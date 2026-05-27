@@ -22,8 +22,8 @@ function countDecimals(step: string): number {
   return dotIndex === -1 ? 0 : step.length - dotIndex - 1;
 }
 
-const secretKey = readEnv('PACIFICA_SUB_ACCOUNT_PRIVATE_KEY');
-const account = readEnv('PACIFICA_SUB_ACCOUNT_PUBLIC_KEY');
+const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
+const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 const NETWORK_TIMEOUT = 30_000;
 
 describe('orders write (testnet, ordres réels)', () => {

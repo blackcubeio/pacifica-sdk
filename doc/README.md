@@ -12,6 +12,7 @@ Documentation construite ticket par ticket, au fil de l'implémentation.
 | [Markets & Spot](./02-markets-spot.md) | #21 | `init()`, données de marché et spot (GET publics) |
 | [Account reading](./03-account-reading.md) | #22 | Compte, positions, ordres, historiques, TWAP (GET) |
 | [Orders write](./04-orders-write.md) | #23 | Ordres signés : limit, market, cancel, edit, stop, batch |
+| [Account write + Agent](./05-account-write.md) | #24 | Leverage, margin, subaccounts, API keys, agent wallets (signé) |
 
 ## Installation
 

@@ -1,6 +1,8 @@
 import { OrderSide, TimeInForce, TriggerPriceType } from '../common/types';
+import type { Signer } from '../common/types';
 
 export { OrderSide, TimeInForce, TriggerPriceType };
+export type { Signer };
 
 export enum CandleInterval {
   OneMinute = '1m',
@@ -636,4 +638,100 @@ export interface BatchActionResult {
 
 export interface BatchResult {
   results: BatchActionResult[];
+}
+
+export interface UpdateLeverageParams {
+  symbol: string;
+  leverage: number;
+}
+
+export interface UpdateMarginModeParams {
+  symbol: string;
+  isIsolated: boolean;
+}
+
+export interface AddIsolatedMarginParams {
+  symbol: string;
+  amount: string;
+}
+
+export interface ToggleAutoLendingParams {
+  disabled: boolean | null;
+}
+
+export interface UpdateSpotSettingsParams {
+  symbol: string;
+  unifiedMarginExcluded: boolean;
+}
+
+export interface WithdrawParams {
+  amount: string;
+}
+
+export interface WithdrawSpotAssetParams {
+  symbol: string;
+  amount: string;
+  idempotencyKey?: string;
+}
+
+export interface WithdrawSpotResult {
+  symbol: string;
+  batchNonce: number;
+  requestedAmount: string;
+  feeAmount: string;
+}
+
+export interface Subaccount {
+  address: string;
+  balance: string;
+  feeLevel: number;
+  feeMode: string;
+  createdAt: number;
+}
+
+export interface CreateSubaccountParams {
+  main: Signer;
+  sub: Signer;
+}
+
+export interface TransferSubaccountFundParams {
+  toAccount: string;
+  amount: string;
+}
+
+export interface SubaccountSpotTransferParams {
+  toAccount: string;
+  symbol: string;
+  amount: string;
+  idempotencyKey?: string;
+}
+
+export interface ApiConfigKeyResult {
+  apiKey: string;
+}
+
+export interface RevokeApiConfigKeyParams {
+  apiKey: string;
+}
+
+export interface BindAgentWalletParams {
+  agentWallet: string;
+}
+
+export interface RevokeAgentWalletParams {
+  agentWallet: string;
+}
+
+export interface ListAgentIpWhitelistParams {
+  agentWallet: string;
+}
+
+export interface AgentWhitelistedIpParams {
+  agentWallet: string;
+  ipAddress: string;
+}
+
+export interface SetAgentIpWhitelistEnabledParams {
+  agentWallet: string;
+  enabled: boolean;
 }

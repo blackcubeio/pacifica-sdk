@@ -51,3 +51,27 @@ export * from './rest/orders/batch-order';
 export * from './rest/orders/twap/get-open-twap-order';
 export * from './rest/orders/twap/get-twap-order-history';
 export * from './rest/orders/twap/get-twap-order-history-by-id';
+
+export * from './rest/account/update-leverage';
+export * from './rest/account/update-margin-mode';
+export * from './rest/account/add-isolated-margin';
+export * from './rest/account/toggle-auto-lending';
+export * from './rest/account/update-spot-settings';
+export * from './rest/account/withdraw';
+export * from './rest/account/withdraw-spot-asset';
+export * from './rest/account/create-subaccount';
+export * from './rest/account/list-subaccounts';
+export * from './rest/account/transfer-subaccount-fund';
+export * from './rest/account/subaccount-spot-transfer';
+export * from './rest/account/create-api-config-key';
+export * from './rest/account/revoke-api-config-key';
+export * from './rest/account/list-api-config-keys';
+
+export * from './rest/agent/bind-agent-wallet';
+export * from './rest/agent/list-agent-wallets';
+export * from './rest/agent/revoke-agent-wallet';
+export * from './rest/agent/revoke-all-agent-wallets';
+export * from './rest/agent/list-agent-ip-whitelist';
+export * from './rest/agent/add-agent-whitelisted-ip';
+export * from './rest/agent/remove-agent-whitelisted-ip';
+export * from './rest/agent/set-agent-ip-whitelist-enabled';

@@ -16,7 +16,7 @@ function readEnv(name: string): string {
   return line.slice(name.length + 1).trim();
 }
 
-const account = readEnv('PACIFICA_SUB_ACCOUNT_PUBLIC_KEY');
+const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 const NETWORK_TIMEOUT = 20_000;
 
 describe('account reading (testnet, réseau réel)', () => {

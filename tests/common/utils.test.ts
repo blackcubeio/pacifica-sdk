@@ -19,8 +19,8 @@ function readEnv(name: string): string {
   return line.slice(name.length + 1).trim();
 }
 
-const subAccountPrivateKey = readEnv('PACIFICA_SUB_ACCOUNT_PRIVATE_KEY');
-const subAccountPublicKey = readEnv('PACIFICA_SUB_ACCOUNT_PUBLIC_KEY');
+const subAccountPrivateKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
+const subAccountPublicKey = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 
 describe('sortJsonKeys', () => {
   it('sorts nested object keys recursively', () => {

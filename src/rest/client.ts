@@ -59,10 +59,13 @@ export function httpPost<TData>(path: string, body: JsonObject): Promise<ApiEnve
 
 function parseEnvelope<TData>(response: Response): Promise<ApiEnvelope<TData>> {
   return response.text().then((body) => {
-    const parsed = (body === '' ? {} : JSON.parse(body)) as ApiEnvelope<TData>;
+    const parsed = tryParseEnvelope<TData>(body);
     if (response.ok === false) {
-      const message = parsed.error ?? `HTTP ${response.status}`;
-      throw new PacificaApiError(response.status, parsed.code ?? null, message);
+      const message = parsed?.error ?? (body === '' ? `HTTP ${response.status}` : body);
+      throw new PacificaApiError(response.status, parsed?.code ?? null, message);
+    }
+    if (parsed === null) {
+      throw new PacificaApiError(response.status, null, body === '' ? 'Empty response' : body);
     }
     if (parsed.success === false) {
       throw new PacificaApiError(
@@ -73,4 +76,15 @@ function parseEnvelope<TData>(response: Response): Promise<ApiEnvelope<TData>> {
     }
     return parsed;
   });
+}
+
+function tryParseEnvelope<TData>(body: string): ApiEnvelope<TData> | null {
+  if (body === '') {
+    return null;
+  }
+  try {
+    return JSON.parse(body) as ApiEnvelope<TData>;
+  } catch {
+    return null;
+  }
 }
