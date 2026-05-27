@@ -2,21 +2,21 @@ import { httpGet } from '../client';
 import type { Vault, VaultConfig } from '../types';
 
 interface VaultConfigWire {
-  deposit_cap: string;
-  manager_profit_share: string;
+  deposit_cap?: string | null;
+  manager_profit_share?: string | null;
   manager_loss_share?: string | null;
-  deposit_min_duration_ms: number;
-  manager_min_balance_portion: string;
-  manager_liquidation_balance_portion: string;
-  withdraw_window_s: number;
-  withdraw_duration_s: number;
+  deposit_min_duration_ms?: number | null;
+  manager_min_balance_portion?: string | null;
+  manager_liquidation_balance_portion?: string | null;
+  withdraw_window_s?: number | null;
+  withdraw_duration_s?: number | null;
 }
 
 interface VaultWire {
   address: string;
   creator: string;
   manager: string | null;
-  nickname: string;
+  nickname: string | null;
   lp_shares: string;
   manager_shares: string;
   lp_balance: string;
@@ -56,13 +56,13 @@ function mapVault(wire: VaultWire): Vault {
 
 function mapConfig(wire: VaultConfigWire): VaultConfig {
   return {
-    depositCap: wire.deposit_cap,
-    managerProfitShare: wire.manager_profit_share,
+    depositCap: wire.deposit_cap ?? null,
+    managerProfitShare: wire.manager_profit_share ?? null,
     managerLossShare: wire.manager_loss_share ?? null,
-    depositMinDurationMs: wire.deposit_min_duration_ms,
-    managerMinBalancePortion: wire.manager_min_balance_portion,
-    managerLiquidationBalancePortion: wire.manager_liquidation_balance_portion,
-    withdrawWindowS: wire.withdraw_window_s,
-    withdrawDurationS: wire.withdraw_duration_s,
+    depositMinDurationMs: wire.deposit_min_duration_ms ?? null,
+    managerMinBalancePortion: wire.manager_min_balance_portion ?? null,
+    managerLiquidationBalancePortion: wire.manager_liquidation_balance_portion ?? null,
+    withdrawWindowS: wire.withdraw_window_s ?? null,
+    withdrawDurationS: wire.withdraw_duration_s ?? null,
   };
 }

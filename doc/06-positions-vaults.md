@@ -38,9 +38,13 @@ managerLiquidationBalancePortion, referralCode? }`. Dépôt initial **minimum 10
 
 ## Cas limites / observations testnet
 
-- **`Vault` est permissif** (réalité testnet ≠ exemple doc) : `manager`, `referrer`,
-  `userShare`, `config` peuvent être `null`/absents ; `config.managerLossShare` optionnel.
-  Le mapping est défensif.
+- **`Vault` est typé d'après la réalité testnet, pas l'exemple doc** (mesuré sur 172 lakes) :
+  la doc est plus optimiste que les données réelles. Toujours présents (172/172) → requis :
+  `address, creator, lpShares, managerShares, lpBalance, managerBalance, lastCheckedEquity,
+  highWatermark, createdAt`. Nullable/optionnels (gaps réels) : `manager` (12 null),
+  `nickname` (6 null), `referrer` (présent 4/172), `userShare` (absent du listing), `config`
+  (absent 17/172) et **tous** les sous-champs de `config` (ex. `withdrawWindowS` 4/155,
+  `depositMinDurationMs` 52/155). Mapping défensif (`?? null`).
 - `vaultDeposit` : montant **minimum 10**.
 - `createVault` vérifié en réel sur testnet (retourne `lakeAddress`). `vaultDeposit` vérifié réel.
   Les ops manager (updateDepositCap, whitelist…) et `createPositionTpsl` sont validées au niveau

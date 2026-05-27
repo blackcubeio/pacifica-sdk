@@ -746,21 +746,21 @@ export interface CreatePositionTpslParams {
 }
 
 export interface VaultConfig {
-  depositCap: string;
-  managerProfitShare: string;
+  depositCap: string | null;
+  managerProfitShare: string | null;
   managerLossShare: string | null;
-  depositMinDurationMs: number;
-  managerMinBalancePortion: string;
-  managerLiquidationBalancePortion: string;
-  withdrawWindowS: number;
-  withdrawDurationS: number;
+  depositMinDurationMs: number | null;
+  managerMinBalancePortion: string | null;
+  managerLiquidationBalancePortion: string | null;
+  withdrawWindowS: number | null;
+  withdrawDurationS: number | null;
 }
 
 export interface Vault {
   address: string;
   creator: string;
   manager: string | null;
-  nickname: string;
+  nickname: string | null;
   lpShares: string;
   managerShares: string;
   lpBalance: string;
