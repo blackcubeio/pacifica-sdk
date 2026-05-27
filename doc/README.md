@@ -15,6 +15,7 @@ Documentation construite ticket par ticket, au fil de l'implémentation.
 | [Account write + Agent](./05-account-write.md) | #24 | Leverage, margin, subaccounts, API keys, agent wallets (signé) |
 | [Positions TP/SL + Vaults](./06-positions-vaults.md) | #25 | TP/SL de position et vaults/lakes (signé) |
 | [WebSocket](./07-websocket.md) | #26 | WsClient : subscriptions + actions signées temps réel |
+| [Deposit on-chain](./08-deposit.md) | #27 | Dépôt Solana via @solana/kit |
 
 ## Installation
 

@@ -25,6 +25,8 @@
   "dependencies": {
     "@noble/curves": "^1.7.0",
     "@noble/hashes": "^1.6.1",
+    "@solana-program/token": "^0.13.0",
+    "@solana/kit": "^6.9.0",
     "bs58": "^6.0.0"
   },
   "devDependencies": {

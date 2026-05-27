@@ -92,4 +92,6 @@ export * from './rest/vaults/remove-from-blacklist';
 export * from './rest/vaults/add-max-leverage';
 export * from './rest/vaults/remove-max-leverage';
 
+export * from './rest/deposit';
+
 export * from './ws/client';
