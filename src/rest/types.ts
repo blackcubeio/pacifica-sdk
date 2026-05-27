@@ -1,3 +1,7 @@
+import { OrderSide } from '../common/types';
+
+export { OrderSide };
+
 export enum CandleInterval {
   OneMinute = '1m',
   ThreeMinutes = '3m',
@@ -184,4 +188,345 @@ export interface SpotAssetsQuery {
 
 export interface BridgeParamsQuery {
   symbol: string;
+}
+
+export enum OrderType {
+  Limit = 'limit',
+  Market = 'market',
+  StopLimit = 'stop_limit',
+  StopMarket = 'stop_market',
+  TakeProfitLimit = 'take_profit_limit',
+  StopLossLimit = 'stop_loss_limit',
+  TakeProfitMarket = 'take_profit_market',
+  StopLossMarket = 'stop_loss_market',
+}
+
+export enum OrderStatus {
+  Open = 'open',
+  PartiallyFilled = 'partially_filled',
+  Filled = 'filled',
+  Cancelled = 'cancelled',
+  Rejected = 'rejected',
+}
+
+export enum OrderCancelReason {
+  Cancel = 'cancel',
+  ForceCancel = 'force_cancel',
+  Expired = 'expired',
+  PostOnlyRejected = 'post_only_rejected',
+  SelfTradePrevented = 'self_trade_prevented',
+}
+
+export enum OrderHistoryEventType {
+  Make = 'make',
+  StopCreated = 'stop_created',
+  TwapCreated = 'twap_created',
+  FulfillMarket = 'fulfill_market',
+  FulfillLimit = 'fulfill_limit',
+  Adjust = 'adjust',
+  StopParentOrderFilled = 'stop_parent_order_filled',
+  StopTriggered = 'stop_triggered',
+  StopUpgrade = 'stop_upgrade',
+  TwapTriggered = 'twap_triggered',
+  Cancel = 'cancel',
+  ForceCancel = 'force_cancel',
+  Expired = 'expired',
+  PostOnlyRejected = 'post_only_rejected',
+  SelfTradePrevented = 'self_trade_prevented',
+}
+
+export enum BalanceEventType {
+  Deposit = 'deposit',
+  DepositRelease = 'deposit_release',
+  Withdraw = 'withdraw',
+  Trade = 'trade',
+  MarketLiquidation = 'market_liquidation',
+  BackstopLiquidation = 'backstop_liquidation',
+  AdlLiquidation = 'adl_liquidation',
+  SubaccountTransfer = 'subaccount_transfer',
+  Funding = 'funding',
+  Payout = 'payout',
+}
+
+export enum PortfolioTimeRange {
+  OneDay = '1d',
+  SevenDays = '7d',
+  FourteenDays = '14d',
+  ThirtyDays = '30d',
+  All = 'all',
+}
+
+export interface AccountSpotBalance {
+  symbol: string;
+  amount: string;
+  availableToWithdraw: string;
+  pendingBalance: string;
+  dailyWithdrawAmountUsd: string;
+  effectiveDailyDepositLimitUsd: string;
+  effectiveDailyWithdrawLimitUsd: string;
+}
+
+export interface AccountInfo {
+  balance: string;
+  feeLevel: number;
+  makerFee: string;
+  takerFee: string;
+  accountEquity: string;
+  availableToSpend: string;
+  availableToWithdraw: string;
+  pendingBalance: string;
+  pendingInterest: string;
+  spotCollateral: string;
+  crossAccountEquity: string | null;
+  spotMarketValue: string;
+  totalMarginUsed: string;
+  crossMmr: string;
+  positionsCount: number;
+  ordersCount: number;
+  stopOrdersCount: number;
+  updatedAt: number;
+  spotBalances: AccountSpotBalance[];
+}
+
+export interface MarginSetting {
+  symbol: string;
+  isolated: boolean;
+  leverage: number;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface SpotSetting {
+  symbol: string;
+  unifiedMarginExcluded: boolean;
+}
+
+export interface AccountSettings {
+  autoLendDisabled: boolean | null;
+  marginSettings: MarginSetting[];
+  spotSettings: SpotSetting[];
+}
+
+export interface Position {
+  symbol: string;
+  side: OrderSide;
+  amount: string;
+  entryPrice: string;
+  margin: string;
+  funding: string;
+  isolated: boolean;
+  liquidationPrice: string | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface LoanSpotBalance {
+  symbol: string;
+  amount: string;
+  ltvRatio: string;
+  marketValue: string;
+  collateralValue: string;
+}
+
+export interface AccountLoan {
+  borrowed: string;
+  pendingInterest: string;
+  collateralUtilization: string;
+  totalInterestEarned: string;
+  totalInterestPaid: string;
+  spotBalances: LoanSpotBalance[];
+  updatedAt: number;
+}
+
+export interface TradeHistoryEntry {
+  historyId: number;
+  orderId: number;
+  clientOrderId: string | null;
+  symbol: string;
+  amount: string;
+  price: string;
+  entryPrice: string;
+  fee: string;
+  pnl: string;
+  eventType: TradeEventType;
+  side: TradeSide;
+  cause: TradeCause;
+  createdAt: number;
+}
+
+export interface AccountFundingEntry {
+  historyId: number;
+  symbol: string;
+  side: OrderSide;
+  amount: string;
+  payout: string;
+  rate: string;
+  createdAt: number;
+}
+
+export interface PortfolioPoint {
+  accountEquity: string;
+  pnl: string;
+  timestamp: number;
+}
+
+export interface BalanceHistoryEntry {
+  amount: string;
+  balance: string;
+  pendingBalance: string;
+  eventType: BalanceEventType;
+  createdAt: number;
+}
+
+export interface SpotBalanceHistoryEntry {
+  amount: string;
+  balance: string;
+  symbol: string;
+  eventType: string;
+  createdAt: number;
+}
+
+export interface SpotDepositEntry {
+  symbol: string;
+  amount: string;
+  transactionId: string;
+  createdAt: number;
+}
+
+export interface SpotWithdrawalEntry {
+  symbol: string;
+  amount: string;
+  batchNonce: number;
+  transactionId: string;
+  createdAt: number;
+}
+
+export interface PendingSpotWithdrawal {
+  symbol: string;
+  amount: string;
+  amountRequested: string;
+  feeAmount: string;
+  batchNonce: number;
+  createdAt: number;
+}
+
+export interface Order {
+  orderId: number;
+  clientOrderId: string | null;
+  symbol: string;
+  side: OrderSide;
+  price: string;
+  initialAmount: string;
+  filledAmount: string;
+  cancelledAmount: string;
+  stopPrice: string | null;
+  orderType: OrderType;
+  stopParentOrderId: number | null;
+  reduceOnly: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface OrderHistoryEntry {
+  orderId: number;
+  clientOrderId: string | null;
+  symbol: string;
+  side: OrderSide;
+  initialPrice: string;
+  averageFilledPrice: string;
+  amount: string;
+  filledAmount: string;
+  orderStatus: OrderStatus;
+  orderType: OrderType;
+  stopPrice: string | null;
+  stopParentOrderId: number | null;
+  reduceOnly: boolean;
+  reason: OrderCancelReason | null;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface OrderHistoryByIdEntry {
+  historyId: number;
+  orderId: number;
+  clientOrderId: string | null;
+  symbol: string;
+  side: OrderSide;
+  price: string;
+  initialAmount: string;
+  filledAmount: string;
+  cancelledAmount: string;
+  eventType: OrderHistoryEventType;
+  orderType: OrderType;
+  orderStatus: OrderStatus;
+  stopPrice: string | null;
+  stopParentOrderId: number | null;
+  reduceOnly: boolean;
+  createdAt: number;
+}
+
+export interface AccountQuery {
+  account: string;
+}
+
+export interface TradeHistoryQuery {
+  account: string;
+  symbol?: string;
+  startTime?: number;
+  endTime?: number;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface FundingHistoryQuery {
+  account: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface PortfolioQuery {
+  account: string;
+  timeRange: PortfolioTimeRange;
+  startTime?: number;
+  endTime?: number;
+  limit?: number;
+}
+
+export interface BalanceHistoryQuery {
+  account: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface SpotBalanceHistoryQuery {
+  account: string;
+  symbol?: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface SpotHistoryQuery {
+  account: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface OrderHistoryQuery {
+  account: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface OrderHistoryByIdQuery {
+  orderId: number;
+}
+
+export interface TwapHistoryQuery {
+  account: string;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface TwapHistoryByIdQuery {
+  orderId: number;
 }

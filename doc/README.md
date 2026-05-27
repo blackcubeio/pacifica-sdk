@@ -10,6 +10,7 @@ Documentation construite ticket par ticket, au fil de l'implémentation.
 |---|---|---|
 | [Core](./01-core.md) | #1 | Constantes, types, signature Ed25519 |
 | [Markets & Spot](./02-markets-spot.md) | #21 | `init()`, données de marché et spot (GET publics) |
+| [Account reading](./03-account-reading.md) | #22 | Compte, positions, ordres, historiques, TWAP (GET) |
 
 ## Installation
 

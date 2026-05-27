@@ -19,3 +19,24 @@ export * from './rest/markets/get-historical-funding';
 export * from './rest/spot/get-spot-assets';
 export * from './rest/spot/get-bridge-info';
 export * from './rest/spot/get-bridge-params';
+
+export * from './rest/account/get-account-info';
+export * from './rest/account/get-account-settings';
+export * from './rest/account/get-positions';
+export * from './rest/account/get-account-loan';
+export * from './rest/account/get-trade-history';
+export * from './rest/account/get-funding-history';
+export * from './rest/account/get-portfolio';
+export * from './rest/account/get-balance-history';
+export * from './rest/account/get-spot-balance-history';
+export * from './rest/account/get-spot-deposit-history';
+export * from './rest/account/get-spot-withdrawal-history';
+export * from './rest/account/get-pending-spot-withdrawals';
+
+export * from './rest/orders/get-open-orders';
+export * from './rest/orders/get-order-history';
+export * from './rest/orders/get-order-history-by-id';
+
+export * from './rest/orders/twap/get-open-twap-order';
+export * from './rest/orders/twap/get-twap-order-history';
+export * from './rest/orders/twap/get-twap-order-history-by-id';
