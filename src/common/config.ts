@@ -5,11 +5,24 @@ export type Network = 'mainnet' | 'testnet';
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
+export interface WebSocketLike {
+  readyState: number;
+  send(data: string): void;
+  close(): void;
+  onopen: ((event: unknown) => void) | null;
+  onmessage: ((event: { data: unknown }) => void) | null;
+  onclose: ((event: unknown) => void) | null;
+  onerror: ((event: unknown) => void) | null;
+}
+
+export type WebSocketFactory = (url: string) => WebSocketLike;
+
 export interface InitOptions {
   network?: Network;
   restUrl?: string;
   wsUrl?: string;
   fetch?: FetchLike;
+  webSocket?: WebSocketFactory;
   signer?: Signer;
 }
 
@@ -17,6 +30,7 @@ export interface PacificaConfig {
   restUrl: string;
   wsUrl: string;
   fetch: FetchLike;
+  webSocket: WebSocketFactory;
   signer?: Signer;
 }
 
@@ -32,7 +46,18 @@ export function init(options: InitOptions = {}): void {
   if (fetchImpl === undefined) {
     throw new Error('No fetch implementation available; pass options.fetch to init()');
   }
-  config = { restUrl, wsUrl, fetch: fetchImpl, signer: options.signer };
+  const webSocket = options.webSocket ?? defaultWebSocketFactory();
+  if (webSocket === undefined) {
+    throw new Error('No WebSocket implementation available; pass options.webSocket to init()');
+  }
+  config = { restUrl, wsUrl, fetch: fetchImpl, webSocket, signer: options.signer };
+}
+
+function defaultWebSocketFactory(): WebSocketFactory | undefined {
+  if (typeof globalThis.WebSocket !== 'function') {
+    return undefined;
+  }
+  return (url) => new globalThis.WebSocket(url) as unknown as WebSocketLike;
 }
 
 export function getConfig(): PacificaConfig {

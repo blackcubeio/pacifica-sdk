@@ -23,12 +23,15 @@ interface BatchActionResultWire {
 }
 
 export function batchOrders(actions: BatchAction[], signer?: Signer): Promise<BatchResult> {
-  const signedActions = actions.map((action) => buildBatchAction(action, signer));
   return httpPost<{ results: BatchActionResultWire[] }>('/orders/batch', {
-    actions: signedActions,
+    actions: buildSignedBatchActions(actions, signer),
   }).then((envelope) => ({
     results: envelope.data.results.map((result) => mapBatchActionResult(result)),
   }));
+}
+
+export function buildSignedBatchActions(actions: BatchAction[], signer?: Signer): JsonObject[] {
+  return actions.map((action) => buildBatchAction(action, signer));
 }
 
 function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
