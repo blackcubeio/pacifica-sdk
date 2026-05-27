@@ -1,0 +1,20 @@
+# @blackcube/pacifica-sdk — Documentation API
+
+SDK TypeScript pour l'exchange [Pacifica](https://pacifica.fi) (perp DEX Solana).
+
+Documentation construite ticket par ticket, au fil de l'implémentation.
+
+## Modules
+
+| Doc | Ticket | Contenu |
+|---|---|---|
+| [Core](./01-core.md) | #1 | Constantes, types, signature Ed25519 |
+
+## Installation
+
+```bash
+pnpm add @blackcube/pacifica-sdk
+```
+
+Compatible Node.js et navigateur. La signature hardware wallet (`signWithHardwareWallet`)
+est **Node-only** (subprocess CLI `solana`).
