@@ -1,21 +1,25 @@
-# @blackcube/pacifica-sdk — Documentation API
+# @blackcube/pacifica-sdk — Documentation
 
 SDK TypeScript pour l'exchange [Pacifica](https://pacifica.fi) (perp DEX Solana).
+Organisation calquée sur la [doc API Pacifica](https://pacifica.gitbook.io/docs/api-documentation/api).
 
-Documentation construite ticket par ticket, au fil de l'implémentation.
+## Sommaire
 
-## Modules
+### REST API
+- [Markets](./rest-api/markets.md) — données de marché (GET publics)
+- [Account](./rest-api/account.md) — compte, positions, historiques, écritures signées
+- [Orders](./rest-api/orders.md) — ordres (lecture + écritures signées), TP/SL, batch, TWAP
+- [Spot](./rest-api/spot.md) — actifs spot et bridge
+- [Subaccounts](./rest-api/subaccounts.md) — création et transferts de sous-comptes
+- [Vaults](./rest-api/vaults.md) — vaults (lakes) : gestion LP et manager
 
-| Doc | Ticket | Contenu |
-|---|---|---|
-| [Core](./01-core.md) | #1 | Constantes, types, signature Ed25519 |
-| [Markets & Spot](./02-markets-spot.md) | #21 | `init()`, données de marché et spot (GET publics) |
-| [Account reading](./03-account-reading.md) | #22 | Compte, positions, ordres, historiques, TWAP (GET) |
-| [Orders write](./04-orders-write.md) | #23 | Ordres signés : limit, market, cancel, edit, stop, batch |
-| [Account write + Agent](./05-account-write.md) | #24 | Leverage, margin, subaccounts, API keys, agent wallets (signé) |
-| [Positions TP/SL + Vaults](./06-positions-vaults.md) | #25 | TP/SL de position et vaults/lakes (signé) |
-| [WebSocket](./07-websocket.md) | #26 | WsClient : subscriptions + actions signées temps réel |
-| [Deposit on-chain](./08-deposit.md) | #27 | Dépôt Solana via @solana/kit |
+### WebSocket
+- [Subscriptions](./websocket/subscriptions.md) — flux temps réel
+- [Trading operations](./websocket/trading-operations.md) — actions signées via WS
+
+### Signing & on-chain
+- [Signing](./signing.md) — signature Ed25519, operation types, hardware wallet, agent wallets, API config keys
+- [Deposit](./deposit.md) — dépôt de collatérale on-chain (Solana)
 
 ## Installation
 
@@ -23,5 +27,34 @@ Documentation construite ticket par ticket, au fil de l'implémentation.
 pnpm add @blackcube/pacifica-sdk
 ```
 
-Compatible Node.js et navigateur. La signature hardware wallet (`signWithHardwareWallet`)
-est **Node-only** (subprocess CLI `solana`).
+Compatible Node.js et navigateur. `signWithHardwareWallet` (Ledger) et `deposit` (on-chain)
+ont des prérequis spécifiques (voir leurs pages).
+
+## Initialisation
+
+Le SDK s'initialise **une fois** ; toute l'API hérite de la configuration.
+
+```ts
+import { init } from '@blackcube/pacifica-sdk';
+
+init();                                                // mainnet
+init({ network: 'testnet' });                          // testnet
+init({ network: 'testnet', signer: { secretKey } });   // + signer pour les écritures
+```
+
+| Option | Type | Défaut |
+|---|---|---|
+| `network` | `'mainnet' \| 'testnet'` | `'mainnet'` |
+| `restUrl` / `wsUrl` | `string` | selon `network` |
+| `fetch` | `FetchLike` | `globalThis.fetch` |
+| `webSocket` | `WebSocketFactory` | `globalThis.WebSocket` |
+| `signer` | `Signer` | — (requis pour les écritures) |
+
+Appeler l'API avant `init()` lève `Pacifica SDK not initialized`. `resetConfig()` réinitialise.
+
+## Conventions
+
+- **API publique en camelCase** ; conversion vers le wire snake_case en interne.
+- **Réponses mappées en camelCase**. Montants/prix = **strings décimales**.
+- Erreurs → `PacificaApiError` (`status`, `code`, `message`).
+- Écritures → objet [`Signer`](./signing.md) (`init` ou argument par appel).
