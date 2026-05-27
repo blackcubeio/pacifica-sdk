@@ -1,6 +1,15 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
-import { buildDepositData, deposit } from '../../src/rest/deposit';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { init, resetConfig } from '../../src/common/config';
+import { getAccountInfo } from '../../src/rest/account/get-account-info';
+import {
+  DEVNET_CENTRAL_STATE,
+  DEVNET_COLLATERAL_MINT,
+  DEVNET_DEPOSIT_PROGRAM_ID,
+  DEVNET_RPC_URL,
+  buildDepositData,
+  deposit,
+} from '../../src/rest/deposit';
 
 function readEnv(name: string): string {
   const content = readFileSync(new URL('../../.env', import.meta.url), 'utf-8');
@@ -11,10 +20,24 @@ function readEnv(name: string): string {
   return line.slice(name.length + 1).trim();
 }
 
-const DEVNET_RPC_URL = 'https://api.devnet.solana.com';
-const USDP_MINT = 'USDPqRbLidFGufty2s3oizmDEKdqx7ePTqzDMbf5ZKM';
 const solanaSecretKey = readEnv('SOLANA_PRIVATE_KEY');
-const NETWORK_TIMEOUT = 60_000;
+const account = readEnv('SOLANA_PUBLIC_KEY');
+const NETWORK_TIMEOUT = 90_000;
+
+function waitForBalance(target: number, deadline: number): Promise<number> {
+  return getAccountInfo({ account }).then((info) => {
+    const balance = Number(info.balance);
+    if (balance >= target) {
+      return balance;
+    }
+    if (Date.now() > deadline) {
+      throw new Error(`balance ${balance} stayed below ${target} (deposit not credited)`);
+    }
+    return new Promise<void>((resolve) => setTimeout(resolve, 3000)).then(() =>
+      waitForBalance(target, deadline),
+    );
+  });
+}
 
 describe('deposit instruction data', () => {
   it('encodes the anchor discriminator and borsh u64 amount', () => {
@@ -25,16 +48,33 @@ describe('deposit instruction data', () => {
   });
 });
 
-describe('deposit (devnet, transaction réelle)', () => {
+describe('deposit (devnet, dépôt réel crédité)', () => {
+  beforeAll(() => {
+    init({ network: 'testnet', signer: { secretKey: solanaSecretKey, account } });
+  });
+
+  afterAll(() => {
+    resetConfig();
+  });
+
   it(
-    'deposits USDP from the main wallet on devnet',
+    'deposits USDP on devnet and the Pacifica account is credited',
     () => {
-      return deposit(
-        { amount: 10, rpcUrl: DEVNET_RPC_URL, collateralMint: USDP_MINT, decimals: 6 },
-        { secretKey: solanaSecretKey },
-      ).then((signature) => {
-        expect(typeof signature).toBe('string');
-        expect(signature.length).toBeGreaterThan(0);
+      return getAccountInfo({ account }).then((before) => {
+        const balanceBefore = Number(before.balance);
+        return deposit({
+          amount: 10,
+          rpcUrl: DEVNET_RPC_URL,
+          programId: DEVNET_DEPOSIT_PROGRAM_ID,
+          centralState: DEVNET_CENTRAL_STATE,
+          collateralMint: DEVNET_COLLATERAL_MINT,
+          decimals: 6,
+        }).then((signature) => {
+          expect(typeof signature).toBe('string');
+          return waitForBalance(balanceBefore + 9, Date.now() + 60_000).then((balanceAfter) => {
+            expect(balanceAfter).toBeGreaterThanOrEqual(balanceBefore + 9);
+          });
+        });
       });
     },
     NETWORK_TIMEOUT,

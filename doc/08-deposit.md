@@ -38,19 +38,37 @@ d'`init()`.
 de l'instruction sans rien envoyer. L'envoi (confirmation) passe par
 `sendAndConfirmTransactionFactory` de `@solana/kit` (RPC + RPC subscriptions).
 
-## Mainnet vs testnet (devnet)
+## ⚠️ Le programme diffère selon l'environnement
 
-Le programme `PCFA…` et `central_state` existent **aussi sur devnet** (= « testnet » Pacifica
-on-chain). Pour déposer en testnet : passer `rpcUrl` devnet + `collateralMint` **USDP**
-(`USDPqRbLidFGufty2s3oizmDEKdqx7ePTqzDMbf5ZKM`, la collatérale testnet). Le vault est dérivé
-automatiquement (ATA de central_state pour le mint).
+Le programme de dépôt et le `central_state` **ne sont pas les mêmes** en mainnet et en
+testnet (= Solana devnet). Il faut passer les bons paramètres :
+
+| | Programme | central_state | mint |
+|---|---|---|---|
+| **mainnet** (défauts) | `PCFA5iYg…` | `9Gdmhq…` | USDC `EPjFW…` |
+| **testnet / devnet** | `peRPsYCcB1J9…` | `2zPRq…` | USDP `USDPqRbL…` |
+
+Constantes devnet exportées : `DEVNET_RPC_URL`, `DEVNET_DEPOSIT_PROGRAM_ID`,
+`DEVNET_CENTRAL_STATE`, `DEVNET_COLLATERAL_MINT`. Le vault et l'event_authority sont **dérivés**
+automatiquement à partir du programme/central_state fournis.
 
 ```ts
+import {
+  deposit, DEVNET_RPC_URL, DEVNET_DEPOSIT_PROGRAM_ID, DEVNET_CENTRAL_STATE, DEVNET_COLLATERAL_MINT,
+} from '@blackcube/pacifica-sdk';
+
 deposit(
-  { amount: 10, rpcUrl: 'https://api.devnet.solana.com', collateralMint: 'USDPqRbL…', decimals: 6 },
+  {
+    amount: 10,
+    rpcUrl: DEVNET_RPC_URL,
+    programId: DEVNET_DEPOSIT_PROGRAM_ID,
+    centralState: DEVNET_CENTRAL_STATE,
+    collateralMint: DEVNET_COLLATERAL_MINT,
+  },
   { secretKey: SOLANA_PRIVATE_KEY },
 );
 ```
 
-> Vérifié par une **transaction réelle confirmée sur devnet** (dépôt de 10 USDP depuis le
-> wallet principal). Le dépôt mainnet engage de vrais USDC.
+> Vérifié **end-to-end sur devnet** : après le dépôt, le solde du compte Pacifica (via
+> `getAccountInfo`) **augmente réellement** du montant déposé. ⚠️ Utiliser le programme mainnet
+> (`PCFA…`) sur devnet produit une transaction qui *confirme* mais ne **crédite pas** le compte.

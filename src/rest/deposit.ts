@@ -29,6 +29,11 @@ const CENTRAL_STATE = '9Gdmhq4Gv1LnNMp7aiS1HSVd7pNnXNMsbuXALCQRmGjY';
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const SYSTEM_PROGRAM_ID = '11111111111111111111111111111111';
 
+export const DEVNET_RPC_URL = 'https://api.devnet.solana.com';
+export const DEVNET_DEPOSIT_PROGRAM_ID = 'peRPsYCcB1J9jvrs29jiGdjkytxs8uHLmSPLKKP9ptm';
+export const DEVNET_CENTRAL_STATE = '2zPRq1Qvdq5A4Ld6WsH7usgCge4ApZRYfhhf5VAjfXxv';
+export const DEVNET_COLLATERAL_MINT = 'USDPqRbLidFGufty2s3oizmDEKdqx7ePTqzDMbf5ZKM';
+
 export interface DepositParams {
   amount: number;
   rpcUrl?: string;
