@@ -13,6 +13,7 @@ import {
   buildEditOrderPayload,
   buildLimitOrderPayload,
   buildMarketOrderPayload,
+  buildPositionTpslPayload,
 } from './payloads';
 
 interface BatchActionResultWire {
@@ -65,6 +66,15 @@ function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
         data: buildSignedRequest(
           OperationType.EditOrder,
           buildEditOrderPayload(action.params),
+          signer,
+        ),
+      };
+    case BatchActionType.SetPositionTpsl:
+      return {
+        type: BatchActionType.SetPositionTpsl,
+        data: buildSignedRequest(
+          OperationType.SetPositionTpsl,
+          buildPositionTpslPayload(action.params),
           signer,
         ),
       };

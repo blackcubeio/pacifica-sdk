@@ -75,3 +75,19 @@ export * from './rest/agent/list-agent-ip-whitelist';
 export * from './rest/agent/add-agent-whitelisted-ip';
 export * from './rest/agent/remove-agent-whitelisted-ip';
 export * from './rest/agent/set-agent-ip-whitelist-enabled';
+
+export * from './rest/positions/create-position-tpsl';
+
+export * from './rest/vaults/get-vaults';
+export * from './rest/vaults/create-vault';
+export * from './rest/vaults/vault-deposit';
+export * from './rest/vaults/vault-withdraw';
+export * from './rest/vaults/claim-referral-code';
+export * from './rest/vaults/claim-manager';
+export * from './rest/vaults/update-deposit-cap';
+export * from './rest/vaults/add-to-whitelist';
+export * from './rest/vaults/remove-from-whitelist';
+export * from './rest/vaults/add-to-blacklist';
+export * from './rest/vaults/remove-from-blacklist';
+export * from './rest/vaults/add-max-leverage';
+export * from './rest/vaults/remove-max-leverage';

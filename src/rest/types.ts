@@ -620,6 +620,7 @@ export enum BatchActionType {
   CreateMarket = 'CreateMarket',
   Cancel = 'Cancel',
   Edit = 'Edit',
+  SetPositionTpsl = 'SetPositionTpsl',
   CancelStopOrder = 'CancelStopOrder',
 }
 
@@ -628,6 +629,7 @@ export type BatchAction =
   | { type: BatchActionType.CreateMarket; params: CreateMarketOrderParams }
   | { type: BatchActionType.Cancel; params: CancelOrderParams }
   | { type: BatchActionType.Edit; params: EditOrderParams }
+  | { type: BatchActionType.SetPositionTpsl; params: CreatePositionTpslParams }
   | { type: BatchActionType.CancelStopOrder; params: CancelStopOrderParams };
 
 export interface BatchActionResult {
@@ -734,4 +736,94 @@ export interface AgentWhitelistedIpParams {
 export interface SetAgentIpWhitelistEnabledParams {
   agentWallet: string;
   enabled: boolean;
+}
+
+export interface CreatePositionTpslParams {
+  symbol: string;
+  side: OrderSide;
+  takeProfit?: StopConfig;
+  stopLoss?: StopConfig;
+}
+
+export interface VaultConfig {
+  depositCap: string;
+  managerProfitShare: string;
+  managerLossShare: string | null;
+  depositMinDurationMs: number;
+  managerMinBalancePortion: string;
+  managerLiquidationBalancePortion: string;
+  withdrawWindowS: number;
+  withdrawDurationS: number;
+}
+
+export interface Vault {
+  address: string;
+  creator: string;
+  manager: string | null;
+  nickname: string;
+  lpShares: string;
+  managerShares: string;
+  lpBalance: string;
+  managerBalance: string;
+  lastCheckedEquity: string;
+  highWatermark: string;
+  createdAt: number;
+  referrer: string | null;
+  userShare: string | null;
+  config: VaultConfig | null;
+}
+
+export interface CreateVaultParams {
+  nickname: string;
+  initialDeposit: string;
+  depositCap: string;
+  depositMinDurationMs: number;
+  withdrawWindowS: number;
+  withdrawDurationS: number;
+  managerProfitShare: string;
+  managerMinBalancePortion: string;
+  managerLiquidationBalancePortion: string;
+  referralCode?: string;
+}
+
+export interface CreateVaultResult {
+  lakeAddress: string;
+}
+
+export interface VaultDepositParams {
+  lake: string;
+  amount: string;
+  idempotencyKey?: string;
+}
+
+export interface VaultWithdrawParams {
+  lake: string;
+  shares: string;
+  idempotencyKey?: string;
+}
+
+export interface ClaimReferralCodeParams {
+  lake: string;
+  code: string;
+}
+
+export interface ClaimManagerParams {
+  lake: string;
+  depositAmount: string;
+}
+
+export interface UpdateDepositCapParams {
+  lake: string;
+  depositCap: string;
+}
+
+export interface VaultSymbolsParams {
+  lake: string;
+  symbols: string[];
+}
+
+export interface AddMaxLeverageParams {
+  lake: string;
+  symbols: string[];
+  maxLeverage: string;
 }

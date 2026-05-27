@@ -6,6 +6,7 @@ import {
   type CancelStopOrderParams,
   type CreateLimitOrderParams,
   type CreateMarketOrderParams,
+  type CreatePositionTpslParams,
   type CreateStopOrderParams,
   type EditOrderParams,
   type StopConfig,
@@ -121,6 +122,17 @@ export function buildEditOrderPayload(params: EditOrderParams): JsonObject {
     payload.client_order_id = params.clientOrderId;
   } else {
     throw new Error('Either orderId or clientOrderId is required');
+  }
+  return payload;
+}
+
+export function buildPositionTpslPayload(params: CreatePositionTpslParams): JsonObject {
+  const payload: JsonObject = { symbol: params.symbol, side: params.side };
+  if (params.takeProfit !== undefined) {
+    payload.take_profit = buildStopConfig(params.takeProfit);
+  }
+  if (params.stopLoss !== undefined) {
+    payload.stop_loss = buildStopConfig(params.stopLoss);
   }
   return payload;
 }
