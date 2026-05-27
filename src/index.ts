@@ -33,9 +33,20 @@ export * from './rest/account/get-spot-deposit-history';
 export * from './rest/account/get-spot-withdrawal-history';
 export * from './rest/account/get-pending-spot-withdrawals';
 
+export * from './rest/signing';
+
 export * from './rest/orders/get-open-orders';
 export * from './rest/orders/get-order-history';
 export * from './rest/orders/get-order-history-by-id';
+
+export * from './rest/orders/create-limit-order';
+export * from './rest/orders/create-market-order';
+export * from './rest/orders/cancel-order';
+export * from './rest/orders/cancel-all-orders';
+export * from './rest/orders/edit-order';
+export * from './rest/orders/create-stop-order';
+export * from './rest/orders/cancel-stop-order';
+export * from './rest/orders/batch-order';
 
 export * from './rest/orders/twap/get-open-twap-order';
 export * from './rest/orders/twap/get-twap-order-history';

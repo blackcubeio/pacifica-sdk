@@ -1,6 +1,6 @@
-import { OrderSide } from '../common/types';
+import { OrderSide, TimeInForce, TriggerPriceType } from '../common/types';
 
-export { OrderSide };
+export { OrderSide, TimeInForce, TriggerPriceType };
 
 export enum CandleInterval {
   OneMinute = '1m',
@@ -529,4 +529,111 @@ export interface TwapHistoryQuery {
 
 export interface TwapHistoryByIdQuery {
   orderId: number;
+}
+
+export interface StopConfig {
+  stopPrice: string;
+  limitPrice?: string;
+  clientOrderId?: string;
+  triggerPriceType?: TriggerPriceType;
+}
+
+export interface StopOrderConfig {
+  stopPrice: string;
+  limitPrice?: string;
+  clientOrderId?: string;
+  triggerPriceType?: TriggerPriceType;
+  amount?: string;
+}
+
+export interface CreateLimitOrderParams {
+  symbol: string;
+  price: string;
+  amount: string;
+  side: OrderSide;
+  tif?: TimeInForce;
+  reduceOnly?: boolean;
+  clientOrderId?: string;
+  takeProfit?: StopConfig;
+  stopLoss?: StopConfig;
+  builderCode?: string;
+}
+
+export interface CreateMarketOrderParams {
+  symbol: string;
+  amount: string;
+  side: OrderSide;
+  slippagePercent: string;
+  reduceOnly?: boolean;
+  clientOrderId?: string;
+  takeProfit?: StopConfig;
+  stopLoss?: StopConfig;
+  builderCode?: string;
+}
+
+export interface CancelOrderParams {
+  symbol: string;
+  orderId?: number;
+  clientOrderId?: string;
+}
+
+export interface CancelAllOrdersParams {
+  allSymbols: boolean;
+  excludeReduceOnly: boolean;
+  symbol?: string;
+}
+
+export interface EditOrderParams {
+  symbol: string;
+  price: string;
+  amount: string;
+  orderId?: number;
+  clientOrderId?: string;
+}
+
+export interface CreateStopOrderParams {
+  symbol: string;
+  side: OrderSide;
+  reduceOnly: boolean;
+  stopOrder: StopOrderConfig;
+  builderCode?: string;
+}
+
+export interface CancelStopOrderParams {
+  symbol: string;
+  orderId?: number;
+  clientOrderId?: string;
+}
+
+export interface CreateOrderResult {
+  orderId: number;
+}
+
+export interface CancelAllResult {
+  cancelledCount: number;
+}
+
+export enum BatchActionType {
+  Create = 'Create',
+  CreateMarket = 'CreateMarket',
+  Cancel = 'Cancel',
+  Edit = 'Edit',
+  CancelStopOrder = 'CancelStopOrder',
+}
+
+export type BatchAction =
+  | { type: BatchActionType.Create; params: CreateLimitOrderParams }
+  | { type: BatchActionType.CreateMarket; params: CreateMarketOrderParams }
+  | { type: BatchActionType.Cancel; params: CancelOrderParams }
+  | { type: BatchActionType.Edit; params: EditOrderParams }
+  | { type: BatchActionType.CancelStopOrder; params: CancelStopOrderParams };
+
+export interface BatchActionResult {
+  success: boolean;
+  orderId?: number;
+  error: string | null;
+}
+
+export interface BatchResult {
+  results: BatchActionResult[];
 }

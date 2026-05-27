@@ -69,6 +69,12 @@ export interface HardwareSignature {
   value: string;
 }
 
+export interface Signer {
+  secretKey: string;
+  account?: string;
+  agentWallet?: string;
+}
+
 export type Signature = string | HardwareSignature;
 
 export interface SignedRequestHeader {

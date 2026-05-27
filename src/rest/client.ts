@@ -1,4 +1,5 @@
 import { getConfig } from '../common/config';
+import type { JsonObject } from '../common/types';
 
 export class PacificaApiError extends Error {
   constructor(
@@ -41,6 +42,18 @@ export function httpGet<TData>(path: string, query?: QueryParams): Promise<ApiEn
   const url = buildUrl(config.restUrl, path, query);
   return config
     .fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
+    .then((response) => parseEnvelope<TData>(response));
+}
+
+export function httpPost<TData>(path: string, body: JsonObject): Promise<ApiEnvelope<TData>> {
+  const config = getConfig();
+  const url = buildUrl(config.restUrl, path);
+  return config
+    .fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(body),
+    })
     .then((response) => parseEnvelope<TData>(response));
 }
 

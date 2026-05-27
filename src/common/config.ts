@@ -1,4 +1,5 @@
 import { REST_URL, TESTNET_REST_URL, TESTNET_WS_URL, WS_URL } from './constants';
+import type { Signer } from './types';
 
 export type Network = 'mainnet' | 'testnet';
 
@@ -9,12 +10,14 @@ export interface InitOptions {
   restUrl?: string;
   wsUrl?: string;
   fetch?: FetchLike;
+  signer?: Signer;
 }
 
 export interface PacificaConfig {
   restUrl: string;
   wsUrl: string;
   fetch: FetchLike;
+  signer?: Signer;
 }
 
 let config: PacificaConfig | null = null;
@@ -29,7 +32,7 @@ export function init(options: InitOptions = {}): void {
   if (fetchImpl === undefined) {
     throw new Error('No fetch implementation available; pass options.fetch to init()');
   }
-  config = { restUrl, wsUrl, fetch: fetchImpl };
+  config = { restUrl, wsUrl, fetch: fetchImpl, signer: options.signer };
 }
 
 export function getConfig(): PacificaConfig {
