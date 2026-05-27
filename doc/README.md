@@ -9,6 +9,7 @@ Documentation construite ticket par ticket, au fil de l'implémentation.
 | Doc | Ticket | Contenu |
 |---|---|---|
 | [Core](./01-core.md) | #1 | Constantes, types, signature Ed25519 |
+| [Markets & Spot](./02-markets-spot.md) | #21 | `init()`, données de marché et spot (GET publics) |
 
 ## Installation
 
