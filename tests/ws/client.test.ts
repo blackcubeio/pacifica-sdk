@@ -15,10 +15,11 @@ function readEnv(name: string): string {
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 const NETWORK_TIMEOUT = 20_000;
+const IDLE_TIMEOUT = 90_000;
 
 describe('WsClient (testnet, réseau réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signer: { secretKey, account } });
+    init({ network: 'testnet', signers: { [account]: { secretKey } } });
   });
 
   afterAll(() => {
@@ -56,5 +57,37 @@ describe('WsClient (testnet, réseau réel)', () => {
         });
     },
     NETWORK_TIMEOUT,
+  );
+
+  it(
+    'stays alive while idle past the 60s server timeout thanks to the heartbeat',
+    () => {
+      const client = new WsClient();
+      let closed = false;
+      let reconnected = false;
+      client.onClose = () => {
+        closed = true;
+      };
+      client.onReconnect = () => {
+        reconnected = true;
+      };
+      return client
+        .connect()
+        .then(() => new Promise<void>((resolve) => setTimeout(resolve, 65_000)))
+        .then(() => {
+          // No close/reconnect during the idle window → the 30s ping kept it alive.
+          expect(closed).toBe(false);
+          expect(reconnected).toBe(false);
+          // And the same connection is still functional.
+          return new Promise<void>((resolve) => {
+            const unsubscribe = client.subscribePrices(() => {
+              unsubscribe();
+              client.disconnect();
+              resolve();
+            });
+          });
+        });
+    },
+    IDLE_TIMEOUT,
   );
 });

@@ -13,7 +13,7 @@ const NETWORK_TIMEOUT = 40_000;
 
 describe('WS account stream (testnet, voir passer les opérations)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signer: { secretKey, account } });
+    init({ network: 'testnet', signers: { [account]: { secretKey } } });
   });
 
   afterAll(() => {

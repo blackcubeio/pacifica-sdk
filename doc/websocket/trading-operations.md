@@ -4,14 +4,17 @@ Signed trading actions over WebSocket, with the **same names and types as REST**
 `buildSignedRequest` + the payload builders). `WsClient` methods. Each action resolves with the
 server response (correlated by `id`).
 
+Authority: 🔑 **Account key or API key** — the account's own key, or a bound API key for that
+account (same rules as the equivalent REST writes).
+
 | Method | sent format |
 |---|---|
-| `createLimitOrder(params, signer?)` | `{ id, params: { create_order: <signed> } }` |
-| `createMarketOrder(params, signer?)` | `{ id, params: { create_market_order: <signed> } }` |
-| `cancelOrder(params, signer?)` | `{ id, params: { cancel_order: <signed> } }` |
-| `cancelAllOrders(params, signer?)` | `{ id, params: { cancel_all_orders: <signed> } }` |
-| `editOrder(params, signer?)` | `{ id, params: { edit_order: <signed> } }` |
-| `batchOrders(actions, signer?)` | `{ id, params: { actions: [<signed>, …] } }` |
+| `createLimitOrder(params, account?)` | `{ id, params: { create_order: <signed> } }` |
+| `createMarketOrder(params, account?)` | `{ id, params: { create_market_order: <signed> } }` |
+| `cancelOrder(params, account?)` | `{ id, params: { cancel_order: <signed> } }` |
+| `cancelAllOrders(params, account?)` | `{ id, params: { cancel_all_orders: <signed> } }` |
+| `editOrder(params, account?)` | `{ id, params: { edit_order: <signed> } }` |
+| `batchOrders(actions, account?)` | `{ id, params: { actions: [<signed>, …] } }` |
 
 ```ts
 ws.connect().then(() => {

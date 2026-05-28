@@ -25,7 +25,7 @@ const NETWORK_TIMEOUT = 30_000;
 
 describe('vaults + positions tpsl (testnet, réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signer: { secretKey, account } });
+    init({ network: 'testnet', signers: { [account]: { secretKey } } });
   });
 
   afterAll(() => {

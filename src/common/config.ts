@@ -23,7 +23,8 @@ export interface InitOptions {
   wsUrl?: string;
   fetch?: FetchLike;
   webSocket?: WebSocketFactory;
-  signer?: Signer;
+  /** Registry of signers keyed by account address. Signed calls reference an account. */
+  signers?: Record<string, Signer>;
 }
 
 export interface PacificaConfig {
@@ -31,7 +32,7 @@ export interface PacificaConfig {
   wsUrl: string;
   fetch: FetchLike;
   webSocket: WebSocketFactory;
-  signer?: Signer;
+  signers: Record<string, Signer>;
 }
 
 let config: PacificaConfig | null = null;
@@ -50,7 +51,7 @@ export function init(options: InitOptions = {}): void {
   if (webSocket === undefined) {
     throw new Error('No WebSocket implementation available; pass options.webSocket to init()');
   }
-  config = { restUrl, wsUrl, fetch: fetchImpl, webSocket, signer: options.signer };
+  config = { restUrl, wsUrl, fetch: fetchImpl, webSocket, signers: options.signers ?? {} };
 }
 
 function defaultWebSocketFactory(): WebSocketFactory | undefined {

@@ -2,6 +2,8 @@
 
 Public market data (GET, unsigned). Responses mapped to camelCase.
 
+Authority: 🔓 **Public** — no signer for any function on this page.
+
 | Function | Endpoint | Returns |
 |---|---|---|
 | `getMarketInfo()` | `GET /info` | `Market[]` |

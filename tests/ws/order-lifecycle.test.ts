@@ -11,7 +11,7 @@ const NETWORK_TIMEOUT = 40_000;
 
 describe('order lifecycle WS (testnet, WS write visible via REST then undone via WS)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signer: { secretKey, account } });
+    init({ network: 'testnet', signers: { [account]: { secretKey } } });
   });
 
   afterAll(() => {
