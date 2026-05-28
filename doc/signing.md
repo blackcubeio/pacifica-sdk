@@ -69,15 +69,16 @@ requires the `solana` CLI installed + a connected Ledger.
 `add_agent_whitelisted_ip`, `remove_agent_whitelisted_ip`, `set_agent_ip_whitelist_enabled`),
 API keys (`create_api_key`, `revoke_api_key`, `list_api_keys`).
 
-## Agent wallets
+## Agent wallets / API keys
 
-Let you sign on behalf of the account without exposing the main key (`account` = main wallet,
-signature with the agent key, `agent_wallet` field). Source: Python SDK (lightly documented on gitbook).
+API agent keys let a program trade **on behalf of an account** without its main key (`account` =
+the account, signature with the agent key, `agent_wallet` field). They are **per account** —
+each account (including each subaccount) holds its own API key (max 20 per account, self-custody).
 
 | Function | type | Endpoint | Returns |
 |---|---|---|---|
 | `bindAgentWallet({ agentWallet }, account?)` | `bind_agent_wallet` | `POST /agent/bind` | `void` |
-| `listAgentWallets(account?)` | `list_agent_wallets` | `POST /agent/list` | `JsonValue` |
+| `listAgentWallets(account?)` | `list_agent_wallets` | `POST /agent/list` | `string[]` |
 | `revokeAgentWallet({ agentWallet }, account?)` | `revoke_agent_wallet` | `POST /agent/revoke` | `void` |
 | `revokeAllAgentWallets(account?)` | `revoke_all_agent_wallets` | `POST /agent/revoke_all` | `void` |
 | `listAgentIpWhitelist({ agentWallet }, account?)` | `list_agent_ip_whitelist` | `POST /agent/ip_whitelist/list` | `JsonValue` |
@@ -85,8 +86,23 @@ signature with the agent key, `agent_wallet` field). Source: Python SDK (lightly
 | `removeAgentWhitelistedIp({ agentWallet, ipAddress }, account?)` | `remove_agent_whitelisted_ip` | `POST /agent/ip_whitelist/remove` | `void` |
 | `setAgentIpWhitelistEnabled({ agentWallet, enabled }, account?)` | `set_agent_ip_whitelist_enabled` | `POST /agent/ip_whitelist/toggle` | `void` |
 
-Usage: `init({ signers: { [MAIN_PUBKEY]: { secretKey: AGENT_SECRET, agentWallet: AGENT_PUBKEY } } })`
-then call with `account = MAIN_PUBKEY`.
+### Using an API key per subaccount
+
+1. **Bind** the key to its account, signed by the account owner:
+   `bindAgentWallet({ agentWallet: API_PUBKEY }, account)` (owner key registered for `account`).
+2. **Register** the key as that account's signer and trade with it — one entry per subaccount:
+
+```ts
+init({
+  network: 'testnet',
+  signers: {
+    [SUB01]: { secretKey: API01_SECRET, agentWallet: API01_PUBKEY },
+    [SUB02]: { secretKey: API02_SECRET, agentWallet: API02_PUBKEY },
+  },
+});
+createLimitOrder(params, SUB01);   // signed by SUB01's API key, credited to SUB01
+```
+
 `listAgentIpWhitelist` sends `api_agent_key` (not `agent_wallet`) in the payload.
 
 ## API config keys (rate-limit)
@@ -97,5 +113,6 @@ then call with `account = MAIN_PUBKEY`.
 | `revokeApiConfigKey({ apiKey }, account?)` | `revoke_api_key` | `POST /account/api_keys/revoke` | `void` |
 | `listApiConfigKeys(account?)` | `list_api_keys` | `POST /account/api_keys` | `JsonValue` |
 
-> The `list*` responses (agent wallets, ip whitelist, api config keys) are undocumented →
-> typed as `JsonValue` (no invented fields).
+> `listAgentWallets` returns `string[]` (agent wallet addresses, observed on testnet).
+> `listAgentIpWhitelist` and `listApiConfigKeys` responses are undocumented → typed as
+> `JsonValue` (no invented fields).
