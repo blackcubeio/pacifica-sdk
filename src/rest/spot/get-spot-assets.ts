@@ -12,11 +12,15 @@ interface SpotAssetWire {
   updated_at: number;
 }
 
-export function getSpotAssets(query: SpotAssetsQuery = {}): Promise<SpotAsset[]> {
-  return httpGet<SpotAssetWire[]>('/spot_assets', {
-    include_inactive: query.includeInactive,
-    collateral_enabled_only: query.collateralEnabledOnly,
-  }).then((envelope) => envelope.data.map((asset) => mapSpotAsset(asset)));
+export function getSpotAssets(query: SpotAssetsQuery = {}, label?: string): Promise<SpotAsset[]> {
+  return httpGet<SpotAssetWire[]>(
+    '/spot_assets',
+    {
+      include_inactive: query.includeInactive,
+      collateral_enabled_only: query.collateralEnabledOnly,
+    },
+    label,
+  ).then((envelope) => envelope.data.map((asset) => mapSpotAsset(asset)));
 }
 
 function mapSpotAsset(wire: SpotAssetWire): SpotAsset {

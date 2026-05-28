@@ -22,19 +22,21 @@ interface BatchActionResultWire {
   error?: string | null;
 }
 
-export function batchOrders(actions: BatchAction[], account?: string): Promise<BatchResult> {
-  return httpPost<{ results: BatchActionResultWire[] }>('/orders/batch', {
-    actions: buildSignedBatchActions(actions, account),
-  }).then((envelope) => ({
+export function batchOrders(actions: BatchAction[], label: string): Promise<BatchResult> {
+  return httpPost<{ results: BatchActionResultWire[] }>(
+    '/orders/batch',
+    { actions: buildSignedBatchActions(actions, label) },
+    label,
+  ).then((envelope) => ({
     results: envelope.data.results.map((result) => mapBatchActionResult(result)),
   }));
 }
 
-export function buildSignedBatchActions(actions: BatchAction[], account?: string): JsonObject[] {
-  return actions.map((action) => buildBatchAction(action, account));
+export function buildSignedBatchActions(actions: BatchAction[], label?: string): JsonObject[] {
+  return actions.map((action) => buildBatchAction(action, label));
 }
 
-function buildBatchAction(action: BatchAction, account?: string): JsonObject {
+function buildBatchAction(action: BatchAction, label?: string): JsonObject {
   switch (action.type) {
     case BatchActionType.Create:
       return {
@@ -42,7 +44,7 @@ function buildBatchAction(action: BatchAction, account?: string): JsonObject {
         data: buildSignedRequest(
           OperationType.CreateOrder,
           buildLimitOrderPayload(action.params),
-          account,
+          label,
         ),
       };
     case BatchActionType.CreateMarket:
@@ -51,7 +53,7 @@ function buildBatchAction(action: BatchAction, account?: string): JsonObject {
         data: buildSignedRequest(
           OperationType.CreateMarketOrder,
           buildMarketOrderPayload(action.params),
-          account,
+          label,
         ),
       };
     case BatchActionType.Cancel:
@@ -60,7 +62,7 @@ function buildBatchAction(action: BatchAction, account?: string): JsonObject {
         data: buildSignedRequest(
           OperationType.CancelOrder,
           buildCancelOrderPayload(action.params),
-          account,
+          label,
         ),
       };
     case BatchActionType.Edit:
@@ -69,7 +71,7 @@ function buildBatchAction(action: BatchAction, account?: string): JsonObject {
         data: buildSignedRequest(
           OperationType.EditOrder,
           buildEditOrderPayload(action.params),
-          account,
+          label,
         ),
       };
     case BatchActionType.SetPositionTpsl:
@@ -78,7 +80,7 @@ function buildBatchAction(action: BatchAction, account?: string): JsonObject {
         data: buildSignedRequest(
           OperationType.SetPositionTpsl,
           buildPositionTpslPayload(action.params),
-          account,
+          label,
         ),
       };
     case BatchActionType.CancelStopOrder:
@@ -87,7 +89,7 @@ function buildBatchAction(action: BatchAction, account?: string): JsonObject {
         data: buildSignedRequest(
           OperationType.CancelStopOrder,
           buildCancelStopOrderPayload(action.params),
-          account,
+          label,
         ),
       };
     default:

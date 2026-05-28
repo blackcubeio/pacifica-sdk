@@ -29,8 +29,8 @@ interface VaultWire {
   config?: VaultConfigWire | null;
 }
 
-export function getVaults(): Promise<Vault[]> {
-  return httpGet<{ lakes: VaultWire[] }>('/lake/list').then((envelope) =>
+export function getVaults(label?: string): Promise<Vault[]> {
+  return httpGet<{ lakes: VaultWire[] }>('/lake/list', undefined, label).then((envelope) =>
     envelope.data.lakes.map((vault) => mapVault(vault)),
   );
 }

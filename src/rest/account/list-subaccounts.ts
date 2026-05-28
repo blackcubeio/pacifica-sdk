@@ -11,11 +11,13 @@ interface SubaccountWire {
   created_at: number;
 }
 
-export function listSubaccounts(account?: string): Promise<Subaccount[]> {
-  const request = buildSignedRequest(OperationType.ListSubaccounts, {}, account);
-  return httpPost<{ subaccounts: SubaccountWire[] }>('/account/subaccount/list', request).then(
-    (envelope) => envelope.data.subaccounts.map((subaccount) => mapSubaccount(subaccount)),
-  );
+export function listSubaccounts(label: string): Promise<Subaccount[]> {
+  const request = buildSignedRequest(OperationType.ListSubaccounts, {}, label);
+  return httpPost<{ subaccounts: SubaccountWire[] }>(
+    '/account/subaccount/list',
+    request,
+    label,
+  ).then((envelope) => envelope.data.subaccounts.map((subaccount) => mapSubaccount(subaccount)));
 }
 
 function mapSubaccount(wire: SubaccountWire): Subaccount {

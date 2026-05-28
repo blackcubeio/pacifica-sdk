@@ -29,10 +29,15 @@ interface OrderHistoryByIdWire {
 
 export function getOrderHistoryById(
   query: OrderHistoryByIdQuery,
+  label?: string,
 ): Promise<OrderHistoryByIdEntry[]> {
-  return httpGet<OrderHistoryByIdWire[]>('/orders/history_by_id', {
-    order_id: query.orderId,
-  }).then((envelope) => envelope.data.map((entry) => mapEntry(entry)));
+  return httpGet<OrderHistoryByIdWire[]>(
+    '/orders/history_by_id',
+    {
+      order_id: query.orderId,
+    },
+    label,
+  ).then((envelope) => envelope.data.map((entry) => mapEntry(entry)));
 }
 
 function mapEntry(wire: OrderHistoryByIdWire): OrderHistoryByIdEntry {

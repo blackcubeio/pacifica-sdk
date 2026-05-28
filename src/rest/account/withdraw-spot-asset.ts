@@ -12,17 +12,19 @@ interface WithdrawSpotWire {
 
 export function withdrawSpotAsset(
   params: WithdrawSpotAssetParams,
-  account?: string,
+  label: string,
 ): Promise<WithdrawSpotResult> {
   const payload: JsonObject = { symbol: params.symbol, amount: params.amount };
   if (params.idempotencyKey !== undefined) {
     payload.idempotency_key = params.idempotencyKey;
   }
-  const request = buildSignedRequest(OperationType.WithdrawSpotAsset, payload, account);
-  return httpPost<WithdrawSpotWire>('/account/spot_asset/withdraw', request).then((envelope) => ({
-    symbol: envelope.data.symbol,
-    batchNonce: envelope.data.batch_nonce,
-    requestedAmount: envelope.data.requested_amount,
-    feeAmount: envelope.data.fee_amount,
-  }));
+  const request = buildSignedRequest(OperationType.WithdrawSpotAsset, payload, label);
+  return httpPost<WithdrawSpotWire>('/account/spot_asset/withdraw', request, label).then(
+    (envelope) => ({
+      symbol: envelope.data.symbol,
+      batchNonce: envelope.data.batch_nonce,
+      requestedAmount: envelope.data.requested_amount,
+      feeAmount: envelope.data.fee_amount,
+    }),
+  );
 }

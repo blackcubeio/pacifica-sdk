@@ -1,17 +1,17 @@
 # REST API — Orders
 
-Order reads (public GET) and signed writes (`account?`). Amounts/prices are strings;
-`clientOrderId` is auto-generated (UUID v4) when omitted.
+Order reads (public GET, optional `label`) and signed writes (mandatory `label`). Amounts/prices
+are strings; `clientOrderId` is auto-generated (UUID v4) when omitted.
 
 ## Read (GET, unsigned)
 
-Authority: 🔓 **Public** — no signer.
+Authority: 🔓 **Public** — no signer. A trailing `label?` selects the network (no label → mainnet).
 
 | Function | Endpoint | Returns |
 |---|---|---|
-| `getOpenOrders({ account })` | `GET /orders` | `Order[]` |
-| `getOrderHistory({ account, limit?, cursor? })` | `GET /orders/history` | `Paginated<OrderHistoryEntry>` |
-| `getOrderHistoryById({ orderId })` | `GET /orders/history_by_id` | `OrderHistoryByIdEntry[]` |
+| `getOpenOrders({ account }, label?)` | `GET /orders` | `Order[]` |
+| `getOrderHistory({ account, limit?, cursor? }, label?)` | `GET /orders/history` | `Paginated<OrderHistoryEntry>` |
+| `getOrderHistoryById({ orderId }, label?)` | `GET /orders/history_by_id` | `OrderHistoryByIdEntry[]` |
 
 ## Writes (signed)
 
@@ -20,15 +20,15 @@ account (per-account scope).
 
 | Function | signature type | Endpoint | Returns |
 |---|---|---|---|
-| `createLimitOrder(params, account?)` | `create_order` | `POST /orders/create` | `CreateOrderResult` |
-| `createMarketOrder(params, account?)` | `create_market_order` | `POST /orders/create_market` | `CreateOrderResult` |
-| `cancelOrder(params, account?)` | `cancel_order` | `POST /orders/cancel` | `void` |
-| `cancelAllOrders(params, account?)` | `cancel_all_orders` | `POST /orders/cancel_all` | `CancelAllResult` |
-| `editOrder(params, account?)` | `edit_order` | `POST /orders/edit` | `CreateOrderResult` |
-| `createStopOrder(params, account?)` | `create_stop_order` | `POST /orders/stop/create` | `CreateOrderResult` |
-| `cancelStopOrder(params, account?)` | `cancel_stop_order` | `POST /orders/stop/cancel` | `void` |
-| `createPositionTpsl(params, account?)` | `set_position_tpsl` | `POST /positions/tpsl` | `void` |
-| `batchOrders(actions, account?)` | *(per action)* | `POST /orders/batch` | `BatchResult` |
+| `createLimitOrder(params, label)` | `create_order` | `POST /orders/create` | `CreateOrderResult` |
+| `createMarketOrder(params, label)` | `create_market_order` | `POST /orders/create_market` | `CreateOrderResult` |
+| `cancelOrder(params, label)` | `cancel_order` | `POST /orders/cancel` | `void` |
+| `cancelAllOrders(params, label)` | `cancel_all_orders` | `POST /orders/cancel_all` | `CancelAllResult` |
+| `editOrder(params, label)` | `edit_order` | `POST /orders/edit` | `CreateOrderResult` |
+| `createStopOrder(params, label)` | `create_stop_order` | `POST /orders/stop/create` | `CreateOrderResult` |
+| `cancelStopOrder(params, label)` | `cancel_stop_order` | `POST /orders/stop/cancel` | `void` |
+| `createPositionTpsl(params, label)` | `set_position_tpsl` | `POST /positions/tpsl` | `void` |
+| `batchOrders(actions, label)` | *(per action)* | `POST /orders/batch` | `BatchResult` |
 
 ### Params
 

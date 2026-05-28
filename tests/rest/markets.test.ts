@@ -6,7 +6,10 @@ import { getOrderbook } from '../../src/rest/markets/get-orderbook';
 import { getPrices } from '../../src/rest/markets/get-prices';
 import { getSpotAssets } from '../../src/rest/spot/get-spot-assets';
 import { CandleInterval } from '../../src/rest/types';
+import { readEnv } from '../helpers';
 
+const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
+const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const NETWORK_TIMEOUT = 20_000;
 
 describe('init guard', () => {
@@ -18,7 +21,7 @@ describe('init guard', () => {
 
 describe('markets (testnet, réseau réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet' });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -28,7 +31,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getMarketInfo returns a non-empty list of markets',
     () => {
-      return getMarketInfo().then((markets) => {
+      return getMarketInfo(account).then((markets) => {
         expect(markets.length).toBeGreaterThan(0);
         const market = markets[0];
         expect(typeof market?.symbol).toBe('string');
@@ -42,7 +45,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getPrices returns mark/oracle prices',
     () => {
-      return getPrices().then((prices) => {
+      return getPrices(account).then((prices) => {
         expect(prices.length).toBeGreaterThan(0);
         const price = prices[0];
         expect(typeof price?.mark).toBe('string');
@@ -56,7 +59,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getOrderbook splits bids and asks',
     () => {
-      return getOrderbook({ symbol: 'BTC' }).then((orderbook) => {
+      return getOrderbook({ symbol: 'BTC' }, account).then((orderbook) => {
         expect(orderbook.symbol).toBe('BTC');
         expect(Array.isArray(orderbook.bids)).toBe(true);
         expect(Array.isArray(orderbook.asks)).toBe(true);
@@ -69,14 +72,15 @@ describe('markets (testnet, réseau réel)', () => {
     'getCandleData returns candles with mapped fields',
     () => {
       const startTime = Date.now() - 60 * 60 * 1000;
-      return getCandleData({ symbol: 'BTC', interval: CandleInterval.OneMinute, startTime }).then(
-        (candles) => {
-          expect(candles.length).toBeGreaterThan(0);
-          const candle = candles[0];
-          expect(typeof candle?.openTime).toBe('number');
-          expect(typeof candle?.open).toBe('string');
-        },
-      );
+      return getCandleData(
+        { symbol: 'BTC', interval: CandleInterval.OneMinute, startTime },
+        account,
+      ).then((candles) => {
+        expect(candles.length).toBeGreaterThan(0);
+        const candle = candles[0];
+        expect(typeof candle?.openTime).toBe('number');
+        expect(typeof candle?.open).toBe('string');
+      });
     },
     NETWORK_TIMEOUT,
   );
@@ -84,7 +88,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getSpotAssets returns spot assets',
     () => {
-      return getSpotAssets().then((assets) => {
+      return getSpotAssets({}, account).then((assets) => {
         expect(Array.isArray(assets)).toBe(true);
       });
     },

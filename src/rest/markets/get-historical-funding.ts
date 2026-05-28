@@ -12,12 +12,17 @@ interface FundingPointWire {
 
 export function getHistoricalFunding(
   query: HistoricalFundingQuery,
+  label?: string,
 ): Promise<Paginated<FundingPoint>> {
-  return httpGet<FundingPointWire[]>('/funding_rate/history', {
-    symbol: query.symbol,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+  return httpGet<FundingPointWire[]>(
+    '/funding_rate/history',
+    {
+      symbol: query.symbol,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((point) => mapFundingPoint(point)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

@@ -3,10 +3,7 @@ import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
 import type { CreateVaultParams, CreateVaultResult } from '../types';
 
-export function createVault(
-  params: CreateVaultParams,
-  account?: string,
-): Promise<CreateVaultResult> {
+export function createVault(params: CreateVaultParams, label: string): Promise<CreateVaultResult> {
   const payload: JsonObject = {
     nickname: params.nickname,
     initial_deposit: params.initialDeposit,
@@ -21,8 +18,8 @@ export function createVault(
   if (params.referralCode !== undefined) {
     payload.referral_code = params.referralCode;
   }
-  const request = buildSignedRequest(OperationType.CreateLake, payload, account);
-  return httpPost<{ lake_address: string }>('/lake/create', request).then((envelope) => ({
+  const request = buildSignedRequest(OperationType.CreateLake, payload, label);
+  return httpPost<{ lake_address: string }>('/lake/create', request, label).then((envelope) => ({
     lakeAddress: envelope.data.lake_address,
   }));
 }

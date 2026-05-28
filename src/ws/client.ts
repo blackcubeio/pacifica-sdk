@@ -1,6 +1,7 @@
 import { type WebSocketFactory, type WebSocketLike, getConfig } from '../common/config';
 import { WS_HEARTBEAT_INTERVAL } from '../common/constants';
 import { type JsonObject, type JsonValue, OperationType } from '../common/types';
+import { resolveReadNetwork } from '../rest/client';
 import { buildSignedBatchActions } from '../rest/orders/batch-order';
 import {
   buildCancelAllOrdersPayload,
@@ -26,7 +27,8 @@ export type Unsubscribe = () => void;
 export interface WsClientOptions {
   url?: string;
   webSocket?: WebSocketFactory;
-  account?: string;
+  /** Label du signer : choisit le réseau (défaut mainnet) et signe les actions. */
+  label?: string;
 }
 
 interface PendingAction {
@@ -42,7 +44,7 @@ export class WsClient {
 
   private readonly url: string;
   private readonly createSocket: WebSocketFactory;
-  private readonly account: string | undefined;
+  private readonly label: string | undefined;
   private socket: WebSocketLike | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
   private readonly pending = new Map<string, PendingAction>();
@@ -52,9 +54,9 @@ export class WsClient {
 
   constructor(options: WsClientOptions = {}) {
     const config = getConfig();
-    this.url = options.url ?? config.wsUrl;
+    this.url = options.url ?? config.wsUrls[resolveReadNetwork(options.label)];
     this.createSocket = options.webSocket ?? config.webSocket;
-    this.account = options.account;
+    this.label = options.label;
   }
 
   public connect(): Promise<void> {
@@ -197,57 +199,57 @@ export class WsClient {
     return this.subscribeAccount('account_twap_order_updates', handler, account);
   }
 
-  public createLimitOrder(params: CreateLimitOrderParams, account?: string): Promise<JsonValue> {
+  public createLimitOrder(params: CreateLimitOrderParams): Promise<JsonValue> {
     const data = buildSignedRequest(
       OperationType.CreateOrder,
       buildLimitOrderPayload(params),
-      account ?? this.account,
+      this.label,
     );
     return this.sendAction({ create_order: data });
   }
 
-  public createMarketOrder(params: CreateMarketOrderParams, account?: string): Promise<JsonValue> {
+  public createMarketOrder(params: CreateMarketOrderParams): Promise<JsonValue> {
     const data = buildSignedRequest(
       OperationType.CreateMarketOrder,
       buildMarketOrderPayload(params),
-      account ?? this.account,
+      this.label,
     );
     return this.sendAction({ create_market_order: data });
   }
 
-  public cancelOrder(params: CancelOrderParams, account?: string): Promise<JsonValue> {
+  public cancelOrder(params: CancelOrderParams): Promise<JsonValue> {
     const data = buildSignedRequest(
       OperationType.CancelOrder,
       buildCancelOrderPayload(params),
-      account ?? this.account,
+      this.label,
     );
     return this.sendAction({ cancel_order: data });
   }
 
-  public cancelAllOrders(params: CancelAllOrdersParams, account?: string): Promise<JsonValue> {
+  public cancelAllOrders(params: CancelAllOrdersParams): Promise<JsonValue> {
     const data = buildSignedRequest(
       OperationType.CancelAllOrders,
       buildCancelAllOrdersPayload(params),
-      account ?? this.account,
+      this.label,
     );
     return this.sendAction({ cancel_all_orders: data });
   }
 
-  public editOrder(params: EditOrderParams, account?: string): Promise<JsonValue> {
+  public editOrder(params: EditOrderParams): Promise<JsonValue> {
     const data = buildSignedRequest(
       OperationType.EditOrder,
       buildEditOrderPayload(params),
-      account ?? this.account,
+      this.label,
     );
     return this.sendAction({ edit_order: data });
   }
 
-  public batchOrders(actions: BatchAction[], account?: string): Promise<JsonValue> {
-    return this.sendAction({ actions: buildSignedBatchActions(actions, account ?? this.account) });
+  public batchOrders(actions: BatchAction[]): Promise<JsonValue> {
+    return this.sendAction({ actions: buildSignedBatchActions(actions, this.label) });
   }
 
   private subscribeAccount(source: string, handler: StreamHandler, account?: string): Unsubscribe {
-    const resolvedAccount = account ?? this.account ?? resolveSigner().account;
+    const resolvedAccount = account ?? resolveSigner(this.label).account;
     return this.subscribeChannel(source, { source, account: resolvedAccount }, handler);
   }
 

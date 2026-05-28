@@ -80,8 +80,12 @@ export interface HardwareSignature {
   value: string;
 }
 
+export type Network = 'mainnet' | 'testnet';
+
 export interface Signer {
   secretKey: string;
+  publicKey: string;
+  network: Network;
   agentWallet?: string;
 }
 

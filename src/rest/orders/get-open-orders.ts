@@ -18,8 +18,8 @@ interface OrderWire {
   updated_at: number;
 }
 
-export function getOpenOrders(query: AccountQuery): Promise<Order[]> {
-  return httpGet<OrderWire[]>('/orders', { account: query.account }).then((envelope) =>
+export function getOpenOrders(query: AccountQuery, label?: string): Promise<Order[]> {
+  return httpGet<OrderWire[]>('/orders', { account: query.account }, label).then((envelope) =>
     envelope.data.map((order) => mapOrder(order)),
   );
 }

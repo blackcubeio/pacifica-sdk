@@ -11,12 +11,17 @@ interface SpotWithdrawalWire {
 
 export function getSpotWithdrawalHistory(
   query: SpotHistoryQuery,
+  label?: string,
 ): Promise<Paginated<SpotWithdrawalEntry>> {
-  return httpGet<SpotWithdrawalWire[]>('/account/spot_asset/withdraw/history', {
-    account: query.account,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+  return httpGet<SpotWithdrawalWire[]>(
+    '/account/spot_asset/withdraw/history',
+    {
+      account: query.account,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((entry) => mapSpotWithdrawalEntry(entry)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

@@ -5,9 +5,9 @@ import type { TransferSubaccountFundParams } from '../types';
 
 export function transferSubaccountFund(
   params: TransferSubaccountFundParams,
-  account?: string,
+  label: string,
 ): Promise<void> {
   const payload = { to_account: params.toAccount, amount: params.amount };
-  const request = buildSignedRequest(OperationType.TransferFunds, payload, account);
-  return httpPost<null>('/account/subaccount/transfer', request).then(() => undefined);
+  const request = buildSignedRequest(OperationType.TransferFunds, payload, label);
+  return httpPost<null>('/account/subaccount/transfer', request, label).then(() => undefined);
 }

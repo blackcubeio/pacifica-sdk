@@ -16,7 +16,7 @@ Each function's required credential is annotated on its page with one of:
 | ◎ **Solana wallet** | The account's on-chain Solana keypair (deposit) — never an API key. |
 
 **API keys are per account (incl. per subaccount)** — a key only works for the account it is
-bound to; register one per account in `init({ signers })`. Verified on testnet: an API key can
+bound to; register one signer per label in `init({ signers })`. Verified on testnet: an API key can
 trade / change leverage / withdraw for its account, but **cannot** bind/revoke agent keys (those
 need the account's own key).
 
@@ -30,32 +30,37 @@ need the account's own key).
 6. REST request = `{ account, signature, timestamp, expiry_window, ...payload }`
 7. WS message = `{ id, params: { "<operation_type>": request } }`
 
-## Signer registry & accounts
+## Signer registry, labels & networks
 
-Signers are registered **per account address** in `init({ signers })`, then signed calls
-reference an account by address:
+Signers are registered **per label** in `init({ signers })`. A signer is self-contained and
+**carries its own network** — that's what lets mainnet and testnet coexist in one process:
 
 ```ts
 interface Signer {
-  secretKey: string;     // base58 private key used to sign
-  agentWallet?: string;  // agent key pubkey when signing via an agent wallet
+  secretKey: string;               // base58 private key used to sign
+  publicKey: string;               // the account address (the signed `account`, used for reads)
+  network: 'mainnet' | 'testnet';  // the network this signer acts on
+  agentWallet?: string;            // agent key pubkey when signing via an agent wallet
 }
 
 init({
-  network: 'testnet',
   signers: {
-    'FQaG…(account address)': { secretKey: AGENT_SECRET, agentWallet: AGENT_PUBKEY },
-    'ENUW…(another account)': { secretKey: OTHER_SECRET },
+    trader: { secretKey: TRADER_SECRET, publicKey: 'FQaG…', network: 'mainnet' },
+    tester: { secretKey: TESTER_SECRET, publicKey: 'ENUW…', network: 'testnet' },
   },
 });
 
-createMarketOrder(params, 'FQaG…');   // 2nd arg = the registry key (account address)
+createMarketOrder(params, 'tester');   // 2nd arg = the label; network comes from the signer
 ```
 
-The **registry key is the account** (the wallet the action is for); the **value is the
-signing material** (`secretKey` — which may be an agent key — and optional `agentWallet`).
-With a single registered account, the `account` argument is optional. An unknown/missing
-account throws `No signer registered for account …`.
+Two resolvers back the read/write rules:
+
+- `resolveSigner(label)` — for **writes**. The label is **mandatory**: a missing label throws
+  `Un signer (label) est obligatoire pour cette action signée`, an unknown one throws
+  `Aucun signer enregistré sous "…"`. The signed `account` field is the signer's `publicKey`; the
+  network routes the request.
+- `resolveReadNetwork(label?)` — for **reads**. The label is **optional**: no label → `mainnet`,
+  a label → that signer's network; an unknown label still throws.
 
 ## Primitives (`utils`)
 
@@ -99,30 +104,30 @@ via an API key → `400 "Verification failed"`). An agent cannot create or revok
 
 | Function | type | Endpoint | Returns |
 |---|---|---|---|
-| `bindAgentWallet({ agentWallet }, account?)` | `bind_agent_wallet` | `POST /agent/bind` | `void` |
-| `listAgentWallets(account?)` | `list_agent_wallets` | `POST /agent/list` | `string[]` |
-| `revokeAgentWallet({ agentWallet }, account?)` | `revoke_agent_wallet` | `POST /agent/revoke` | `void` |
-| `revokeAllAgentWallets(account?)` | `revoke_all_agent_wallets` | `POST /agent/revoke_all` | `void` |
-| `listAgentIpWhitelist({ agentWallet }, account?)` | `list_agent_ip_whitelist` | `POST /agent/ip_whitelist/list` | `JsonValue` |
-| `addAgentWhitelistedIp({ agentWallet, ipAddress }, account?)` | `add_agent_whitelisted_ip` | `POST /agent/ip_whitelist/add` | `void` |
-| `removeAgentWhitelistedIp({ agentWallet, ipAddress }, account?)` | `remove_agent_whitelisted_ip` | `POST /agent/ip_whitelist/remove` | `void` |
-| `setAgentIpWhitelistEnabled({ agentWallet, enabled }, account?)` | `set_agent_ip_whitelist_enabled` | `POST /agent/ip_whitelist/toggle` | `void` |
+| `bindAgentWallet({ agentWallet }, label)` | `bind_agent_wallet` | `POST /agent/bind` | `void` |
+| `listAgentWallets(label)` | `list_agent_wallets` | `POST /agent/list` | `string[]` |
+| `revokeAgentWallet({ agentWallet }, label)` | `revoke_agent_wallet` | `POST /agent/revoke` | `void` |
+| `revokeAllAgentWallets(label)` | `revoke_all_agent_wallets` | `POST /agent/revoke_all` | `void` |
+| `listAgentIpWhitelist({ agentWallet }, label)` | `list_agent_ip_whitelist` | `POST /agent/ip_whitelist/list` | `JsonValue` |
+| `addAgentWhitelistedIp({ agentWallet, ipAddress }, label)` | `add_agent_whitelisted_ip` | `POST /agent/ip_whitelist/add` | `void` |
+| `removeAgentWhitelistedIp({ agentWallet, ipAddress }, label)` | `remove_agent_whitelisted_ip` | `POST /agent/ip_whitelist/remove` | `void` |
+| `setAgentIpWhitelistEnabled({ agentWallet, enabled }, label)` | `set_agent_ip_whitelist_enabled` | `POST /agent/ip_whitelist/toggle` | `void` |
 
 ### Using an API key per subaccount
 
 1. **Bind** the key to its account, signed by the account owner:
-   `bindAgentWallet({ agentWallet: API_PUBKEY }, account)` (owner key registered for `account`).
-2. **Register** the key as that account's signer and trade with it — one entry per subaccount:
+   `bindAgentWallet({ agentWallet: API_PUBKEY }, 'owner')` (owner signer registered under `owner`).
+2. **Register** the key as a labelled signer and trade with it — one label per subaccount. Set
+   `publicKey` to the subaccount address and `secretKey` to its API key:
 
 ```ts
 init({
-  network: 'testnet',
   signers: {
-    [SUB01]: { secretKey: API01_SECRET, agentWallet: API01_PUBKEY },
-    [SUB02]: { secretKey: API02_SECRET, agentWallet: API02_PUBKEY },
+    sub01: { secretKey: API01_SECRET, publicKey: SUB01, agentWallet: API01_PUBKEY, network: 'testnet' },
+    sub02: { secretKey: API02_SECRET, publicKey: SUB02, agentWallet: API02_PUBKEY, network: 'testnet' },
   },
 });
-createLimitOrder(params, SUB01);   // signed by SUB01's API key, credited to SUB01
+createLimitOrder(params, 'sub01');   // signed by SUB01's API key, credited to SUB01
 ```
 
 `listAgentIpWhitelist` sends `api_agent_key` (not `agent_wallet`) in the payload.
@@ -134,9 +139,9 @@ own key (an API key cannot manage API keys).
 
 | Function | type | Endpoint | Returns |
 |---|---|---|---|
-| `createApiConfigKey(account?)` | `create_api_key` | `POST /account/api_keys/create` | `{ apiKey }` |
-| `revokeApiConfigKey({ apiKey }, account?)` | `revoke_api_key` | `POST /account/api_keys/revoke` | `void` |
-| `listApiConfigKeys(account?)` | `list_api_keys` | `POST /account/api_keys` | `JsonValue` |
+| `createApiConfigKey(label)` | `create_api_key` | `POST /account/api_keys/create` | `{ apiKey }` |
+| `revokeApiConfigKey({ apiKey }, label)` | `revoke_api_key` | `POST /account/api_keys/revoke` | `void` |
+| `listApiConfigKeys(label)` | `list_api_keys` | `POST /account/api_keys` | `JsonValue` |
 
 > `listAgentWallets` returns `string[]` (agent wallet addresses, observed on testnet).
 > `listAgentIpWhitelist` and `listApiConfigKeys` responses are undocumented → typed as

@@ -2,22 +2,24 @@
 
 Public market data (GET, unsigned). Responses mapped to camelCase.
 
-Authority: 🔓 **Public** — no signer for any function on this page.
+Authority: 🔓 **Public** — no signer for any function on this page. Each takes a trailing optional
+`label?` that selects the network (no label → mainnet; a label → its signer's network).
 
 | Function | Endpoint | Returns |
 |---|---|---|
-| `getMarketInfo()` | `GET /info` | `Market[]` |
-| `getPrices()` | `GET /info/prices` | `Price[]` |
-| `getFeeLevels()` | `GET /info/fees` | `FeeLevel[]` |
-| `getCandleData({ symbol, interval, startTime, endTime? })` | `GET /kline` | `Candle[]` |
-| `getMarkPriceCandleData({ symbol, interval, startTime, endTime? })` | `GET /kline/mark` | `Candle[]` |
-| `getOrderbook({ symbol, aggLevel? })` | `GET /book` | `Orderbook` |
-| `getRecentTrades({ symbol })` | `GET /trades` | `RecentTrades` |
-| `getHistoricalFunding({ symbol, limit?, cursor? })` | `GET /funding_rate/history` | `Paginated<FundingPoint>` |
-| `getLoanPool()` | `GET /loan_pool` | `LoanPool` |
+| `getMarketInfo(label?)` | `GET /info` | `Market[]` |
+| `getPrices(label?)` | `GET /info/prices` | `Price[]` |
+| `getFeeLevels(label?)` | `GET /info/fees` | `FeeLevel[]` |
+| `getCandleData({ symbol, interval, startTime, endTime? }, label?)` | `GET /kline` | `Candle[]` |
+| `getMarkPriceCandleData({ symbol, interval, startTime, endTime? }, label?)` | `GET /kline/mark` | `Candle[]` |
+| `getOrderbook({ symbol, aggLevel? }, label?)` | `GET /book` | `Orderbook` |
+| `getRecentTrades({ symbol }, label?)` | `GET /trades` | `RecentTrades` |
+| `getHistoricalFunding({ symbol, limit?, cursor? }, label?)` | `GET /funding_rate/history` | `Paginated<FundingPoint>` |
+| `getLoanPool(label?)` | `GET /loan_pool` | `LoanPool` |
 
 ```ts
-const prices = await getPrices();
+const prices = await getPrices();                        // mainnet (no label)
+const testPrices = await getPrices('tester');            // testnet (the label's network)
 const book = getOrderbook({ symbol: 'BTC' });            // book.bids / book.asks
 const candles = getCandleData({ symbol: 'BTC', interval: CandleInterval.OneMinute, startTime: Date.now() - 3_600_000 });
 ```

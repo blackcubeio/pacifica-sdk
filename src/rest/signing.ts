@@ -1,35 +1,36 @@
 import { getConfig } from '../common/config';
 import { DEFAULT_EXPIRY_WINDOW } from '../common/constants';
-import type { JsonObject, OperationType, Signer } from '../common/types';
+import type { JsonObject, Network, OperationType, Signer } from '../common/types';
 import { publicKeyFromBase58, signMessage } from '../common/utils';
 
 export interface ResolvedSigner {
+  label: string;
   account: string;
   secretKey: string;
+  network: Network;
   agentWallet?: string;
 }
 
 /**
- * Resolves a signed-call's signer from the account registry set in init().
- * - `account` given → the registered signer for that account.
- * - `account` omitted → the only registered signer, or throws if 0 or 2+.
+ * Résout le signer d'une **écriture** par son label. Le signer est **obligatoire** : on lève
+ * si le label est absent ou inconnu. `account` est la clé publique (le compte), `network` est
+ * porté par le signer.
  */
-export function resolveSigner(account?: string): ResolvedSigner {
-  const { signers } = getConfig();
-  if (account !== undefined) {
-    const signer = signers[account];
-    if (signer === undefined) {
-      throw new Error(`No signer registered for account ${account}; add it in init({ signers })`);
-    }
-    return { account, secretKey: signer.secretKey, agentWallet: signer.agentWallet };
+export function resolveSigner(label?: string): ResolvedSigner {
+  if (label === undefined) {
+    throw new Error('Un signer (label) est obligatoire pour cette action signée');
   }
-  const accounts = Object.keys(signers);
-  if (accounts.length !== 1) {
-    throw new Error('account is required: 0 or multiple signers are registered in init()');
+  const signer = getConfig().signers[label];
+  if (signer === undefined) {
+    throw new Error(`Aucun signer enregistré sous "${label}"; ajoute-le dans init({ signers })`);
   }
-  const onlyAccount = accounts[0] as string;
-  const signer = signers[onlyAccount] as Signer;
-  return { account: onlyAccount, secretKey: signer.secretKey, agentWallet: signer.agentWallet };
+  return {
+    label,
+    account: signer.publicKey,
+    secretKey: signer.secretKey,
+    network: signer.network,
+    agentWallet: signer.agentWallet,
+  };
 }
 
 /** Account address for a raw keypair signer (used by the dual-signature subaccount flow). */
@@ -40,10 +41,10 @@ export function signerAccount(signer: Signer): string {
 export function buildSignedRequest(
   type: OperationType,
   payload: JsonObject,
-  account?: string,
+  label?: string,
   expiryWindow: number = DEFAULT_EXPIRY_WINDOW,
 ): JsonObject {
-  const signer = resolveSigner(account);
+  const signer = resolveSigner(label);
   const timestamp = Date.now();
   const signed = signMessage({ type, timestamp, expiryWindow }, payload, signer.secretKey);
   const request: JsonObject = {

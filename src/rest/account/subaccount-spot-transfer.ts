@@ -5,7 +5,7 @@ import type { SubaccountSpotTransferParams } from '../types';
 
 export function subaccountSpotTransfer(
   params: SubaccountSpotTransferParams,
-  account?: string,
+  label: string,
 ): Promise<void> {
   const payload: JsonObject = {
     to_account: params.toAccount,
@@ -15,6 +15,8 @@ export function subaccountSpotTransfer(
   if (params.idempotencyKey !== undefined) {
     payload.idempotency_key = params.idempotencyKey;
   }
-  const request = buildSignedRequest(OperationType.SubaccountSpotTransfer, payload, account);
-  return httpPost<null>('/account/subaccount/spot_asset/transfer', request).then(() => undefined);
+  const request = buildSignedRequest(OperationType.SubaccountSpotTransfer, payload, label);
+  return httpPost<null>('/account/subaccount/spot_asset/transfer', request, label).then(
+    () => undefined,
+  );
 }

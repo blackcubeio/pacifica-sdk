@@ -24,15 +24,22 @@ interface TradeHistoryWire {
   created_at: number;
 }
 
-export function getTradeHistory(query: TradeHistoryQuery): Promise<Paginated<TradeHistoryEntry>> {
-  return httpGet<TradeHistoryWire[]>('/trades/history', {
-    account: query.account,
-    symbol: query.symbol,
-    start_time: query.startTime,
-    end_time: query.endTime,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+export function getTradeHistory(
+  query: TradeHistoryQuery,
+  label?: string,
+): Promise<Paginated<TradeHistoryEntry>> {
+  return httpGet<TradeHistoryWire[]>(
+    '/trades/history',
+    {
+      account: query.account,
+      symbol: query.symbol,
+      start_time: query.startTime,
+      end_time: query.endTime,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((entry) => mapTradeHistoryEntry(entry)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

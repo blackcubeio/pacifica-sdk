@@ -11,7 +11,7 @@ const NETWORK_TIMEOUT = 40_000;
 
 describe('order lifecycle WS (testnet, WS write visible via REST then undone via WS)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey } } });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -22,7 +22,7 @@ describe('order lifecycle WS (testnet, WS write visible via REST then undone via
     'creates an order over WS, sees it via REST, cancels it over WS, then it is gone',
     () => {
       const clientOrderId = globalThis.crypto.randomUUID();
-      const client = new WsClient();
+      const client = new WsClient({ label: account });
       return client
         .connect()
         .then(() => buildFarBtcLimit())
@@ -38,14 +38,14 @@ describe('order lifecycle WS (testnet, WS write visible via REST then undone via
         .then((response) => {
           expect(response).not.toBeNull();
           return poll(
-            () => getOpenOrders({ account }),
+            () => getOpenOrders({ account }, account),
             (orders) => hasClientOrderId(orders, clientOrderId),
           );
         })
         .then(() => client.cancelOrder({ symbol: 'BTC', clientOrderId }))
         .then(() =>
           poll(
-            () => getOpenOrders({ account }),
+            () => getOpenOrders({ account }, account),
             (orders) => hasClientOrderId(orders, clientOrderId) === false,
           ),
         )

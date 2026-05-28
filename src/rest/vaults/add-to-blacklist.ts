@@ -3,8 +3,8 @@ import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
 import type { VaultSymbolsParams } from '../types';
 
-export function addToBlacklist(params: VaultSymbolsParams, account?: string): Promise<void> {
+export function addToBlacklist(params: VaultSymbolsParams, label: string): Promise<void> {
   const payload = { lake: params.lake, symbols: params.symbols };
-  const request = buildSignedRequest(OperationType.AddLakeBlacklist, payload, account);
-  return httpPost<null>('/lake/add_blacklist', request).then(() => undefined);
+  const request = buildSignedRequest(OperationType.AddLakeBlacklist, payload, label);
+  return httpPost<null>('/lake/add_blacklist', request, label).then(() => undefined);
 }

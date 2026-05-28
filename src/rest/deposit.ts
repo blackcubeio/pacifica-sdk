@@ -51,8 +51,8 @@ export function buildDepositData(amount: number, decimals: number): Uint8Array {
   return data;
 }
 
-export function deposit(params: DepositParams, account?: string): Promise<string> {
-  const resolved = resolveSigner(account);
+export function deposit(params: DepositParams, label: string): Promise<string> {
+  const resolved = resolveSigner(label);
   const rpcUrl = params.rpcUrl ?? MAINNET_RPC_URL;
   const rpcSubscriptionsUrl = params.rpcSubscriptionsUrl ?? toSubscriptionsUrl(rpcUrl);
   const rpc = createSolanaRpc(rpcUrl);

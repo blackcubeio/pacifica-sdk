@@ -20,8 +20,8 @@ interface AccountSettingsWire {
   spot_settings?: SpotSettingWire[];
 }
 
-export function getAccountSettings(query: AccountQuery): Promise<AccountSettings> {
-  return httpGet<AccountSettingsWire>('/account/settings', { account: query.account }).then(
+export function getAccountSettings(query: AccountQuery, label?: string): Promise<AccountSettings> {
+  return httpGet<AccountSettingsWire>('/account/settings', { account: query.account }, label).then(
     (envelope) => mapAccountSettings(envelope.data),
   );
 }

@@ -28,12 +28,19 @@ interface OrderHistoryWire {
   updated_at: number;
 }
 
-export function getOrderHistory(query: OrderHistoryQuery): Promise<Paginated<OrderHistoryEntry>> {
-  return httpGet<OrderHistoryWire[]>('/orders/history', {
-    account: query.account,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+export function getOrderHistory(
+  query: OrderHistoryQuery,
+  label?: string,
+): Promise<Paginated<OrderHistoryEntry>> {
+  return httpGet<OrderHistoryWire[]>(
+    '/orders/history',
+    {
+      account: query.account,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((entry) => mapOrderHistoryEntry(entry)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

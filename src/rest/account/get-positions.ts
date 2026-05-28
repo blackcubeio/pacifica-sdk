@@ -14,8 +14,8 @@ interface PositionWire {
   updated_at: number;
 }
 
-export function getPositions(query: AccountQuery): Promise<Position[]> {
-  return httpGet<PositionWire[]>('/positions', { account: query.account }).then((envelope) =>
+export function getPositions(query: AccountQuery, label?: string): Promise<Position[]> {
+  return httpGet<PositionWire[]>('/positions', { account: query.account }, label).then((envelope) =>
     envelope.data.map((position) => mapPosition(position)),
   );
 }
