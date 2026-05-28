@@ -12,7 +12,7 @@ const NETWORK_TIMEOUT = 40_000;
 
 describe('order lifecycle REST (testnet, do → visible → undo → gone)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey } } });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -24,18 +24,21 @@ describe('order lifecycle REST (testnet, do → visible → undo → gone)', () 
     () => {
       const clientOrderId = globalThis.crypto.randomUUID();
       return buildFarBtcLimit().then(({ price, amount }) =>
-        createLimitOrder({ symbol: 'BTC', price, amount, side: OrderSide.Bid, clientOrderId })
+        createLimitOrder(
+          { symbol: 'BTC', price, amount, side: OrderSide.Bid, clientOrderId },
+          account,
+        )
           .then((created) => {
             expect(typeof created.orderId).toBe('number');
             return poll(
-              () => getOpenOrders({ account }),
+              () => getOpenOrders({ account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId),
             );
           })
-          .then(() => cancelOrder({ symbol: 'BTC', clientOrderId }))
+          .then(() => cancelOrder({ symbol: 'BTC', clientOrderId }, account))
           .then(() =>
             poll(
-              () => getOpenOrders({ account }),
+              () => getOpenOrders({ account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId) === false,
             ),
           )

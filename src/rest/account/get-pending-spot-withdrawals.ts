@@ -10,10 +10,17 @@ interface PendingSpotWithdrawalWire {
   created_at: number;
 }
 
-export function getPendingSpotWithdrawals(query: AccountQuery): Promise<PendingSpotWithdrawal[]> {
-  return httpGet<PendingSpotWithdrawalWire[]>('/account/spot_asset/withdraw/pending', {
-    account: query.account,
-  }).then((envelope) => envelope.data.map((entry) => mapPendingSpotWithdrawal(entry)));
+export function getPendingSpotWithdrawals(
+  query: AccountQuery,
+  label?: string,
+): Promise<PendingSpotWithdrawal[]> {
+  return httpGet<PendingSpotWithdrawalWire[]>(
+    '/account/spot_asset/withdraw/pending',
+    {
+      account: query.account,
+    },
+    label,
+  ).then((envelope) => envelope.data.map((entry) => mapPendingSpotWithdrawal(entry)));
 }
 
 function mapPendingSpotWithdrawal(wire: PendingSpotWithdrawalWire): PendingSpotWithdrawal {

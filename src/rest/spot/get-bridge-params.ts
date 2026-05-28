@@ -10,10 +10,12 @@ interface BridgeAssetWire {
   decimals: number;
 }
 
-export function getBridgeParams(query: BridgeParamsQuery): Promise<BridgeAsset> {
-  return httpGet<BridgeAssetWire>(`/spot_assets/bridge/parameters/${query.symbol}`).then(
-    (envelope) => mapBridgeAsset(envelope.data),
-  );
+export function getBridgeParams(query: BridgeParamsQuery, label?: string): Promise<BridgeAsset> {
+  return httpGet<BridgeAssetWire>(
+    `/spot_assets/bridge/parameters/${query.symbol}`,
+    undefined,
+    label,
+  ).then((envelope) => mapBridgeAsset(envelope.data));
 }
 
 function mapBridgeAsset(wire: BridgeAssetWire): BridgeAsset {

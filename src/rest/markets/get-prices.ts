@@ -14,8 +14,8 @@ interface PriceWire {
   timestamp: number;
 }
 
-export function getPrices(): Promise<Price[]> {
-  return httpGet<PriceWire[]>('/info/prices').then((envelope) =>
+export function getPrices(label?: string): Promise<Price[]> {
+  return httpGet<PriceWire[]>('/info/prices', undefined, label).then((envelope) =>
     envelope.data.map((price) => mapPrice(price)),
   );
 }

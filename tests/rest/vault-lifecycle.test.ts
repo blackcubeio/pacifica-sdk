@@ -11,7 +11,7 @@ const NETWORK_TIMEOUT = 60_000;
 
 function vaultBalance(lake: string): () => Promise<number | null> {
   return () =>
-    getVaults().then((vaults) => {
+    getVaults(account).then((vaults) => {
       const vault = vaults.find((entry) => entry.address === lake);
       return vault === undefined ? null : Number(vault.lpBalance);
     });
@@ -19,7 +19,7 @@ function vaultBalance(lake: string): () => Promise<number | null> {
 
 describe('vault lifecycle (testnet, réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey } } });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -29,23 +29,26 @@ describe('vault lifecycle (testnet, réel)', () => {
   it(
     'creates a vault (visible in getVaults) then a deposit increases its balance',
     () => {
-      return createVault({
-        nickname: `sdk-e2e-${Date.now()}`,
-        initialDeposit: '10',
-        depositCap: '1000000',
-        depositMinDurationMs: 0,
-        withdrawWindowS: 2_592_000,
-        withdrawDurationS: 259_200,
-        managerProfitShare: '0.10',
-        managerMinBalancePortion: '0.10',
-        managerLiquidationBalancePortion: '0.05',
-      }).then((created) => {
+      return createVault(
+        {
+          nickname: `sdk-e2e-${Date.now()}`,
+          initialDeposit: '10',
+          depositCap: '1000000',
+          depositMinDurationMs: 0,
+          withdrawWindowS: 2_592_000,
+          withdrawDurationS: 259_200,
+          managerProfitShare: '0.10',
+          managerMinBalancePortion: '0.10',
+          managerLiquidationBalancePortion: '0.05',
+        },
+        account,
+      ).then((created) => {
         const lake = created.lakeAddress;
         expect(typeof lake).toBe('string');
         return poll(vaultBalance(lake), (balance) => balance !== null)
           .then((balanceAfterCreate) => {
             const created = Number(balanceAfterCreate);
-            return vaultDeposit({ lake, amount: '10' }).then(() =>
+            return vaultDeposit({ lake, amount: '10' }, account).then(() =>
               poll(vaultBalance(lake), (balance) => balance !== null && balance > created),
             );
           })

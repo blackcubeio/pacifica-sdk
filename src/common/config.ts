@@ -1,7 +1,7 @@
 import { REST_URL, TESTNET_REST_URL, TESTNET_WS_URL, WS_URL } from './constants';
-import type { Signer } from './types';
+import type { Network, Signer } from './types';
 
-export type Network = 'mainnet' | 'testnet';
+export type { Network };
 
 export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>;
 
@@ -18,29 +18,27 @@ export interface WebSocketLike {
 export type WebSocketFactory = (url: string) => WebSocketLike;
 
 export interface InitOptions {
-  network?: Network;
-  restUrl?: string;
-  wsUrl?: string;
   fetch?: FetchLike;
   webSocket?: WebSocketFactory;
-  /** Registry of signers keyed by account address. Signed calls reference an account. */
+  /** Registry of signers keyed by label. Each signer carries its own network. */
   signers?: Record<string, Signer>;
+  /** Override the REST base URL per network. */
+  restUrls?: Partial<Record<Network, string>>;
+  /** Override the WebSocket base URL per network. */
+  wsUrls?: Partial<Record<Network, string>>;
 }
 
 export interface PacificaConfig {
-  restUrl: string;
-  wsUrl: string;
   fetch: FetchLike;
   webSocket: WebSocketFactory;
   signers: Record<string, Signer>;
+  restUrls: Record<Network, string>;
+  wsUrls: Record<Network, string>;
 }
 
 let config: PacificaConfig | null = null;
 
 export function init(options: InitOptions = {}): void {
-  const network = options.network ?? 'mainnet';
-  const restUrl = options.restUrl ?? (network === 'testnet' ? TESTNET_REST_URL : REST_URL);
-  const wsUrl = options.wsUrl ?? (network === 'testnet' ? TESTNET_WS_URL : WS_URL);
   const fetchImpl =
     options.fetch ??
     (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : undefined);
@@ -51,7 +49,19 @@ export function init(options: InitOptions = {}): void {
   if (webSocket === undefined) {
     throw new Error('No WebSocket implementation available; pass options.webSocket to init()');
   }
-  config = { restUrl, wsUrl, fetch: fetchImpl, webSocket, signers: options.signers ?? {} };
+  config = {
+    fetch: fetchImpl,
+    webSocket,
+    signers: options.signers ?? {},
+    restUrls: {
+      mainnet: options.restUrls?.mainnet ?? REST_URL,
+      testnet: options.restUrls?.testnet ?? TESTNET_REST_URL,
+    },
+    wsUrls: {
+      mainnet: options.wsUrls?.mainnet ?? WS_URL,
+      testnet: options.wsUrls?.testnet ?? TESTNET_WS_URL,
+    },
+  };
 }
 
 function defaultWebSocketFactory(): WebSocketFactory | undefined {

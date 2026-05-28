@@ -37,26 +37,36 @@ The SDK is initialised **once**; the whole API inherits the configuration.
 ```ts
 import { init } from '@blackcube/pacifica-sdk';
 
-init();                                                // mainnet
-init({ network: 'testnet' });                          // testnet
-init({ network: 'testnet', signers: { [account]: { secretKey } } }); // + signer registry
+init();                                                          // reads only, mainnet fallback
+init({
+  signers: {
+    trader: { secretKey, publicKey, network: 'mainnet' },        // a mainnet signer
+    tester: { secretKey, publicKey, network: 'testnet' },        // a testnet signer
+  },
+});
 ```
 
 | Option | Type | Default |
 |---|---|---|
-| `network` | `'mainnet' \| 'testnet'` | `'mainnet'` |
-| `restUrl` / `wsUrl` | `string` | per `network` |
+| `signers` | `Record<label, Signer>` | — (required for writes) |
 | `fetch` | `FetchLike` | `globalThis.fetch` |
 | `webSocket` | `WebSocketFactory` | `globalThis.WebSocket` |
-| `signers` | `Record<account, Signer>` | — (required for writes) |
+| `restUrls` / `wsUrls` | `Record<Network, string>` | per network |
 
-Calling the API before `init()` throws `Pacifica SDK not initialized`. `resetConfig()` resets it.
+Each `Signer` carries its own `network`, so mainnet and testnet coexist in one process. Calling the
+API before `init()` throws `Pacifica SDK not initialized`. `resetConfig()` resets it.
 
-## Multi-account
+## Labels, networks & read/write rules
 
-Register one signer per account address in `init({ signers })`, then reference an account by
-address on signed calls — `createLimitOrder(params, account)` — and on account subscriptions.
-With a single registered account the `account` argument is optional.
+Register one signer per **label** in `init({ signers })`; each signer carries its own `network`.
+Every call takes the label as a trailing argument:
+
+- **Reads** (`getPrices`, `getPositions`, subscriptions…) — label is **optional**. No label →
+  **mainnet**; a label → that signer's network. `getPrices('tester')`.
+- **Writes** (`createLimitOrder`, `withdraw`, `updateLeverage`…) — label is **mandatory** and throws
+  if omitted. It selects both the wallet and the network: `createLimitOrder(params, 'tester')`.
+
+Because the network lives on the signer, mainnet and testnet are usable at the same time.
 
 ## Authority — which credential each function needs
 
@@ -71,11 +81,12 @@ Every function is annotated on its page with the credential it requires. Summary
 | ◎ **Solana wallet** | on-chain Solana keypair | `deposit` |
 
 **API keys are per account (incl. per subaccount)** and only work for the account they are bound
-to — register one per account in `init({ signers })`. See [Signing › Authority](./signing.md).
+to — register one signer per label (its `publicKey` is the account, `secretKey` the API key) in
+`init({ signers })`. See [Signing › Authority](./signing.md).
 
 ## Conventions
 
 - **Public API in camelCase**; converted to the snake_case wire format internally.
 - **Responses mapped to camelCase**. Amounts/prices are **decimal strings**.
 - Errors throw `PacificaApiError` (`status`, `code`, `message`).
-- Writes reference a registered [account](./signing.md) (registry in `init`, `account` per call).
+- Writes reference a registered signer by [label](./signing.md) (registry in `init`, label per call).

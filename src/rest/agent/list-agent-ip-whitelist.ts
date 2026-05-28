@@ -5,9 +5,11 @@ import type { ListAgentIpWhitelistParams } from '../types';
 
 export function listAgentIpWhitelist(
   params: ListAgentIpWhitelistParams,
-  account?: string,
+  label: string,
 ): Promise<JsonValue> {
   const payload = { api_agent_key: params.agentWallet };
-  const request = buildSignedRequest(OperationType.ListAgentIpWhitelist, payload, account);
-  return httpPost<JsonValue>('/agent/ip_whitelist/list', request).then((envelope) => envelope.data);
+  const request = buildSignedRequest(OperationType.ListAgentIpWhitelist, payload, label);
+  return httpPost<JsonValue>('/agent/ip_whitelist/list', request, label).then(
+    (envelope) => envelope.data,
+  );
 }

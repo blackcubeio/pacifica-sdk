@@ -19,9 +19,9 @@ interface AccountLoanWire {
   updated_at: number;
 }
 
-export function getAccountLoan(query: AccountQuery): Promise<AccountLoan> {
-  return httpGet<AccountLoanWire>('/account/loan', { account: query.account }).then((envelope) =>
-    mapAccountLoan(envelope.data),
+export function getAccountLoan(query: AccountQuery, label?: string): Promise<AccountLoan> {
+  return httpGet<AccountLoanWire>('/account/loan', { account: query.account }, label).then(
+    (envelope) => mapAccountLoan(envelope.data),
   );
 }
 

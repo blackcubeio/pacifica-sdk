@@ -13,7 +13,7 @@ const NETWORK_TIMEOUT = 40_000;
 
 describe('WS account stream (testnet, voir passer les opérations)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey } } });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -25,7 +25,7 @@ describe('WS account stream (testnet, voir passer les opérations)', () => {
     () => {
       const clientOrderId = globalThis.crypto.randomUUID();
       const events: JsonValue[] = [];
-      const client = new WsClient();
+      const client = new WsClient({ label: account });
 
       return client
         .connect()
@@ -34,7 +34,10 @@ describe('WS account stream (testnet, voir passer les opérations)', () => {
           return buildFarBtcLimit();
         })
         .then(({ price, amount }) =>
-          createLimitOrder({ symbol: 'BTC', price, amount, side: OrderSide.Bid, clientOrderId }),
+          createLimitOrder(
+            { symbol: 'BTC', price, amount, side: OrderSide.Bid, clientOrderId },
+            account,
+          ),
         )
         .then(() =>
           poll(
@@ -46,7 +49,7 @@ describe('WS account stream (testnet, voir passer les opérations)', () => {
           expect(received.some((event) => JSON.stringify(event).includes(clientOrderId))).toBe(
             true,
           );
-          return cancelOrder({ symbol: 'BTC', clientOrderId });
+          return cancelOrder({ symbol: 'BTC', clientOrderId }, account);
         })
         .then(() => {
           client.disconnect();

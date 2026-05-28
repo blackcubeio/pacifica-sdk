@@ -2,13 +2,14 @@
 
 Spot assets and bridge (public GET). Responses mapped to camelCase.
 
-Authority: 🔓 **Public** — no signer for any function on this page.
+Authority: 🔓 **Public** — no signer for any function on this page. Each takes a trailing optional
+`label?` that selects the network (no label → mainnet; a label → its signer's network).
 
 | Function | Endpoint | Returns |
 |---|---|---|
-| `getSpotAssets({ includeInactive?, collateralEnabledOnly? })` | `GET /spot_assets` | `SpotAsset[]` |
-| `getBridgeInfo()` | `GET /spot_assets/bridge/info` | `BridgeAsset[]` |
-| `getBridgeParams({ symbol })` | `GET /spot_assets/bridge/parameters/{symbol}` | `BridgeAsset` |
+| `getSpotAssets({ includeInactive?, collateralEnabledOnly? }, label?)` | `GET /spot_assets` | `SpotAsset[]` |
+| `getBridgeInfo(label?)` | `GET /spot_assets/bridge/info` | `BridgeAsset[]` |
+| `getBridgeParams({ symbol }, label?)` | `GET /spot_assets/bridge/parameters/{symbol}` | `BridgeAsset` |
 
 ```ts
 const assets = await getSpotAssets();

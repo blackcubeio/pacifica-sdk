@@ -16,8 +16,10 @@ interface LoanPoolWire {
   updated_at: number;
 }
 
-export function getLoanPool(): Promise<LoanPool> {
-  return httpGet<LoanPoolWire>('/loan_pool').then((envelope) => mapLoanPool(envelope.data));
+export function getLoanPool(label?: string): Promise<LoanPool> {
+  return httpGet<LoanPoolWire>('/loan_pool', undefined, label).then((envelope) =>
+    mapLoanPool(envelope.data),
+  );
 }
 
 function mapLoanPool(wire: LoanPoolWire): LoanPool {

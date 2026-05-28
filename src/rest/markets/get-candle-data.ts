@@ -14,13 +14,17 @@ interface CandleWire {
   n: number;
 }
 
-export function getCandleData(query: CandleQuery): Promise<Candle[]> {
-  return httpGet<CandleWire[]>('/kline', {
-    symbol: query.symbol,
-    interval: query.interval,
-    start_time: query.startTime,
-    end_time: query.endTime,
-  }).then((envelope) => envelope.data.map((candle) => mapCandle(candle)));
+export function getCandleData(query: CandleQuery, label?: string): Promise<Candle[]> {
+  return httpGet<CandleWire[]>(
+    '/kline',
+    {
+      symbol: query.symbol,
+      interval: query.interval,
+      start_time: query.startTime,
+      end_time: query.endTime,
+    },
+    label,
+  ).then((envelope) => envelope.data.map((candle) => mapCandle(candle)));
 }
 
 function mapCandle(wire: CandleWire): Candle {

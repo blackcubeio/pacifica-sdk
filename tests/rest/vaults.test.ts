@@ -25,7 +25,7 @@ const NETWORK_TIMEOUT = 30_000;
 
 describe('vaults + positions tpsl (testnet, réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey } } });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -35,7 +35,7 @@ describe('vaults + positions tpsl (testnet, réel)', () => {
   it(
     'lists vaults',
     () => {
-      return getVaults().then((vaults) => {
+      return getVaults(account).then((vaults) => {
         expect(vaults.length).toBeGreaterThan(0);
         expect(typeof vaults[0]?.address).toBe('string');
       });
@@ -46,23 +46,28 @@ describe('vaults + positions tpsl (testnet, réel)', () => {
   it(
     'creates a vault, deposits, then runs manager ops',
     () => {
-      return createVault({
-        nickname: `sdk-test-${Date.now()}`,
-        initialDeposit: '10',
-        depositCap: '1000000',
-        depositMinDurationMs: 86_400_000,
-        withdrawWindowS: 2_592_000,
-        withdrawDurationS: 259_200,
-        managerProfitShare: '0.10',
-        managerMinBalancePortion: '0.10',
-        managerLiquidationBalancePortion: '0.05',
-      }).then((created) => {
+      return createVault(
+        {
+          nickname: `sdk-test-${Date.now()}`,
+          initialDeposit: '10',
+          depositCap: '1000000',
+          depositMinDurationMs: 86_400_000,
+          withdrawWindowS: 2_592_000,
+          withdrawDurationS: 259_200,
+          managerProfitShare: '0.10',
+          managerMinBalancePortion: '0.10',
+          managerLiquidationBalancePortion: '0.05',
+        },
+        account,
+      ).then((created) => {
         expect(typeof created.lakeAddress).toBe('string');
         const lake = created.lakeAddress;
-        return vaultDeposit({ lake, amount: '10' }).then(() => {
-          return signatureAccepted(updateDepositCap({ lake, depositCap: '2000000' })).then(() => {
-            return signatureAccepted(addToWhitelist({ lake, symbols: ['BTC'] }));
-          });
+        return vaultDeposit({ lake, amount: '10' }, account).then(() => {
+          return signatureAccepted(updateDepositCap({ lake, depositCap: '2000000' }, account)).then(
+            () => {
+              return signatureAccepted(addToWhitelist({ lake, symbols: ['BTC'] }, account));
+            },
+          );
         });
       });
     },
@@ -73,11 +78,14 @@ describe('vaults + positions tpsl (testnet, réel)', () => {
     'createPositionTpsl signature is accepted by the API',
     () => {
       return signatureAccepted(
-        createPositionTpsl({
-          symbol: 'BTC',
-          side: OrderSide.Bid,
-          takeProfit: { stopPrice: '500000' },
-        }),
+        createPositionTpsl(
+          {
+            symbol: 'BTC',
+            side: OrderSide.Bid,
+            takeProfit: { stopPrice: '500000' },
+          },
+          account,
+        ),
       );
     },
     NETWORK_TIMEOUT,

@@ -11,13 +11,18 @@ interface SpotBalanceHistoryWire {
 
 export function getSpotBalanceHistory(
   query: SpotBalanceHistoryQuery,
+  label?: string,
 ): Promise<Paginated<SpotBalanceHistoryEntry>> {
-  return httpGet<SpotBalanceHistoryWire[]>('/account/spot_balance/history', {
-    account: query.account,
-    symbol: query.symbol,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+  return httpGet<SpotBalanceHistoryWire[]>(
+    '/account/spot_balance/history',
+    {
+      account: query.account,
+      symbol: query.symbol,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((entry) => mapSpotBalanceHistoryEntry(entry)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

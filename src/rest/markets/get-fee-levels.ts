@@ -7,8 +7,8 @@ interface FeeLevelWire {
   taker_fee_rate: string;
 }
 
-export function getFeeLevels(): Promise<FeeLevel[]> {
-  return httpGet<FeeLevelWire[]>('/info/fees').then((envelope) =>
+export function getFeeLevels(label?: string): Promise<FeeLevel[]> {
+  return httpGet<FeeLevelWire[]>('/info/fees', undefined, label).then((envelope) =>
     envelope.data.map((feeLevel) => mapFeeLevel(feeLevel)),
   );
 }

@@ -1,5 +1,20 @@
 import { getConfig } from '../common/config';
-import type { JsonObject } from '../common/types';
+import type { JsonObject, Network } from '../common/types';
+
+/**
+ * Réseau d'une **lecture**. Le label est optionnel : sans label on retombe sur le **mainnet**
+ * (les lectures ne touchent pas au wallet), avec un label on tape sur le réseau de son signer.
+ */
+export function resolveReadNetwork(label?: string): Network {
+  if (label === undefined) {
+    return 'mainnet';
+  }
+  const signer = getConfig().signers[label];
+  if (signer === undefined) {
+    throw new Error(`Aucun signer enregistré sous "${label}"; ajoute-le dans init({ signers })`);
+  }
+  return signer.network;
+}
 
 export class PacificaApiError extends Error {
   constructor(
@@ -37,17 +52,36 @@ export function buildUrl(baseUrl: string, path: string, query?: QueryParams): st
   return url.toString();
 }
 
-export function httpGet<TData>(path: string, query?: QueryParams): Promise<ApiEnvelope<TData>> {
+/** Lecture (non signée). `label` optionnel choisit le réseau (défaut mainnet). */
+export function httpGet<TData>(
+  path: string,
+  query?: QueryParams,
+  label?: string,
+): Promise<ApiEnvelope<TData>> {
   const config = getConfig();
-  const url = buildUrl(config.restUrl, path, query);
+  const url = buildUrl(config.restUrls[resolveReadNetwork(label)], path, query);
   return config
     .fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
     .then((response) => parseEnvelope<TData>(response));
 }
 
-export function httpPost<TData>(path: string, body: JsonObject): Promise<ApiEnvelope<TData>> {
+/** POST sur le réseau du signer `label`. Pour les écritures, le label est obligatoire en amont. */
+export function httpPost<TData>(
+  path: string,
+  body: JsonObject,
+  label?: string,
+): Promise<ApiEnvelope<TData>> {
+  return httpPostTo<TData>(path, body, resolveReadNetwork(label));
+}
+
+/** POST sur un réseau explicite (flux à signataires bruts, ex. création de sous-compte). */
+export function httpPostTo<TData>(
+  path: string,
+  body: JsonObject,
+  network: Network,
+): Promise<ApiEnvelope<TData>> {
   const config = getConfig();
-  const url = buildUrl(config.restUrl, path);
+  const url = buildUrl(config.restUrls[network], path);
   return config
     .fetch(url, {
       method: 'POST',

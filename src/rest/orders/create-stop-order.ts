@@ -6,11 +6,11 @@ import { buildStopOrderPayload } from './payloads';
 
 export function createStopOrder(
   params: CreateStopOrderParams,
-  account?: string,
+  label: string,
 ): Promise<CreateOrderResult> {
   const payload = buildStopOrderPayload(params);
-  const request = buildSignedRequest(OperationType.CreateStopOrder, payload, account);
-  return httpPost<{ order_id: number }>('/orders/stop/create', request).then((envelope) => ({
+  const request = buildSignedRequest(OperationType.CreateStopOrder, payload, label);
+  return httpPost<{ order_id: number }>('/orders/stop/create', request, label).then((envelope) => ({
     orderId: envelope.data.order_id,
   }));
 }

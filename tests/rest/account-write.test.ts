@@ -18,7 +18,7 @@ const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 const NETWORK_TIMEOUT = 40_000;
 
 function btcLeverage(): Promise<number | null> {
-  return getAccountSettings({ account }).then((settings) => {
+  return getAccountSettings({ account }, account).then((settings) => {
     const margin = settings.marginSettings.find((entry) => entry.symbol === 'BTC');
     return margin === undefined ? null : margin.leverage;
   });
@@ -26,7 +26,7 @@ function btcLeverage(): Promise<number | null> {
 
 describe('account write read-back (testnet, do → état visible → undo)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey } } });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -36,11 +36,11 @@ describe('account write read-back (testnet, do → état visible → undo)', () 
   it(
     'updateLeverage is reflected in account settings',
     () => {
-      return updateLeverage({ symbol: 'BTC', leverage: 5 })
+      return updateLeverage({ symbol: 'BTC', leverage: 5 }, account)
         .then(() => poll(btcLeverage, (value) => value === 5))
         .then((value) => {
           expect(value).toBe(5);
-          return updateLeverage({ symbol: 'BTC', leverage: 10 });
+          return updateLeverage({ symbol: 'BTC', leverage: 10 }, account);
         })
         .then(() => poll(btcLeverage, (value) => value === 10))
         .then((value) => {
@@ -53,16 +53,16 @@ describe('account write read-back (testnet, do → état visible → undo)', () 
   it(
     'API config key appears after create and disappears after revoke',
     () => {
-      return createApiConfigKey().then((created) => {
+      return createApiConfigKey(account).then((created) => {
         expect(typeof created.apiKey).toBe('string');
         return poll(
-          () => listApiConfigKeys(),
+          () => listApiConfigKeys(account),
           (keys) => JSON.stringify(keys).includes(created.apiKey),
         )
-          .then(() => revokeApiConfigKey({ apiKey: created.apiKey }))
+          .then(() => revokeApiConfigKey({ apiKey: created.apiKey }, account))
           .then(() =>
             poll(
-              () => listApiConfigKeys(),
+              () => listApiConfigKeys(account),
               (keys) => JSON.stringify(keys).includes(created.apiKey) === false,
             ),
           );
@@ -75,17 +75,17 @@ describe('account write read-back (testnet, do → état visible → undo)', () 
     'agent wallet appears after bind and disappears after revoke',
     () => {
       const agentWallet = publicKeyFromBase58(bs58.encode(ed25519.utils.randomPrivateKey()));
-      return bindAgentWallet({ agentWallet })
+      return bindAgentWallet({ agentWallet }, account)
         .then(() =>
           poll(
-            () => listAgentWallets(),
+            () => listAgentWallets(account),
             (wallets) => JSON.stringify(wallets).includes(agentWallet),
           ),
         )
-        .then(() => revokeAgentWallet({ agentWallet }))
+        .then(() => revokeAgentWallet({ agentWallet }, account))
         .then(() =>
           poll(
-            () => listAgentWallets(),
+            () => listAgentWallets(account),
             (wallets) => JSON.stringify(wallets).includes(agentWallet) === false,
           ),
         );
