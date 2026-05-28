@@ -5,6 +5,8 @@ Order reads (public GET) and signed writes (`account?`). Amounts/prices are stri
 
 ## Read (GET, unsigned)
 
+Authority: 🔓 **Public** — no signer.
+
 | Function | Endpoint | Returns |
 |---|---|---|
 | `getOpenOrders({ account })` | `GET /orders` | `Order[]` |
@@ -12,6 +14,9 @@ Order reads (public GET) and signed writes (`account?`). Amounts/prices are stri
 | `getOrderHistoryById({ orderId })` | `GET /orders/history_by_id` | `OrderHistoryByIdEntry[]` |
 
 ## Writes (signed)
+
+Authority: 🔑 **Account key or API key** — the account's own key, or a bound API key for that
+account (per-account scope).
 
 | Function | signature type | Endpoint | Returns |
 |---|---|---|---|
@@ -50,6 +55,8 @@ Types: `Create`, `CreateMarket`, `Cancel`, `Edit`, `SetPositionTpsl`, `CancelSto
 Returns `BatchResult { results: { success, orderId?, error }[] }`.
 
 ## TWAP (read)
+
+Authority: 🔓 **Public** — no signer.
 
 | Function | Endpoint | Returns |
 |---|---|---|

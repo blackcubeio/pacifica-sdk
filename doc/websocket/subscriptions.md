@@ -31,6 +31,11 @@ ws.connect().then(() => {
 
 Each `subscribeXxx(...)` returns an unsubscribe function. The stream `data` is delivered to the callback (`JsonValue`).
 
+Authority: 🔓 **Public** — market streams (`prices`, `book`, `bbo`, `trades`, `candle`,
+`mark_price_candle`) need no credential. Account streams (`subscribeAccountXxx`) need only the
+**account address** (no signature) — pass `account`, or rely on the client's account / the single
+registered account.
+
 | Method | source |
 |---|---|
 | `subscribePrices(cb)` | `prices` |

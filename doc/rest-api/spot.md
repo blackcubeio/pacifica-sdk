@@ -2,6 +2,8 @@
 
 Spot assets and bridge (public GET). Responses mapped to camelCase.
 
+Authority: 🔓 **Public** — no signer for any function on this page.
+
 | Function | Endpoint | Returns |
 |---|---|---|
 | `getSpotAssets({ includeInactive?, collateralEnabledOnly? })` | `GET /spot_assets` | `SpotAsset[]` |

@@ -58,6 +58,21 @@ Register one signer per account address in `init({ signers })`, then reference a
 address on signed calls — `createLimitOrder(params, account)` — and on account subscriptions.
 With a single registered account the `account` argument is optional.
 
+## Authority — which credential each function needs
+
+Every function is annotated on its page with the credential it requires. Summary:
+
+| Mark | Required credential | Covers |
+|---|---|---|
+| 🔓 **Public** | none | all market reads, account/order/vault reads, market WS streams |
+| 🔑 **Account key or API key** | the account's own key **or** a bound API key | trading, account writes, withdraw, vault ops, subaccount transfers, WS trading |
+| 👤 **Account key only** | the account's **own** key (API key rejected) | agent-key & API-key management |
+| ✍️ **Dual** | main + new sub keys | `createSubaccount` |
+| ◎ **Solana wallet** | on-chain Solana keypair | `deposit` |
+
+**API keys are per account (incl. per subaccount)** and only work for the account they are bound
+to — register one per account in `init({ signers })`. See [Signing › Authority](./signing.md).
+
 ## Conventions
 
 - **Public API in camelCase**; converted to the snake_case wire format internally.

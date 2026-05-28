@@ -2,6 +2,9 @@
 
 Vault (lake) management: LP and manager. `getVaults` is public; everything else is signed (`account?`).
 
+Authority: 🔓 **Public** for `getVaults`; every signed function below is 🔑 **Account key or API key**
+(the account's own key, or a bound API key for that account).
+
 | Function | signature type | Endpoint | Returns |
 |---|---|---|---|
 | `getVaults()` | — (public GET) | `GET /lake/list` | `Vault[]` |

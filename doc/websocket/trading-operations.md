@@ -4,6 +4,9 @@ Signed trading actions over WebSocket, with the **same names and types as REST**
 `buildSignedRequest` + the payload builders). `WsClient` methods. Each action resolves with the
 server response (correlated by `id`).
 
+Authority: 🔑 **Account key or API key** — the account's own key, or a bound API key for that
+account (same rules as the equivalent REST writes).
+
 | Method | sent format |
 |---|---|
 | `createLimitOrder(params, account?)` | `{ id, params: { create_order: <signed> } }` |

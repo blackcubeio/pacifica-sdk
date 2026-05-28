@@ -3,6 +3,23 @@
 Ed25519 request signing, the `Signer` object, operation types, hardware wallet, agent wallets
 and API config keys.
 
+## Authority — who can sign what
+
+Each function's required credential is annotated on its page with one of:
+
+| Mark | Meaning |
+|---|---|
+| 🔓 **Public** | No signer — public read (any account address as a query param). |
+| 🔑 **Account key or API key** | The account's own key **or** a bound API key for that account (registry signer). Trading, account writes, withdraw, vaults, positions… |
+| 👤 **Account key only** | The account's **own** key; an **API key is rejected** (`"Verification failed"`). Agent-key & API-key management. |
+| ✍️ **Dual** | Two keys: the main account **and** the new sub account (subaccount creation). |
+| ◎ **Solana wallet** | The account's on-chain Solana keypair (deposit) — never an API key. |
+
+**API keys are per account (incl. per subaccount)** — a key only works for the account it is
+bound to; register one per account in `init({ signers })`. Verified on testnet: an API key can
+trade / change leverage / withdraw for its account, but **cannot** bind/revoke agent keys (those
+need the account's own key).
+
 ## Mechanism
 
 1. header `{ timestamp(ms), expiryWindow(default 30000), type }`
@@ -73,7 +90,12 @@ API keys (`create_api_key`, `revoke_api_key`, `list_api_keys`).
 
 API agent keys let a program trade **on behalf of an account** without its main key (`account` =
 the account, signature with the agent key, `agent_wallet` field). They are **per account** —
-each account (including each subaccount) holds its own API key (max 20 per account, self-custody).
+each account (including each subaccount) holds its own API key (max 20 per account, self-custody),
+and a key only works for the account it is bound to.
+
+Authority: 👤 **Account key only** — every management function below must be signed with the
+account's **own** key. An API key signing these is rejected (verified on testnet: `bindAgentWallet`
+via an API key → `400 "Verification failed"`). An agent cannot create or revoke agents.
 
 | Function | type | Endpoint | Returns |
 |---|---|---|---|
@@ -106,6 +128,9 @@ createLimitOrder(params, SUB01);   // signed by SUB01's API key, credited to SUB
 `listAgentIpWhitelist` sends `api_agent_key` (not `agent_wallet`) in the payload.
 
 ## API config keys (rate-limit)
+
+Authority: 👤 **Account key only** — same management class as agent keys; sign with the account's
+own key (an API key cannot manage API keys).
 
 | Function | type | Endpoint | Returns |
 |---|---|---|---|
