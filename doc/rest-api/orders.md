@@ -1,9 +1,11 @@
 # REST API — Orders
 
-Order reads (public GET) and signed writes (`signer?`). Amounts/prices are strings;
+Order reads (public GET) and signed writes (`account?`). Amounts/prices are strings;
 `clientOrderId` is auto-generated (UUID v4) when omitted.
 
 ## Read (GET, unsigned)
+
+Authority: 🔓 **Public** — no signer.
 
 | Function | Endpoint | Returns |
 |---|---|---|
@@ -13,17 +15,20 @@ Order reads (public GET) and signed writes (`signer?`). Amounts/prices are strin
 
 ## Writes (signed)
 
+Authority: 🔑 **Account key or API key** — the account's own key, or a bound API key for that
+account (per-account scope).
+
 | Function | signature type | Endpoint | Returns |
 |---|---|---|---|
-| `createLimitOrder(params, signer?)` | `create_order` | `POST /orders/create` | `CreateOrderResult` |
-| `createMarketOrder(params, signer?)` | `create_market_order` | `POST /orders/create_market` | `CreateOrderResult` |
-| `cancelOrder(params, signer?)` | `cancel_order` | `POST /orders/cancel` | `void` |
-| `cancelAllOrders(params, signer?)` | `cancel_all_orders` | `POST /orders/cancel_all` | `CancelAllResult` |
-| `editOrder(params, signer?)` | `edit_order` | `POST /orders/edit` | `CreateOrderResult` |
-| `createStopOrder(params, signer?)` | `create_stop_order` | `POST /orders/stop/create` | `CreateOrderResult` |
-| `cancelStopOrder(params, signer?)` | `cancel_stop_order` | `POST /orders/stop/cancel` | `void` |
-| `createPositionTpsl(params, signer?)` | `set_position_tpsl` | `POST /positions/tpsl` | `void` |
-| `batchOrders(actions, signer?)` | *(per action)* | `POST /orders/batch` | `BatchResult` |
+| `createLimitOrder(params, account?)` | `create_order` | `POST /orders/create` | `CreateOrderResult` |
+| `createMarketOrder(params, account?)` | `create_market_order` | `POST /orders/create_market` | `CreateOrderResult` |
+| `cancelOrder(params, account?)` | `cancel_order` | `POST /orders/cancel` | `void` |
+| `cancelAllOrders(params, account?)` | `cancel_all_orders` | `POST /orders/cancel_all` | `CancelAllResult` |
+| `editOrder(params, account?)` | `edit_order` | `POST /orders/edit` | `CreateOrderResult` |
+| `createStopOrder(params, account?)` | `create_stop_order` | `POST /orders/stop/create` | `CreateOrderResult` |
+| `cancelStopOrder(params, account?)` | `cancel_stop_order` | `POST /orders/stop/cancel` | `void` |
+| `createPositionTpsl(params, account?)` | `set_position_tpsl` | `POST /positions/tpsl` | `void` |
+| `batchOrders(actions, account?)` | *(per action)* | `POST /orders/batch` | `BatchResult` |
 
 ### Params
 
@@ -50,6 +55,8 @@ Types: `Create`, `CreateMarket`, `Cancel`, `Edit`, `SetPositionTpsl`, `CancelSto
 Returns `BatchResult { results: { success, orderId?, error }[] }`.
 
 ## TWAP (read)
+
+Authority: 🔓 **Public** — no signer.
 
 | Function | Endpoint | Returns |
 |---|---|---|

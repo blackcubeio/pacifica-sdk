@@ -4,6 +4,8 @@ Account reads (public GET, `account` as query param) and signed account writes.
 
 ## Read (GET, unsigned)
 
+Authority: 🔓 **Public** — no signer, `account` is just a query param.
+
 | Function | Endpoint | Returns |
 |---|---|---|
 | `getAccountInfo({ account })` | `GET /account` | `AccountInfo` |
@@ -21,7 +23,10 @@ Account reads (public GET, `account` as query param) and signed account writes.
 
 `getPortfolio` is the docs' "account equity history" (`timeRange`: `PortfolioTimeRange`).
 
-## Writes (signed — `signer?`)
+## Writes (signed — `account?` per call)
+
+Authority: 🔑 **Account key or API key** — the account's own key, or a bound API key for that
+account. Verified on testnet: `updateLeverage` and `withdraw` both work signed with an API key.
 
 | Function | signature type | Endpoint | Returns |
 |---|---|---|---|

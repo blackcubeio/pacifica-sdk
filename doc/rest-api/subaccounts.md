@@ -1,13 +1,13 @@
 # REST API — Subaccounts
 
-Subaccount creation and transfers (signed). `signer?` except for `createSubaccount` (dual signature).
+Subaccount creation and transfers (signed). `account?` except for `createSubaccount` (dual signature).
 
-| Function | signature type | Endpoint | Returns |
-|---|---|---|---|
-| `createSubaccount({ main, sub })` | `subaccount_initiate` + `subaccount_confirm` | `POST /account/subaccount/create` | `void` |
-| `listSubaccounts(signer?)` | `list_subaccounts` | `POST /account/subaccount/list` | `Subaccount[]` |
-| `transferSubaccountFund({ toAccount, amount }, signer?)` | `transfer_funds` | `POST /account/subaccount/transfer` | `void` |
-| `subaccountSpotTransfer({ toAccount, symbol, amount, idempotencyKey? }, signer?)` | `subaccount_spot_transfer` | `POST /account/subaccount/spot_asset/transfer` | `void` |
+| Function | Authority | signature type | Endpoint | Returns |
+|---|---|---|---|---|
+| `createSubaccount({ main, sub })` | ✍️ **Dual** (main + new sub) | `subaccount_initiate` + `subaccount_confirm` | `POST /account/subaccount/create` | `void` |
+| `listSubaccounts(account?)` | 🔑 Account key or API key | `list_subaccounts` | `POST /account/subaccount/list` | `Subaccount[]` |
+| `transferSubaccountFund({ toAccount, amount }, account?)` | 🔑 Account key or API key | `transfer_funds` | `POST /account/subaccount/transfer` | `void` |
+| `subaccountSpotTransfer({ toAccount, symbol, amount, idempotencyKey? }, account?)` | 🔑 Account key or API key | `subaccount_spot_transfer` | `POST /account/subaccount/spot_asset/transfer` | `void` |
 
 ## createSubaccount — dual signature
 

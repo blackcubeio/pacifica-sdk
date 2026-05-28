@@ -1,11 +1,11 @@
 # WebSocket — Subscriptions
 
-Real-time streams via `WsClient`. URL/signer inherited from `init()`.
+Real-time streams via `WsClient`. URL inherited from `init()`; account per client or per call.
 
 ```ts
 import { WsClient, CandleInterval } from '@blackcube/pacifica-sdk';
 
-const ws = new WsClient();           // or new WsClient({ url, webSocket, signer })
+const ws = new WsClient();           // or new WsClient({ url, webSocket, account })
 ws.connect().then(() => {
   const off = ws.subscribePrices((data) => console.log(data));
   // ...
@@ -31,6 +31,11 @@ ws.connect().then(() => {
 
 Each `subscribeXxx(...)` returns an unsubscribe function. The stream `data` is delivered to the callback (`JsonValue`).
 
+Authority: 🔓 **Public** — market streams (`prices`, `book`, `bbo`, `trades`, `candle`,
+`mark_price_candle`) need no credential. Account streams (`subscribeAccountXxx`) need only the
+**account address** (no signature) — pass `account`, or rely on the client's account / the single
+registered account.
+
 | Method | source |
 |---|---|
 | `subscribePrices(cb)` | `prices` |
@@ -49,5 +54,5 @@ Each `subscribeXxx(...)` returns an unsubscribe function. The stream `data` is d
 | `subscribeAccountTwapOrders(cb, account?)` | `account_twap_orders` |
 | `subscribeAccountTwapUpdates(cb, account?)` | `account_twap_order_updates` |
 
-Account subscriptions use the `account` argument, or the one derived from the `init()` signer.
+Account subscriptions use the `account` argument, else the client's account, else the single registered account.
 `orderbook` uses the `book` source. The `{ channel: "pong" }` message is ignored by the dispatcher.

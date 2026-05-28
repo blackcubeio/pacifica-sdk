@@ -50,7 +50,7 @@ describe('deposit instruction data', () => {
 
 describe('deposit (devnet, dépôt réel crédité)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signer: { secretKey: solanaSecretKey, account } });
+    init({ network: 'testnet', signers: { [account]: { secretKey: solanaSecretKey } } });
   });
 
   afterAll(() => {

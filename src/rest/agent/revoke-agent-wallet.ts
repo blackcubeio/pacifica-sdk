@@ -1,10 +1,13 @@
-import { OperationType, type Signer } from '../../common/types';
+import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
 import type { RevokeAgentWalletParams } from '../types';
 
-export function revokeAgentWallet(params: RevokeAgentWalletParams, signer?: Signer): Promise<void> {
+export function revokeAgentWallet(
+  params: RevokeAgentWalletParams,
+  account?: string,
+): Promise<void> {
   const payload = { agent_wallet: params.agentWallet };
-  const request = buildSignedRequest(OperationType.RevokeAgentWallet, payload, signer);
+  const request = buildSignedRequest(OperationType.RevokeAgentWallet, payload, account);
   return httpPost<null>('/agent/revoke', request).then(() => undefined);
 }

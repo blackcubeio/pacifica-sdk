@@ -1,11 +1,11 @@
-import { type JsonObject, OperationType, type Signer } from '../../common/types';
+import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
 import type { SubaccountSpotTransferParams } from '../types';
 
 export function subaccountSpotTransfer(
   params: SubaccountSpotTransferParams,
-  signer?: Signer,
+  account?: string,
 ): Promise<void> {
   const payload: JsonObject = {
     to_account: params.toAccount,
@@ -15,6 +15,6 @@ export function subaccountSpotTransfer(
   if (params.idempotencyKey !== undefined) {
     payload.idempotency_key = params.idempotencyKey;
   }
-  const request = buildSignedRequest(OperationType.SubaccountSpotTransfer, payload, signer);
+  const request = buildSignedRequest(OperationType.SubaccountSpotTransfer, payload, account);
   return httpPost<null>('/account/subaccount/spot_asset/transfer', request).then(() => undefined);
 }
