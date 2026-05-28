@@ -12,3 +12,4 @@ dist
 
 .claude
 docs/blackcube
+rewrite-history.sh
