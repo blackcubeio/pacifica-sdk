@@ -1,10 +1,10 @@
 # REST API — Vaults (Lakes)
 
-Gestion des vaults (lakes) : LP et manager. `getVaults` est public ; le reste est signé (`signer?`).
+Vault (lake) management: LP and manager. `getVaults` is public; everything else is signed (`signer?`).
 
-| Fonction | type signature | Endpoint | Retour |
+| Function | signature type | Endpoint | Returns |
 |---|---|---|---|
-| `getVaults()` | — (GET public) | `GET /lake/list` | `Vault[]` |
+| `getVaults()` | — (public GET) | `GET /lake/list` | `Vault[]` |
 | `createVault(params, signer?)` | `create_lake` | `POST /lake/create` | `CreateVaultResult` |
 | `vaultDeposit({ lake, amount, idempotencyKey? }, signer?)` | `deposit_to_lake` | `POST /lake/deposit` | `void` |
 | `vaultWithdraw({ lake, shares, idempotencyKey? }, signer?)` | `withdraw_from_lake` | `POST /lake/withdraw` | `void` |
@@ -22,12 +22,12 @@ Gestion des vaults (lakes) : LP et manager. `getVaults` est public ; le reste es
 
 `{ nickname, initialDeposit, depositCap, depositMinDurationMs, withdrawWindowS,
 withdrawDurationS, managerProfitShare, managerMinBalancePortion,
-managerLiquidationBalancePortion, referralCode? }` → `{ lakeAddress }`. Dépôt initial **min 10**.
+managerLiquidationBalancePortion, referralCode? }` → `{ lakeAddress }`. Minimum initial deposit is 10.
 
-## Notes (réalité testnet, mesurée sur 172 lakes)
+## Notes (real testnet data, measured over 172 lakes)
 
-Le type `Vault` est **permissif** car la réponse réelle diffère de l'exemple doc. Toujours
-présents → requis : `address, creator, lpShares, managerShares, lpBalance, managerBalance,
-lastCheckedEquity, highWatermark, createdAt`. Nullable/optionnels : `manager`, `nickname`,
-`referrer`, `userShare`, `config` (absent sur ~10% des lakes) et **tous** les sous-champs de
-`config`. `vaultDeposit` : montant minimum 10.
+The `Vault` type is **permissive** because the real response differs from the docs example.
+Always present → required: `address, creator, lpShares, managerShares, lpBalance, managerBalance,
+lastCheckedEquity, highWatermark, createdAt`. Nullable/optional: `manager`, `nickname`,
+`referrer`, `userShare`, `config` (absent on ~10% of lakes) and **all** of `config`'s sub-fields.
+`vaultDeposit`: minimum amount is 10.

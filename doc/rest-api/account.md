@@ -1,10 +1,10 @@
 # REST API — Account
 
-Lecture du compte (GET publics, `account` en query) et écritures de compte (signées).
+Account reads (public GET, `account` as query param) and signed account writes.
 
-## Lecture (GET, non signé)
+## Read (GET, unsigned)
 
-| Fonction | Endpoint | Retour |
+| Function | Endpoint | Returns |
 |---|---|---|
 | `getAccountInfo({ account })` | `GET /account` | `AccountInfo` |
 | `getAccountSettings({ account })` | `GET /account/settings` | `AccountSettings` |
@@ -19,11 +19,11 @@ Lecture du compte (GET publics, `account` en query) et écritures de compte (sig
 | `getSpotWithdrawalHistory({ account, limit?, cursor? })` | `GET /account/spot_asset/withdraw/history` | `Paginated<SpotWithdrawalEntry>` |
 | `getPendingSpotWithdrawals({ account })` | `GET /account/spot_asset/withdraw/pending` | `PendingSpotWithdrawal[]` |
 
-`getPortfolio` = « account equity history » (`timeRange` : `PortfolioTimeRange`).
+`getPortfolio` is the docs' "account equity history" (`timeRange`: `PortfolioTimeRange`).
 
-## Écritures (signées — `signer?`)
+## Writes (signed — `signer?`)
 
-| Fonction | type signature | Endpoint | Retour |
+| Function | signature type | Endpoint | Returns |
 |---|---|---|---|
 | `updateLeverage({ symbol, leverage })` | `update_leverage` | `POST /account/leverage` | `void` |
 | `updateMarginMode({ symbol, isIsolated })` | `update_margin_mode` | `POST /account/margin` | `void` |
@@ -33,11 +33,12 @@ Lecture du compte (GET publics, `account` en query) et écritures de compte (sig
 | `withdraw({ amount })` | `withdraw` | `POST /account/withdraw` | `void` |
 | `withdrawSpotAsset({ symbol, amount, idempotencyKey? })` | `withdraw_spot_asset` | `POST /account/spot_asset/withdraw` | `WithdrawSpotResult` |
 
-`toggleAutoLending` : `disabled` = `true` (désactive) / `false` (active) / `null` (défaut).
+`toggleAutoLending`: `disabled` = `true` (disable) / `false` (enable) / `null` (default).
 
-## Cas limites
+## Edge cases
 
-- `AccountInfo.crossAccountEquity` peut être `null`.
-- `AccountSettings` : marchés en réglages par défaut (cross + levier max) non retournés ; `autoLendDisabled = null` = défaut.
-- `Position.liquidationPrice` peut être `null` ; `margin` significatif seulement en isolated.
-- Le dépôt de collatérale n'est **pas** une route API → voir [Deposit (on-chain)](../deposit.md).
+- `AccountInfo.crossAccountEquity` may be `null`.
+- `AccountSettings`: markets left at default (cross + max leverage) are not returned;
+  `autoLendDisabled = null` means default.
+- `Position.liquidationPrice` may be `null`; `margin` is only meaningful for isolated positions.
+- Collateral deposit is **not** an API route → see [Deposit (on-chain)](../deposit.md).

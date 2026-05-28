@@ -1,8 +1,8 @@
 # REST API — Spot
 
-Actifs spot et bridge (GET publics). Réponses mappées camelCase.
+Spot assets and bridge (public GET). Responses mapped to camelCase.
 
-| Fonction | Endpoint | Retour |
+| Function | Endpoint | Returns |
 |---|---|---|
 | `getSpotAssets({ includeInactive?, collateralEnabledOnly? })` | `GET /spot_assets` | `SpotAsset[]` |
 | `getBridgeInfo()` | `GET /spot_assets/bridge/info` | `BridgeAsset[]` |
@@ -15,6 +15,6 @@ const sol = getBridgeParams({ symbol: 'SOL' });
 
 ## Notes
 
-- `getBridgeParams` utilise un **path param** `{symbol}` (pas un query param).
-- `BridgeAsset.mint` est `null` pour le SOL natif.
-- `getSpotAssets` accepte les filtres `includeInactive` / `collateralEnabledOnly`.
+- `getBridgeParams` uses a **path param** `{symbol}` (not a query param).
+- `BridgeAsset.mint` is `null` for native SOL.
+- `getSpotAssets` accepts the `includeInactive` / `collateralEnabledOnly` filters.

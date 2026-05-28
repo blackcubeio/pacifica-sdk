@@ -1,8 +1,8 @@
 # REST API — Markets
 
-Données de marché publiques (GET, non signées). Réponses mappées camelCase.
+Public market data (GET, unsigned). Responses mapped to camelCase.
 
-| Fonction | Endpoint | Retour |
+| Function | Endpoint | Returns |
 |---|---|---|
 | `getMarketInfo()` | `GET /info` | `Market[]` |
 | `getPrices()` | `GET /info/prices` | `Price[]` |
@@ -22,10 +22,11 @@ const candles = getCandleData({ symbol: 'BTC', interval: CandleInterval.OneMinut
 
 ## Notes
 
-- **Orderbook** : l'API renvoie un seul tableau `l = [bids[], asks[]]` ; le SDK l'expose en
-  `bids` / `asks` séparés (`{ price, amount, orderCount }`, ≤10 niveaux).
-- **Candles** : clés courtes API (`t,T,o,c,h,l,v,n`) mappées
-  `openTime/closeTime/open/close/high/low/volume/tradeCount`. Intervalles via `CandleInterval`.
-- `getRecentTrades` expose `lastOrderId` (nonce exchange-wide) à côté des `trades`.
-- `Market.createdAt` typé `number` (ms) ; la doc Pacifica annonce "ISO 8601 string" mais renvoie un timestamp ms.
-- `getCandleData` : `startTime` requis.
+- **Orderbook**: the API returns a single array `l = [bids[], asks[]]`; the SDK exposes it as
+  separate `bids` / `asks` (`{ price, amount, orderCount }`, up to 10 levels).
+- **Candles**: short API keys (`t,T,o,c,h,l,v,n`) are mapped to
+  `openTime/closeTime/open/close/high/low/volume/tradeCount`. Intervals via `CandleInterval`.
+- `getRecentTrades` exposes `lastOrderId` (exchange-wide nonce) alongside `trades`.
+- `Market.createdAt` is typed as `number` (ms); the Pacifica docs claim "ISO 8601 string" but
+  the API returns a millisecond timestamp.
+- `getCandleData`: `startTime` is required.

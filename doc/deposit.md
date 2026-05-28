@@ -1,44 +1,44 @@
 # Deposit (on-chain)
 
-Le dépôt de collatérale **n'est pas une route API** — c'est une **transaction Solana** directe
-vers le programme Pacifica (ce que fait l'UI / le SDK Python). Utilise `@solana/kit` +
-`@solana-program/token` (SDK moderne, pas le legacy `@solana/web3.js`).
+Collateral deposit is **not an API route** — it's a **Solana transaction** straight to the
+Pacifica program (what the UI / the Python SDK do). Uses the modern `@solana/kit` +
+`@solana-program/token` (not the legacy `@solana/web3.js`).
 
-## Fonction
+## Function
 
 ```ts
-deposit(params: DepositParams, signer?: Signer): Promise<string>   // signature de transaction
+deposit(params: DepositParams, signer?: Signer): Promise<string>   // transaction signature
 ```
 
 ```ts
 interface DepositParams {
-  amount: number;               // ex. 10 = 10 USDC/USDP
-  rpcUrl?: string;              // défaut: mainnet-beta
-  rpcSubscriptionsUrl?: string; // défaut: dérivé de rpcUrl (https→wss)
+  amount: number;               // e.g. 10 = 10 USDC/USDP
+  rpcUrl?: string;              // default: mainnet-beta
+  rpcSubscriptionsUrl?: string; // default: derived from rpcUrl (https→wss)
   programId?: string;
   centralState?: string;
   collateralMint?: string;
-  decimals?: number;            // défaut: 6
+  decimals?: number;            // default: 6
 }
 ```
 
-`buildDepositData(amount, decimals)` est exporté pour inspecter/tester l'encodage sans envoyer.
+`buildDepositData(amount, decimals)` is exported to inspect/test the encoding without sending.
 
-## Construction de l'instruction
+## Instruction layout
 
-- Discriminateur Anchor `sha256("global:deposit")[:8]` (= `f223c68952e1f2b6`) + montant `u64` LE (`amount × 10^decimals`).
-- **Vault dérivé** : ATA de `centralState` pour le mint (pas d'adresse de vault à fournir).
-- 10 comptes : depositor (signer), ATA depositor, central_state, vault, token program, ATA program, mint, system program, event_authority (PDA `["__event_authority"]`), program.
-- Envoi via `sendAndConfirmTransactionFactory` de `@solana/kit`.
+- Anchor discriminator `sha256("global:deposit")[:8]` (= `f223c68952e1f2b6`) + amount as `u64` LE (`amount × 10^decimals`).
+- **Vault is derived**: ATA of `centralState` for the mint (no vault address to provide).
+- 10 accounts: depositor (signer), depositor ATA, central_state, vault, token program, ATA program, mint, system program, event_authority (PDA `["__event_authority"]`), program.
+- Sent via `sendAndConfirmTransactionFactory` from `@solana/kit`.
 
-## ⚠️ Le programme diffère selon l'environnement
+## ⚠️ The program differs per environment
 
-| | Programme | central_state | mint |
+| | Program | central_state | mint |
 |---|---|---|---|
-| **mainnet** (défauts) | `PCFA5iYg…` | `9Gdmhq…` | USDC `EPjFW…` |
+| **mainnet** (defaults) | `PCFA5iYg…` | `9Gdmhq…` | USDC `EPjFW…` |
 | **testnet / devnet** | `peRPsYCcB1J9…` | `2zPRq…` | USDP `USDPqRbL…` |
 
-Constantes devnet exportées : `DEVNET_RPC_URL`, `DEVNET_DEPOSIT_PROGRAM_ID`,
+Exported devnet constants: `DEVNET_RPC_URL`, `DEVNET_DEPOSIT_PROGRAM_ID`,
 `DEVNET_CENTRAL_STATE`, `DEVNET_COLLATERAL_MINT`.
 
 ```ts
@@ -58,6 +58,6 @@ deposit(
 );
 ```
 
-> Vérifié **end-to-end sur devnet** : après le dépôt, le solde du compte Pacifica
-> (`getAccountInfo`) augmente réellement du montant déposé. ⚠️ Utiliser le programme mainnet
-> (`PCFA…`) sur devnet produit une transaction qui *confirme* mais ne **crédite pas** le compte.
+> Verified **end-to-end on devnet**: after the deposit, the Pacifica account balance
+> (`getAccountInfo`) actually increases by the deposited amount. ⚠️ Using the mainnet program
+> (`PCFA…`) on devnet produces a transaction that *confirms* but does **not credit** the account.

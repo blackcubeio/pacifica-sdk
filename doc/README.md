@@ -1,25 +1,25 @@
 # @blackcube/pacifica-sdk — Documentation
 
-SDK TypeScript pour l'exchange [Pacifica](https://pacifica.fi) (perp DEX Solana).
-Organisation calquée sur la [doc API Pacifica](https://pacifica.gitbook.io/docs/api-documentation/api).
+TypeScript SDK for the [Pacifica](https://pacifica.fi) exchange (perpetuals DEX on Solana).
+Organised like the [Pacifica API docs](https://pacifica.gitbook.io/docs/api-documentation/api).
 
-## Sommaire
+## Contents
 
 ### REST API
-- [Markets](./rest-api/markets.md) — données de marché (GET publics)
-- [Account](./rest-api/account.md) — compte, positions, historiques, écritures signées
-- [Orders](./rest-api/orders.md) — ordres (lecture + écritures signées), TP/SL, batch, TWAP
-- [Spot](./rest-api/spot.md) — actifs spot et bridge
-- [Subaccounts](./rest-api/subaccounts.md) — création et transferts de sous-comptes
-- [Vaults](./rest-api/vaults.md) — vaults (lakes) : gestion LP et manager
+- [Markets](./rest-api/markets.md) — market data (public GET)
+- [Account](./rest-api/account.md) — account, positions, history, signed writes
+- [Orders](./rest-api/orders.md) — orders (read + signed writes), TP/SL, batch, TWAP
+- [Spot](./rest-api/spot.md) — spot assets and bridge
+- [Subaccounts](./rest-api/subaccounts.md) — subaccount creation and transfers
+- [Vaults](./rest-api/vaults.md) — vaults (lakes): LP and manager operations
 
 ### WebSocket
-- [Subscriptions](./websocket/subscriptions.md) — flux temps réel
-- [Trading operations](./websocket/trading-operations.md) — actions signées via WS
+- [Subscriptions](./websocket/subscriptions.md) — real-time streams
+- [Trading operations](./websocket/trading-operations.md) — signed actions over WS
 
 ### Signing & on-chain
-- [Signing](./signing.md) — signature Ed25519, operation types, hardware wallet, agent wallets, API config keys
-- [Deposit](./deposit.md) — dépôt de collatérale on-chain (Solana)
+- [Signing](./signing.md) — Ed25519 signing, operation types, hardware wallet, agent wallets, API config keys
+- [Deposit](./deposit.md) — on-chain collateral deposit (Solana)
 
 ## Installation
 
@@ -27,34 +27,34 @@ Organisation calquée sur la [doc API Pacifica](https://pacifica.gitbook.io/docs
 pnpm add @blackcube/pacifica-sdk
 ```
 
-Compatible Node.js et navigateur. `signWithHardwareWallet` (Ledger) et `deposit` (on-chain)
-ont des prérequis spécifiques (voir leurs pages).
+Works in Node.js and the browser. `signWithHardwareWallet` (Ledger) and `deposit` (on-chain)
+have specific prerequisites (see their pages).
 
 ## Initialisation
 
-Le SDK s'initialise **une fois** ; toute l'API hérite de la configuration.
+The SDK is initialised **once**; the whole API inherits the configuration.
 
 ```ts
 import { init } from '@blackcube/pacifica-sdk';
 
 init();                                                // mainnet
 init({ network: 'testnet' });                          // testnet
-init({ network: 'testnet', signer: { secretKey } });   // + signer pour les écritures
+init({ network: 'testnet', signer: { secretKey } });   // + signer for signed writes
 ```
 
-| Option | Type | Défaut |
+| Option | Type | Default |
 |---|---|---|
 | `network` | `'mainnet' \| 'testnet'` | `'mainnet'` |
-| `restUrl` / `wsUrl` | `string` | selon `network` |
+| `restUrl` / `wsUrl` | `string` | per `network` |
 | `fetch` | `FetchLike` | `globalThis.fetch` |
 | `webSocket` | `WebSocketFactory` | `globalThis.WebSocket` |
-| `signer` | `Signer` | — (requis pour les écritures) |
+| `signer` | `Signer` | — (required for writes) |
 
-Appeler l'API avant `init()` lève `Pacifica SDK not initialized`. `resetConfig()` réinitialise.
+Calling the API before `init()` throws `Pacifica SDK not initialized`. `resetConfig()` resets it.
 
 ## Conventions
 
-- **API publique en camelCase** ; conversion vers le wire snake_case en interne.
-- **Réponses mappées en camelCase**. Montants/prix = **strings décimales**.
-- Erreurs → `PacificaApiError` (`status`, `code`, `message`).
-- Écritures → objet [`Signer`](./signing.md) (`init` ou argument par appel).
+- **Public API in camelCase**; converted to the snake_case wire format internally.
+- **Responses mapped to camelCase**. Amounts/prices are **decimal strings**.
+- Errors throw `PacificaApiError` (`status`, `code`, `message`).
+- Writes use a [`Signer`](./signing.md) (`init` or per-call argument).

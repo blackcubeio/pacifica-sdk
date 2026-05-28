@@ -1,17 +1,17 @@
 # WebSocket — Trading operations
 
-Actions de trading signées via WebSocket, **mêmes noms et types que le REST** (réutilisent
-`buildSignedRequest` + les builders de payload). Méthodes du `WsClient`. Chaque action résout
-avec la réponse du serveur (corrélée par `id`).
+Signed trading actions over WebSocket, with the **same names and types as REST** (they reuse
+`buildSignedRequest` + the payload builders). `WsClient` methods. Each action resolves with the
+server response (correlated by `id`).
 
-| Méthode | format envoyé |
+| Method | sent format |
 |---|---|
-| `createLimitOrder(params, signer?)` | `{ id, params: { create_order: <signé> } }` |
-| `createMarketOrder(params, signer?)` | `{ id, params: { create_market_order: <signé> } }` |
-| `cancelOrder(params, signer?)` | `{ id, params: { cancel_order: <signé> } }` |
-| `cancelAllOrders(params, signer?)` | `{ id, params: { cancel_all_orders: <signé> } }` |
-| `editOrder(params, signer?)` | `{ id, params: { edit_order: <signé> } }` |
-| `batchOrders(actions, signer?)` | `{ id, params: { actions: [<signé>, …] } }` |
+| `createLimitOrder(params, signer?)` | `{ id, params: { create_order: <signed> } }` |
+| `createMarketOrder(params, signer?)` | `{ id, params: { create_market_order: <signed> } }` |
+| `cancelOrder(params, signer?)` | `{ id, params: { cancel_order: <signed> } }` |
+| `cancelAllOrders(params, signer?)` | `{ id, params: { cancel_all_orders: <signed> } }` |
+| `editOrder(params, signer?)` | `{ id, params: { edit_order: <signed> } }` |
+| `batchOrders(actions, signer?)` | `{ id, params: { actions: [<signed>, …] } }` |
 
 ```ts
 ws.connect().then(() => {
@@ -19,7 +19,7 @@ ws.connect().then(() => {
 }).then((response) => console.log(response));
 ```
 
-Les types de params sont **identiques** à ceux du [REST Orders](../rest-api/orders.md)
+Param types are **identical** to [REST Orders](../rest-api/orders.md)
 (`CreateLimitOrderParams`, `CreateMarketOrderParams`, `CancelOrderParams`, etc.).
-`sendAction<T>(params)` permet d'envoyer une action brute. Une action avant `connect()` lève
-« WebSocket is not connected ».
+`sendAction<T>(params)` sends a raw action. An action before `connect()` throws
+"WebSocket is not connected".

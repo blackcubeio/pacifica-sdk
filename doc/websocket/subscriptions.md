@@ -1,37 +1,37 @@
 # WebSocket — Subscriptions
 
-Flux temps réel via `WsClient`. URL/signer hérités d'`init()`.
+Real-time streams via `WsClient`. URL/signer inherited from `init()`.
 
 ```ts
 import { WsClient, CandleInterval } from '@blackcube/pacifica-sdk';
 
-const ws = new WsClient();           // ou new WsClient({ url, webSocket, signer })
+const ws = new WsClient();           // or new WsClient({ url, webSocket, signer })
 ws.connect().then(() => {
   const off = ws.subscribePrices((data) => console.log(data));
   // ...
-  off();           // se désabonne
+  off();           // unsubscribe
   ws.disconnect();
 });
 ```
 
-## Cycle de vie
+## Lifecycle
 
-| Méthode | Rôle |
+| Method | Purpose |
 |---|---|
-| `connect(): Promise<void>` | Ouvre la connexion, démarre le heartbeat |
-| `disconnect()` | Ferme et coupe l'auto-reconnect |
-| `startHeartbeat(ms=30000)` / `stopHeartbeat()` | `ping`/`pong` (timeout serveur 60s, 24h max) |
-| `onMessage / onError / onClose / onReconnect` | Callbacks (propriétés) |
-| `subscribe(params)` / `unsubscribe(params)` | Envoi brut `{ method, params }` |
+| `connect(): Promise<void>` | Opens the connection, starts the heartbeat |
+| `disconnect()` | Closes and stops auto-reconnect |
+| `startHeartbeat(ms=30000)` / `stopHeartbeat()` | `ping`/`pong` (60s server timeout, 24h max) |
+| `onMessage / onError / onClose / onReconnect` | Callbacks (properties) |
+| `subscribe(params)` / `unsubscribe(params)` | Raw `{ method, params }` send |
 
-**Auto-reconnect** : à la fermeture, reconnexion + **réémission des subscriptions actives**, puis `onReconnect`.
-**WebSocket** : `globalThis.WebSocket` par défaut (navigateur + Node ≥22), injectable.
+**Auto-reconnect**: on close, reconnects and **re-sends active subscriptions**, then calls `onReconnect`.
+**WebSocket**: `globalThis.WebSocket` by default (browser + Node ≥22), injectable.
 
 ## Subscriptions
 
-Chaque `subscribeXxx(...)` renvoie une fonction de désabonnement. Le `data` du stream est livré au callback (`JsonValue`).
+Each `subscribeXxx(...)` returns an unsubscribe function. The stream `data` is delivered to the callback (`JsonValue`).
 
-| Méthode | source |
+| Method | source |
 |---|---|
 | `subscribePrices(cb)` | `prices` |
 | `subscribeOrderbook({ symbol, aggLevel? }, cb)` | `book` |
@@ -49,5 +49,5 @@ Chaque `subscribeXxx(...)` renvoie une fonction de désabonnement. Le `data` du 
 | `subscribeAccountTwapOrders(cb, account?)` | `account_twap_orders` |
 | `subscribeAccountTwapUpdates(cb, account?)` | `account_twap_order_updates` |
 
-Les subscriptions de compte utilisent l'`account` passé en argument, sinon celui dérivé du signer d'`init()`.
-`orderbook` utilise la source `book`. Le message `{ channel: "pong" }` est ignoré du dispatch.
+Account subscriptions use the `account` argument, or the one derived from the `init()` signer.
+`orderbook` uses the `book` source. The `{ channel: "pong" }` message is ignored by the dispatcher.
