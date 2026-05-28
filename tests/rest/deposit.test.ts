@@ -25,7 +25,7 @@ const account = readEnv('SOLANA_PUBLIC_KEY');
 const NETWORK_TIMEOUT = 90_000;
 
 function waitForBalance(target: number, deadline: number): Promise<number> {
-  return getAccountInfo({ account }).then((info) => {
+  return getAccountInfo({ account }, account).then((info) => {
     const balance = Number(info.balance);
     if (balance >= target) {
       return balance;
@@ -50,7 +50,11 @@ describe('deposit instruction data', () => {
 
 describe('deposit (devnet, dépôt réel crédité)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey: solanaSecretKey } } });
+    init({
+      signers: {
+        [account]: { secretKey: solanaSecretKey, publicKey: account, network: 'testnet' },
+      },
+    });
   });
 
   afterAll(() => {
@@ -60,16 +64,19 @@ describe('deposit (devnet, dépôt réel crédité)', () => {
   it(
     'deposits USDP on devnet and the Pacifica account is credited',
     () => {
-      return getAccountInfo({ account }).then((before) => {
+      return getAccountInfo({ account }, account).then((before) => {
         const balanceBefore = Number(before.balance);
-        return deposit({
-          amount: 10,
-          rpcUrl: DEVNET_RPC_URL,
-          programId: DEVNET_DEPOSIT_PROGRAM_ID,
-          centralState: DEVNET_CENTRAL_STATE,
-          collateralMint: DEVNET_COLLATERAL_MINT,
-          decimals: 6,
-        }).then((signature) => {
+        return deposit(
+          {
+            amount: 10,
+            rpcUrl: DEVNET_RPC_URL,
+            programId: DEVNET_DEPOSIT_PROGRAM_ID,
+            centralState: DEVNET_CENTRAL_STATE,
+            collateralMint: DEVNET_COLLATERAL_MINT,
+            decimals: 6,
+          },
+          account,
+        ).then((signature) => {
           expect(typeof signature).toBe('string');
           return waitForBalance(balanceBefore + 9, Date.now() + 60_000).then((balanceAfter) => {
             expect(balanceAfter).toBeGreaterThanOrEqual(balanceBefore + 9);

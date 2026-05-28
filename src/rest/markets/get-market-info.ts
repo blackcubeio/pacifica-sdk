@@ -16,8 +16,8 @@ interface MarketWire {
   created_at: number;
 }
 
-export function getMarketInfo(): Promise<Market[]> {
-  return httpGet<MarketWire[]>('/info').then((envelope) =>
+export function getMarketInfo(label?: string): Promise<Market[]> {
+  return httpGet<MarketWire[]>('/info', undefined, label).then((envelope) =>
     envelope.data.map((market) => mapMarket(market)),
   );
 }

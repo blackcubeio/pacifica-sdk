@@ -19,7 +19,7 @@ const IDLE_TIMEOUT = 90_000;
 
 describe('WsClient (testnet, réseau réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signers: { [account]: { secretKey } } });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -29,7 +29,7 @@ describe('WsClient (testnet, réseau réel)', () => {
   it(
     'connects and receives a prices stream message',
     () => {
-      const client = new WsClient();
+      const client = new WsClient({ label: account });
       return client.connect().then(() => {
         return new Promise<void>((resolve) => {
           const unsubscribe = client.subscribePrices((data) => {
@@ -47,7 +47,7 @@ describe('WsClient (testnet, réseau réel)', () => {
   it(
     'sends a signed action (cancelAllOrders) over WS and gets a response',
     () => {
-      const client = new WsClient();
+      const client = new WsClient({ label: account });
       return client
         .connect()
         .then(() => client.cancelAllOrders({ allSymbols: true, excludeReduceOnly: false }))
@@ -62,7 +62,7 @@ describe('WsClient (testnet, réseau réel)', () => {
   it(
     'stays alive while idle past the 60s server timeout thanks to the heartbeat',
     () => {
-      const client = new WsClient();
+      const client = new WsClient({ label: account });
       let closed = false;
       let reconnected = false;
       client.onClose = () => {

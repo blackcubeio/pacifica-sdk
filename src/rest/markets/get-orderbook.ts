@@ -13,11 +13,15 @@ interface OrderbookWire {
   t: number;
 }
 
-export function getOrderbook(query: OrderbookQuery): Promise<Orderbook> {
-  return httpGet<OrderbookWire>('/book', {
-    symbol: query.symbol,
-    agg_level: query.aggLevel,
-  }).then((envelope) => mapOrderbook(envelope.data));
+export function getOrderbook(query: OrderbookQuery, label?: string): Promise<Orderbook> {
+  return httpGet<OrderbookWire>(
+    '/book',
+    {
+      symbol: query.symbol,
+      agg_level: query.aggLevel,
+    },
+    label,
+  ).then((envelope) => mapOrderbook(envelope.data));
 }
 
 function mapOrderbook(wire: OrderbookWire): Orderbook {

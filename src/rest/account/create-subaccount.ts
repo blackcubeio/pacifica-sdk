@@ -1,7 +1,7 @@
 import { DEFAULT_EXPIRY_WINDOW } from '../../common/constants';
 import { OperationType } from '../../common/types';
 import { signMessage } from '../../common/utils';
-import { httpPost } from '../client';
+import { httpPostTo } from '../client';
 import { signerAccount } from '../signing';
 import type { CreateSubaccountParams } from '../types';
 
@@ -30,5 +30,7 @@ export function createSubaccount(params: CreateSubaccountParams): Promise<void> 
     timestamp,
     expiry_window: expiryWindow,
   };
-  return httpPost<null>('/account/subaccount/create', request).then(() => undefined);
+  return httpPostTo<null>('/account/subaccount/create', request, params.main.network).then(
+    () => undefined,
+  );
 }

@@ -33,8 +33,8 @@ interface AccountInfoWire {
   spot_balances: SpotBalanceWire[];
 }
 
-export function getAccountInfo(query: AccountQuery): Promise<AccountInfo> {
-  return httpGet<AccountInfoWire>('/account', { account: query.account }).then((envelope) =>
+export function getAccountInfo(query: AccountQuery, label?: string): Promise<AccountInfo> {
+  return httpGet<AccountInfoWire>('/account', { account: query.account }, label).then((envelope) =>
     mapAccountInfo(envelope.data),
   );
 }

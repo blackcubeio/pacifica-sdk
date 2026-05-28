@@ -23,7 +23,11 @@ describe('API agent key (testnet, réel)', () => {
   it(
     'binds the API key to the account (owner-signed) and lists it',
     () => {
-      init({ network: 'testnet', signers: { [account]: { secretKey: accountSecretKey } } });
+      init({
+        signers: {
+          [account]: { secretKey: accountSecretKey, publicKey: account, network: 'testnet' },
+        },
+      });
       return bindAgentWallet({ agentWallet: apiPublicKey }, account)
         .catch((error: unknown) => {
           // Already bound from a previous run → fine (max 20 keys/account).
@@ -49,26 +53,35 @@ describe('API agent key (testnet, réel)', () => {
     'trades for the account signing with the API key (account + agentWallet)',
     () => {
       init({
-        network: 'testnet',
-        signers: { [account]: { secretKey: apiSecretKey, agentWallet: apiPublicKey } },
+        signers: {
+          [account]: {
+            secretKey: apiSecretKey,
+            publicKey: account,
+            agentWallet: apiPublicKey,
+            network: 'testnet',
+          },
+        },
       });
       const clientOrderId = globalThis.crypto.randomUUID();
       return buildFarBtcLimit().then(({ price, amount }) =>
-        createLimitOrder({ symbol: 'BTC', price, amount, side: OrderSide.Bid, clientOrderId })
+        createLimitOrder(
+          { symbol: 'BTC', price, amount, side: OrderSide.Bid, clientOrderId },
+          account,
+        )
           .then(() =>
             poll(
-              () => getOpenOrders({ account }),
+              () => getOpenOrders({ account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId),
             ),
           )
           .then((orders) => {
             // Order signed by the API key is credited to the account it acts for.
             expect(hasClientOrderId(orders, clientOrderId)).toBe(true);
-            return cancelOrder({ symbol: 'BTC', clientOrderId });
+            return cancelOrder({ symbol: 'BTC', clientOrderId }, account);
           })
           .then(() =>
             poll(
-              () => getOpenOrders({ account }),
+              () => getOpenOrders({ account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId) === false,
             ),
           ),

@@ -17,8 +17,8 @@ interface TradeWire {
   created_at: number;
 }
 
-export function getRecentTrades(query: RecentTradesQuery): Promise<RecentTrades> {
-  return httpGet<TradeWire[]>('/trades', { symbol: query.symbol }).then((envelope) => ({
+export function getRecentTrades(query: RecentTradesQuery, label?: string): Promise<RecentTrades> {
+  return httpGet<TradeWire[]>('/trades', { symbol: query.symbol }, label).then((envelope) => ({
     trades: envelope.data.map((trade) => mapTrade(trade)),
     lastOrderId: envelope.last_order_id ?? 0,
   }));

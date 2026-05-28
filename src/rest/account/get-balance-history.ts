@@ -16,12 +16,17 @@ interface BalanceHistoryWire {
 
 export function getBalanceHistory(
   query: BalanceHistoryQuery,
+  label?: string,
 ): Promise<Paginated<BalanceHistoryEntry>> {
-  return httpGet<BalanceHistoryWire[]>('/account/balance/history', {
-    account: query.account,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+  return httpGet<BalanceHistoryWire[]>(
+    '/account/balance/history',
+    {
+      account: query.account,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((entry) => mapBalanceHistoryEntry(entry)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

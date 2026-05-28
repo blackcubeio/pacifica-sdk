@@ -10,8 +10,8 @@ interface BridgeAssetWire {
   decimals: number;
 }
 
-export function getBridgeInfo(): Promise<BridgeAsset[]> {
-  return httpGet<BridgeAssetWire[]>('/spot_assets/bridge/info').then((envelope) =>
+export function getBridgeInfo(label?: string): Promise<BridgeAsset[]> {
+  return httpGet<BridgeAssetWire[]>('/spot_assets/bridge/info', undefined, label).then((envelope) =>
     envelope.data.map((asset) => mapBridgeAsset(asset)),
   );
 }

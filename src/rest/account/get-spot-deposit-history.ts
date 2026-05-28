@@ -10,12 +10,17 @@ interface SpotDepositWire {
 
 export function getSpotDepositHistory(
   query: SpotHistoryQuery,
+  label?: string,
 ): Promise<Paginated<SpotDepositEntry>> {
-  return httpGet<SpotDepositWire[]>('/account/spot_asset/deposit/history', {
-    account: query.account,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+  return httpGet<SpotDepositWire[]>(
+    '/account/spot_asset/deposit/history',
+    {
+      account: query.account,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((entry) => mapSpotDepositEntry(entry)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

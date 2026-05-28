@@ -7,14 +7,18 @@ interface PortfolioPointWire {
   timestamp: number;
 }
 
-export function getPortfolio(query: PortfolioQuery): Promise<PortfolioPoint[]> {
-  return httpGet<PortfolioPointWire[]>('/portfolio', {
-    account: query.account,
-    time_range: query.timeRange,
-    start_time: query.startTime,
-    end_time: query.endTime,
-    limit: query.limit,
-  }).then((envelope) => envelope.data.map((point) => mapPortfolioPoint(point)));
+export function getPortfolio(query: PortfolioQuery, label?: string): Promise<PortfolioPoint[]> {
+  return httpGet<PortfolioPointWire[]>(
+    '/portfolio',
+    {
+      account: query.account,
+      time_range: query.timeRange,
+      start_time: query.startTime,
+      end_time: query.endTime,
+      limit: query.limit,
+    },
+    label,
+  ).then((envelope) => envelope.data.map((point) => mapPortfolioPoint(point)));
 }
 
 function mapPortfolioPoint(wire: PortfolioPointWire): PortfolioPoint {

@@ -4,14 +4,13 @@ Collateral deposit is **not an API route** — it's a **Solana transaction** str
 Pacifica program (what the UI / the Python SDK do). Uses the modern `@solana/kit` +
 `@solana-program/token` (not the legacy `@solana/web3.js`).
 
-Authority: ◎ **Solana wallet** — signed by the depositing account's on-chain Solana keypair
-(passed as the `account?` Signer, else the single registered account). This is a Solana signature,
-never a Pacifica API key.
+Authority: ◎ **Solana wallet** — signed by the depositing account's on-chain Solana keypair,
+resolved from the **mandatory** signer `label`. This is a Solana signature, never a Pacifica API key.
 
 ## Function
 
 ```ts
-deposit(params: DepositParams, account?: Signer): Promise<string>   // transaction signature
+deposit(params: DepositParams, label: string): Promise<string>   // transaction signature
 ```
 
 ```ts

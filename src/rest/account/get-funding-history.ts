@@ -13,12 +13,17 @@ interface AccountFundingWire {
 
 export function getFundingHistory(
   query: FundingHistoryQuery,
+  label?: string,
 ): Promise<Paginated<AccountFundingEntry>> {
-  return httpGet<AccountFundingWire[]>('/funding/history', {
-    account: query.account,
-    limit: query.limit,
-    cursor: query.cursor,
-  }).then((envelope) => ({
+  return httpGet<AccountFundingWire[]>(
+    '/funding/history',
+    {
+      account: query.account,
+      limit: query.limit,
+      cursor: query.cursor,
+    },
+    label,
+  ).then((envelope) => ({
     items: envelope.data.map((entry) => mapFundingEntry(entry)),
     nextCursor: envelope.next_cursor ?? null,
     hasMore: envelope.has_more ?? false,

@@ -5,9 +5,9 @@ import type { AgentWhitelistedIpParams } from '../types';
 
 export function addAgentWhitelistedIp(
   params: AgentWhitelistedIpParams,
-  account?: string,
+  label: string,
 ): Promise<void> {
   const payload = { agent_wallet: params.agentWallet, ip_address: params.ipAddress };
-  const request = buildSignedRequest(OperationType.AddAgentWhitelistedIp, payload, account);
-  return httpPost<null>('/agent/ip_whitelist/add', request).then(() => undefined);
+  const request = buildSignedRequest(OperationType.AddAgentWhitelistedIp, payload, label);
+  return httpPost<null>('/agent/ip_whitelist/add', request, label).then(() => undefined);
 }

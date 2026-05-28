@@ -17,11 +17,12 @@ function readEnv(name: string): string {
 }
 
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
+const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const NETWORK_TIMEOUT = 20_000;
 
 describe('account reading (testnet, réseau réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet' });
+    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   afterAll(() => {
@@ -31,7 +32,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getAccountInfo returns the sub-account balance fields',
     () => {
-      return getAccountInfo({ account }).then((info) => {
+      return getAccountInfo({ account }, account).then((info) => {
         expect(typeof info.balance).toBe('string');
         expect(typeof info.accountEquity).toBe('string');
         expect(Array.isArray(info.spotBalances)).toBe(true);
@@ -43,7 +44,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getPositions returns an array',
     () => {
-      return getPositions({ account }).then((positions) => {
+      return getPositions({ account }, account).then((positions) => {
         expect(Array.isArray(positions)).toBe(true);
       });
     },
@@ -53,7 +54,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getOpenOrders returns an array',
     () => {
-      return getOpenOrders({ account }).then((orders) => {
+      return getOpenOrders({ account }, account).then((orders) => {
         expect(Array.isArray(orders)).toBe(true);
       });
     },
@@ -63,7 +64,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getOpenTwapOrder returns an array',
     () => {
-      return getOpenTwapOrder({ account }).then((twapOrders) => {
+      return getOpenTwapOrder({ account }, account).then((twapOrders) => {
         expect(Array.isArray(twapOrders)).toBe(true);
       });
     },
@@ -73,7 +74,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getOrderHistory returns a paginated result',
     () => {
-      return getOrderHistory({ account }).then((history) => {
+      return getOrderHistory({ account }, account).then((history) => {
         expect(Array.isArray(history.items)).toBe(true);
         expect(typeof history.hasMore).toBe('boolean');
       });
