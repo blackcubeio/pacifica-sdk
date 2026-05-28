@@ -18,7 +18,7 @@ const NETWORK_TIMEOUT = 20_000;
 
 describe('WsClient (testnet, réseau réel)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signer: { secretKey, account } });
+    init({ network: 'testnet', signers: { [account]: { secretKey } } });
   });
 
   afterAll(() => {

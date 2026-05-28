@@ -1,22 +1,22 @@
 # REST API — Vaults (Lakes)
 
-Vault (lake) management: LP and manager. `getVaults` is public; everything else is signed (`signer?`).
+Vault (lake) management: LP and manager. `getVaults` is public; everything else is signed (`account?`).
 
 | Function | signature type | Endpoint | Returns |
 |---|---|---|---|
 | `getVaults()` | — (public GET) | `GET /lake/list` | `Vault[]` |
-| `createVault(params, signer?)` | `create_lake` | `POST /lake/create` | `CreateVaultResult` |
-| `vaultDeposit({ lake, amount, idempotencyKey? }, signer?)` | `deposit_to_lake` | `POST /lake/deposit` | `void` |
-| `vaultWithdraw({ lake, shares, idempotencyKey? }, signer?)` | `withdraw_from_lake` | `POST /lake/withdraw` | `void` |
-| `claimReferralCode({ lake, code }, signer?)` | `claim_lake_referral` | `POST /lake/claim_referral_code` | `void` |
-| `claimManager({ lake, depositAmount }, signer?)` | `claim_lake_manager` | `POST /lake/claim_manager` | `void` |
-| `updateDepositCap({ lake, depositCap }, signer?)` | `update_lake_deposit_cap` | `POST /lake/update_deposit_cap` | `void` |
-| `addToWhitelist({ lake, symbols }, signer?)` | `add_lake_whitelist` | `POST /lake/add_whitelist` | `void` |
-| `removeFromWhitelist({ lake, symbols }, signer?)` | `remove_lake_whitelist` | `POST /lake/remove_whitelist` | `void` |
-| `addToBlacklist({ lake, symbols }, signer?)` | `add_lake_blacklist` | `POST /lake/add_blacklist` | `void` |
-| `removeFromBlacklist({ lake, symbols }, signer?)` | `remove_lake_blacklist` | `POST /lake/remove_blacklist` | `void` |
-| `addMaxLeverage({ lake, symbols, maxLeverage }, signer?)` | `add_lake_max_leverage` | `POST /lake/add_max_leverage` | `void` |
-| `removeMaxLeverage({ lake, symbols }, signer?)` | `remove_lake_max_leverage` | `POST /lake/remove_max_leverage` | `void` |
+| `createVault(params, account?)` | `create_lake` | `POST /lake/create` | `CreateVaultResult` |
+| `vaultDeposit({ lake, amount, idempotencyKey? }, account?)` | `deposit_to_lake` | `POST /lake/deposit` | `void` |
+| `vaultWithdraw({ lake, shares, idempotencyKey? }, account?)` | `withdraw_from_lake` | `POST /lake/withdraw` | `void` |
+| `claimReferralCode({ lake, code }, account?)` | `claim_lake_referral` | `POST /lake/claim_referral_code` | `void` |
+| `claimManager({ lake, depositAmount }, account?)` | `claim_lake_manager` | `POST /lake/claim_manager` | `void` |
+| `updateDepositCap({ lake, depositCap }, account?)` | `update_lake_deposit_cap` | `POST /lake/update_deposit_cap` | `void` |
+| `addToWhitelist({ lake, symbols }, account?)` | `add_lake_whitelist` | `POST /lake/add_whitelist` | `void` |
+| `removeFromWhitelist({ lake, symbols }, account?)` | `remove_lake_whitelist` | `POST /lake/remove_whitelist` | `void` |
+| `addToBlacklist({ lake, symbols }, account?)` | `add_lake_blacklist` | `POST /lake/add_blacklist` | `void` |
+| `removeFromBlacklist({ lake, symbols }, account?)` | `remove_lake_blacklist` | `POST /lake/remove_blacklist` | `void` |
+| `addMaxLeverage({ lake, symbols, maxLeverage }, account?)` | `add_lake_max_leverage` | `POST /lake/add_max_leverage` | `void` |
+| `removeMaxLeverage({ lake, symbols }, account?)` | `remove_lake_max_leverage` | `POST /lake/remove_max_leverage` | `void` |
 
 ### createVault
 

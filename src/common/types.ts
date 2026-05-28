@@ -82,7 +82,6 @@ export interface HardwareSignature {
 
 export interface Signer {
   secretKey: string;
-  account?: string;
   agentWallet?: string;
 }
 

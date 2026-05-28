@@ -26,7 +26,7 @@ function btcLeverage(): Promise<number | null> {
 
 describe('account write read-back (testnet, do → état visible → undo)', () => {
   beforeAll(() => {
-    init({ network: 'testnet', signer: { secretKey, account } });
+    init({ network: 'testnet', signers: { [account]: { secretKey } } });
   });
 
   afterAll(() => {

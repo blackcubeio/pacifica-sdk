@@ -6,12 +6,12 @@ server response (correlated by `id`).
 
 | Method | sent format |
 |---|---|
-| `createLimitOrder(params, signer?)` | `{ id, params: { create_order: <signed> } }` |
-| `createMarketOrder(params, signer?)` | `{ id, params: { create_market_order: <signed> } }` |
-| `cancelOrder(params, signer?)` | `{ id, params: { cancel_order: <signed> } }` |
-| `cancelAllOrders(params, signer?)` | `{ id, params: { cancel_all_orders: <signed> } }` |
-| `editOrder(params, signer?)` | `{ id, params: { edit_order: <signed> } }` |
-| `batchOrders(actions, signer?)` | `{ id, params: { actions: [<signed>, …] } }` |
+| `createLimitOrder(params, account?)` | `{ id, params: { create_order: <signed> } }` |
+| `createMarketOrder(params, account?)` | `{ id, params: { create_market_order: <signed> } }` |
+| `cancelOrder(params, account?)` | `{ id, params: { cancel_order: <signed> } }` |
+| `cancelAllOrders(params, account?)` | `{ id, params: { cancel_all_orders: <signed> } }` |
+| `editOrder(params, account?)` | `{ id, params: { edit_order: <signed> } }` |
+| `batchOrders(actions, account?)` | `{ id, params: { actions: [<signed>, …] } }` |
 
 ```ts
 ws.connect().then(() => {

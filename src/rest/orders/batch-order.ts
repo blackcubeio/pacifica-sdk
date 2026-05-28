@@ -1,4 +1,4 @@
-import { type JsonObject, OperationType, type Signer } from '../../common/types';
+import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
 import {
@@ -22,19 +22,19 @@ interface BatchActionResultWire {
   error?: string | null;
 }
 
-export function batchOrders(actions: BatchAction[], signer?: Signer): Promise<BatchResult> {
+export function batchOrders(actions: BatchAction[], account?: string): Promise<BatchResult> {
   return httpPost<{ results: BatchActionResultWire[] }>('/orders/batch', {
-    actions: buildSignedBatchActions(actions, signer),
+    actions: buildSignedBatchActions(actions, account),
   }).then((envelope) => ({
     results: envelope.data.results.map((result) => mapBatchActionResult(result)),
   }));
 }
 
-export function buildSignedBatchActions(actions: BatchAction[], signer?: Signer): JsonObject[] {
-  return actions.map((action) => buildBatchAction(action, signer));
+export function buildSignedBatchActions(actions: BatchAction[], account?: string): JsonObject[] {
+  return actions.map((action) => buildBatchAction(action, account));
 }
 
-function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
+function buildBatchAction(action: BatchAction, account?: string): JsonObject {
   switch (action.type) {
     case BatchActionType.Create:
       return {
@@ -42,7 +42,7 @@ function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
         data: buildSignedRequest(
           OperationType.CreateOrder,
           buildLimitOrderPayload(action.params),
-          signer,
+          account,
         ),
       };
     case BatchActionType.CreateMarket:
@@ -51,7 +51,7 @@ function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
         data: buildSignedRequest(
           OperationType.CreateMarketOrder,
           buildMarketOrderPayload(action.params),
-          signer,
+          account,
         ),
       };
     case BatchActionType.Cancel:
@@ -60,7 +60,7 @@ function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
         data: buildSignedRequest(
           OperationType.CancelOrder,
           buildCancelOrderPayload(action.params),
-          signer,
+          account,
         ),
       };
     case BatchActionType.Edit:
@@ -69,7 +69,7 @@ function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
         data: buildSignedRequest(
           OperationType.EditOrder,
           buildEditOrderPayload(action.params),
-          signer,
+          account,
         ),
       };
     case BatchActionType.SetPositionTpsl:
@@ -78,7 +78,7 @@ function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
         data: buildSignedRequest(
           OperationType.SetPositionTpsl,
           buildPositionTpslPayload(action.params),
-          signer,
+          account,
         ),
       };
     case BatchActionType.CancelStopOrder:
@@ -87,7 +87,7 @@ function buildBatchAction(action: BatchAction, signer?: Signer): JsonObject {
         data: buildSignedRequest(
           OperationType.CancelStopOrder,
           buildCancelStopOrderPayload(action.params),
-          signer,
+          account,
         ),
       };
     default:

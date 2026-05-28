@@ -26,8 +26,8 @@ npm install @blackcube/pacifica-sdk
 pnpm add @blackcube/pacifica-sdk
 ```
 
-Requires Node.js ≥ 18 (the built-in WebSocket used by `WsClient` needs Node ≥ 22, or inject one;
-browsers work as-is).
+Requires Node.js ≥ 22 (for the built-in WebSocket used by `WsClient`; or inject one).
+Browsers work as-is.
 
 ## Quick start
 
@@ -35,12 +35,16 @@ browsers work as-is).
 import { init, getPrices, createLimitOrder, OrderSide, WsClient } from '@blackcube/pacifica-sdk';
 
 // Initialise once — the whole API inherits this config.
-init({ network: 'testnet', signer: { secretKey: process.env.PACIFICA_SECRET_KEY } });
+// Register one signer per account address; reference an account on signed calls.
+init({
+  network: 'testnet',
+  signers: { [process.env.PACIFICA_ACCOUNT]: { secretKey: process.env.PACIFICA_SECRET_KEY } },
+});
 
 // Public read
 const prices = await getPrices();
 
-// Signed write (uses the signer from init)
+// Signed write — `account` is optional when a single signer is registered
 const { orderId } = await createLimitOrder({
   symbol: 'BTC',
   price: '50000',
@@ -65,10 +69,11 @@ await ws.createMarketOrder({ symbol: 'BTC', amount: '0.001', side: OrderSide.Bid
 | `restUrl` / `wsUrl` | `string` | per `network` |
 | `fetch` | `FetchLike` | `globalThis.fetch` |
 | `webSocket` | `WebSocketFactory` | `globalThis.WebSocket` |
-| `signer` | `Signer` | — (required for signed writes) |
+| `signers` | `Record<account, Signer>` | — (required for signed writes) |
 
-Writes use a `Signer` (`{ secretKey, account?, agentWallet? }`) — set in `init()` or passed per
-call as the last argument. See [docs/signing](./doc/signing.md).
+Signed writes reference a registered account: register signers keyed by account address in
+`init({ signers })` (`Signer = { secretKey, agentWallet? }`), then pass the `account` per call
+(optional when a single account is registered). Multi-account ready. See [docs/signing](./doc/signing.md).
 
 ## API documentation
 

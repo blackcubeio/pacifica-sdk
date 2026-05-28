@@ -39,7 +39,7 @@ import { init } from '@blackcube/pacifica-sdk';
 
 init();                                                // mainnet
 init({ network: 'testnet' });                          // testnet
-init({ network: 'testnet', signer: { secretKey } });   // + signer for signed writes
+init({ network: 'testnet', signers: { [account]: { secretKey } } }); // + signer registry
 ```
 
 | Option | Type | Default |
@@ -48,13 +48,19 @@ init({ network: 'testnet', signer: { secretKey } });   // + signer for signed wr
 | `restUrl` / `wsUrl` | `string` | per `network` |
 | `fetch` | `FetchLike` | `globalThis.fetch` |
 | `webSocket` | `WebSocketFactory` | `globalThis.WebSocket` |
-| `signer` | `Signer` | — (required for writes) |
+| `signers` | `Record<account, Signer>` | — (required for writes) |
 
 Calling the API before `init()` throws `Pacifica SDK not initialized`. `resetConfig()` resets it.
+
+## Multi-account
+
+Register one signer per account address in `init({ signers })`, then reference an account by
+address on signed calls — `createLimitOrder(params, account)` — and on account subscriptions.
+With a single registered account the `account` argument is optional.
 
 ## Conventions
 
 - **Public API in camelCase**; converted to the snake_case wire format internally.
 - **Responses mapped to camelCase**. Amounts/prices are **decimal strings**.
 - Errors throw `PacificaApiError` (`status`, `code`, `message`).
-- Writes use a [`Signer`](./signing.md) (`init` or per-call argument).
+- Writes reference a registered [account](./signing.md) (registry in `init`, `account` per call).

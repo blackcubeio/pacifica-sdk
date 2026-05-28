@@ -13,18 +13,32 @@ and API config keys.
 6. REST request = `{ account, signature, timestamp, expiry_window, ...payload }`
 7. WS message = `{ id, params: { "<operation_type>": request } }`
 
-## Signer
+## Signer registry & accounts
+
+Signers are registered **per account address** in `init({ signers })`, then signed calls
+reference an account by address:
 
 ```ts
 interface Signer {
   secretKey: string;     // base58 private key used to sign
-  account?: string;      // main wallet; defaults to the one derived from secretKey
   agentWallet?: string;  // agent key pubkey when signing via an agent wallet
 }
+
+init({
+  network: 'testnet',
+  signers: {
+    'FQaG…(account address)': { secretKey: AGENT_SECRET, agentWallet: AGENT_PUBKEY },
+    'ENUW…(another account)': { secretKey: OTHER_SECRET },
+  },
+});
+
+createMarketOrder(params, 'FQaG…');   // 2nd arg = the registry key (account address)
 ```
 
-Set in `init({ signer })`, overridable per call: `createMarketOrder(params, signer?)`.
-Without a signer → `No signer available` error.
+The **registry key is the account** (the wallet the action is for); the **value is the
+signing material** (`secretKey` — which may be an agent key — and optional `agentWallet`).
+With a single registered account, the `account` argument is optional. An unknown/missing
+account throws `No signer registered for account …`.
 
 ## Primitives (`utils`)
 
@@ -62,25 +76,26 @@ signature with the agent key, `agent_wallet` field). Source: Python SDK (lightly
 
 | Function | type | Endpoint | Returns |
 |---|---|---|---|
-| `bindAgentWallet({ agentWallet }, signer?)` | `bind_agent_wallet` | `POST /agent/bind` | `void` |
-| `listAgentWallets(signer?)` | `list_agent_wallets` | `POST /agent/list` | `JsonValue` |
-| `revokeAgentWallet({ agentWallet }, signer?)` | `revoke_agent_wallet` | `POST /agent/revoke` | `void` |
-| `revokeAllAgentWallets(signer?)` | `revoke_all_agent_wallets` | `POST /agent/revoke_all` | `void` |
-| `listAgentIpWhitelist({ agentWallet }, signer?)` | `list_agent_ip_whitelist` | `POST /agent/ip_whitelist/list` | `JsonValue` |
-| `addAgentWhitelistedIp({ agentWallet, ipAddress }, signer?)` | `add_agent_whitelisted_ip` | `POST /agent/ip_whitelist/add` | `void` |
-| `removeAgentWhitelistedIp({ agentWallet, ipAddress }, signer?)` | `remove_agent_whitelisted_ip` | `POST /agent/ip_whitelist/remove` | `void` |
-| `setAgentIpWhitelistEnabled({ agentWallet, enabled }, signer?)` | `set_agent_ip_whitelist_enabled` | `POST /agent/ip_whitelist/toggle` | `void` |
+| `bindAgentWallet({ agentWallet }, account?)` | `bind_agent_wallet` | `POST /agent/bind` | `void` |
+| `listAgentWallets(account?)` | `list_agent_wallets` | `POST /agent/list` | `JsonValue` |
+| `revokeAgentWallet({ agentWallet }, account?)` | `revoke_agent_wallet` | `POST /agent/revoke` | `void` |
+| `revokeAllAgentWallets(account?)` | `revoke_all_agent_wallets` | `POST /agent/revoke_all` | `void` |
+| `listAgentIpWhitelist({ agentWallet }, account?)` | `list_agent_ip_whitelist` | `POST /agent/ip_whitelist/list` | `JsonValue` |
+| `addAgentWhitelistedIp({ agentWallet, ipAddress }, account?)` | `add_agent_whitelisted_ip` | `POST /agent/ip_whitelist/add` | `void` |
+| `removeAgentWhitelistedIp({ agentWallet, ipAddress }, account?)` | `remove_agent_whitelisted_ip` | `POST /agent/ip_whitelist/remove` | `void` |
+| `setAgentIpWhitelistEnabled({ agentWallet, enabled }, account?)` | `set_agent_ip_whitelist_enabled` | `POST /agent/ip_whitelist/toggle` | `void` |
 
-Usage: `init({ signer: { secretKey: AGENT_SECRET, account: MAIN_PUBKEY, agentWallet: AGENT_PUBKEY } })`.
+Usage: `init({ signers: { [MAIN_PUBKEY]: { secretKey: AGENT_SECRET, agentWallet: AGENT_PUBKEY } } })`
+then call with `account = MAIN_PUBKEY`.
 `listAgentIpWhitelist` sends `api_agent_key` (not `agent_wallet`) in the payload.
 
 ## API config keys (rate-limit)
 
 | Function | type | Endpoint | Returns |
 |---|---|---|---|
-| `createApiConfigKey(signer?)` | `create_api_key` | `POST /account/api_keys/create` | `{ apiKey }` |
-| `revokeApiConfigKey({ apiKey }, signer?)` | `revoke_api_key` | `POST /account/api_keys/revoke` | `void` |
-| `listApiConfigKeys(signer?)` | `list_api_keys` | `POST /account/api_keys` | `JsonValue` |
+| `createApiConfigKey(account?)` | `create_api_key` | `POST /account/api_keys/create` | `{ apiKey }` |
+| `revokeApiConfigKey({ apiKey }, account?)` | `revoke_api_key` | `POST /account/api_keys/revoke` | `void` |
+| `listApiConfigKeys(account?)` | `list_api_keys` | `POST /account/api_keys` | `JsonValue` |
 
 > The `list*` responses (agent wallets, ip whitelist, api config keys) are undocumented →
 > typed as `JsonValue` (no invented fields).

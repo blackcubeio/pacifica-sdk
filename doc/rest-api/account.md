@@ -21,7 +21,7 @@ Account reads (public GET, `account` as query param) and signed account writes.
 
 `getPortfolio` is the docs' "account equity history" (`timeRange`: `PortfolioTimeRange`).
 
-## Writes (signed — `signer?`)
+## Writes (signed — `account?` per call)
 
 | Function | signature type | Endpoint | Returns |
 |---|---|---|---|

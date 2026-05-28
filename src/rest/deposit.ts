@@ -20,7 +20,6 @@ import {
   signTransactionMessageWithSigners,
 } from '@solana/kit';
 import bs58 from 'bs58';
-import type { Signer } from '../common/types';
 import { resolveSigner } from './signing';
 
 const MAINNET_RPC_URL = 'https://api.mainnet-beta.solana.com';
@@ -52,8 +51,8 @@ export function buildDepositData(amount: number, decimals: number): Uint8Array {
   return data;
 }
 
-export function deposit(params: DepositParams, signer?: Signer): Promise<string> {
-  const resolved = resolveSigner(signer);
+export function deposit(params: DepositParams, account?: string): Promise<string> {
+  const resolved = resolveSigner(account);
   const rpcUrl = params.rpcUrl ?? MAINNET_RPC_URL;
   const rpcSubscriptionsUrl = params.rpcSubscriptionsUrl ?? toSubscriptionsUrl(rpcUrl);
   const rpc = createSolanaRpc(rpcUrl);

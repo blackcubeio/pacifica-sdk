@@ -7,7 +7,7 @@ Pacifica program (what the UI / the Python SDK do). Uses the modern `@solana/kit
 ## Function
 
 ```ts
-deposit(params: DepositParams, signer?: Signer): Promise<string>   // transaction signature
+deposit(params: DepositParams, account?: Signer): Promise<string>   // transaction signature
 ```
 
 ```ts
