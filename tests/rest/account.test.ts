@@ -3,8 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
 import { getAccountInfo } from '../../src/rest/account/get-account-info';
 import { getOpenOrders } from '../../src/rest/get-open-orders';
+import { getOrderHistory } from '../../src/rest/get-order-history';
 import { getPositions } from '../../src/rest/get-positions';
-import { getOrderHistory } from '../../src/rest/orders/get-order-history';
 import { getOpenTwapOrder } from '../../src/rest/orders/twap/get-open-twap-order';
 
 function readEnv(name: string): string {
@@ -72,11 +72,14 @@ describe('account reading (testnet, réseau réel)', () => {
   );
 
   it(
-    'getOrderHistory returns a paginated result',
+    'getOrderHistory renvoie des ordres unifiés',
     () => {
-      return getOrderHistory({ account }, account).then((history) => {
-        expect(Array.isArray(history.items)).toBe(true);
-        expect(typeof history.hasMore).toBe('boolean');
+      return getOrderHistory({ user: account }, account).then((orders) => {
+        expect(Array.isArray(orders)).toBe(true);
+        for (const o of orders) {
+          expect(['buy', 'sell']).toContain(o.side);
+          expect(typeof o.status).toBe('string');
+        }
       });
     },
     NETWORK_TIMEOUT,

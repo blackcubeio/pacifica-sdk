@@ -15,6 +15,7 @@ export * from './rest/get-balances';
 export * from './rest/get-positions';
 export * from './rest/get-open-orders';
 export * from './rest/get-user-trades';
+export * from './rest/get-order-history';
 
 export * from './rest/markets/get-market-info';
 export * from './rest/markets/get-fee-levels';
@@ -40,7 +41,6 @@ export * from './rest/account/get-pending-spot-withdrawals';
 
 export * from './rest/signing';
 
-export * from './rest/orders/get-order-history';
 export * from './rest/orders/get-order-history-by-id';
 
 export * from './rest/orders/create-limit-order';
