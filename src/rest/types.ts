@@ -4,7 +4,16 @@ import type { Signer } from '../common/types';
 export { OrderSide, TimeInForce, TriggerPriceType };
 export type { Signer };
 // Formats unifiés (vivent dans common/types) ; ré-export pour compat des imports.
-export type { Balance, Candle, FundingRate, Order, Position, Price, Trade } from '../common/types';
+export type {
+  Balance,
+  Candle,
+  FundingRate,
+  Order,
+  Position,
+  Price,
+  Trade,
+  UserTrade,
+} from '../common/types';
 
 export enum CandleInterval {
   OneMinute = '1m',
