@@ -20,7 +20,7 @@ export interface CandleNative {
 /**
  * Convertisseur **bijectif total** bougie : `toCommon(native) → Candle` / `toNative(Candle) → native`.
  * Le `kind` (absent du wire) est porté par le convertisseur (`perp` par défaut).
- * `qv`/`tbbv`/`tbqv` sont `null` (non fournis par Pacifica) et `xtras` vide → bijection exacte.
+ * `qv`/`tbbv`/`tbqv` sont `null` (non fournis par Pacifica) et `xtras` omis → bijection exacte.
  */
 export class CandleConverter {
   constructor(private readonly kind: MarketKind = 'perp') {}
@@ -41,7 +41,6 @@ export class CandleConverter {
       qv: null,
       tbbv: null,
       tbqv: null,
-      xtras: {},
     };
   }
 
