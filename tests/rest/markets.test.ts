@@ -54,7 +54,7 @@ describe('markets (testnet, réseau réel)', () => {
         expect(typeof btc?.szDecimals).toBe('number');
         expect(typeof btc?.maxLeverage).toBe('number');
         expect(typeof btc?.tickSize).toBe('string');
-        expect(typeof btc?.raw).toBe('object');
+        expect(typeof btc?.xtras).toBe('object');
       });
     },
     NETWORK_TIMEOUT,
