@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
+import { getPairs } from '../../src/rest/get-pairs';
 import { getCandleData } from '../../src/rest/markets/get-candle-data';
 import { getMarketInfo } from '../../src/rest/markets/get-market-info';
 import { getOrderbook } from '../../src/rest/markets/get-orderbook';
@@ -37,6 +38,23 @@ describe('markets (testnet, réseau réel)', () => {
         expect(typeof market?.symbol).toBe('string');
         expect(typeof market?.maxLeverage).toBe('number');
         expect(typeof market?.tickSize).toBe('string');
+      });
+    },
+    NETWORK_TIMEOUT,
+  );
+
+  it(
+    'getPairs returns the unified Pair format (perp)',
+    () => {
+      return getPairs(account).then((pairs) => {
+        expect(pairs.length).toBeGreaterThan(0);
+        const btc = pairs.find((p) => p.base === 'BTC' && p.kind === 'perp');
+        expect(btc?.name).toBe('BTC');
+        expect(btc?.quote).toBe('USDC');
+        expect(typeof btc?.szDecimals).toBe('number');
+        expect(typeof btc?.maxLeverage).toBe('number');
+        expect(typeof btc?.tickSize).toBe('string');
+        expect(typeof btc?.raw).toBe('object');
       });
     },
     NETWORK_TIMEOUT,

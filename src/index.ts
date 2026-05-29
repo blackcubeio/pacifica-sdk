@@ -5,6 +5,7 @@ export * from './common/utils';
 
 export * from './rest/client';
 export * from './rest/types';
+export * from './rest/get-pairs';
 
 export * from './rest/markets/get-market-info';
 export * from './rest/markets/get-prices';
