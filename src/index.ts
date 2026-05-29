@@ -10,13 +10,13 @@ export * from './rest/get-candles';
 export * from './rest/get-order-book';
 export * from './rest/get-prices';
 export * from './rest/get-trades';
+export * from './rest/get-funding-history';
 
 export * from './rest/markets/get-market-info';
 export * from './rest/markets/get-fee-levels';
 export * from './rest/markets/get-loan-pool';
 export * from './rest/markets/get-candle-data';
 export * from './rest/markets/get-mark-price-candle-data';
-export * from './rest/markets/get-historical-funding';
 
 export * from './rest/spot/get-spot-assets';
 export * from './rest/spot/get-bridge-info';

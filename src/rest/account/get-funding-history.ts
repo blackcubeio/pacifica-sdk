@@ -11,7 +11,11 @@ interface AccountFundingWire {
   created_at: number;
 }
 
-export function getFundingHistory(
+/**
+ * Paiements de funding du **compte** (payouts) — spécifique Pacifica.
+ * À ne pas confondre avec `getFundingHistory` (taux public unifié).
+ */
+export function getAccountFunding(
   query: FundingHistoryQuery,
   label?: string,
 ): Promise<Paginated<AccountFundingEntry>> {

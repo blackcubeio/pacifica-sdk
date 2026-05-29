@@ -3,8 +3,8 @@ import type { Signer } from '../common/types';
 
 export { OrderSide, TimeInForce, TriggerPriceType };
 export type { Signer };
-// `Candle`/`Price`/`Trade` (formats unifiés) vivent dans common/types ; ré-export pour compat.
-export type { Candle, Price, Trade } from '../common/types';
+// Formats unifiés (vivent dans common/types) ; ré-export pour compat des imports.
+export type { Candle, FundingRate, Price, Trade } from '../common/types';
 
 export enum CandleInterval {
   OneMinute = '1m',
@@ -66,15 +66,6 @@ export interface FeeLevel {
   takerFeeRate: string;
 }
 
-export interface FundingPoint {
-  oraclePrice: string;
-  bidImpactPrice: string;
-  askImpactPrice: string;
-  fundingRate: string;
-  nextFundingRate: string;
-  createdAt: number;
-}
-
 export interface LoanPool {
   totalBorrowed: string;
   totalBorrowable: string;
@@ -115,12 +106,6 @@ export interface CandleQuery {
   interval: CandleInterval;
   startTime: number;
   endTime?: number;
-}
-
-export interface HistoricalFundingQuery {
-  symbol: string;
-  limit?: number;
-  cursor?: string;
 }
 
 export interface SpotAssetsQuery {

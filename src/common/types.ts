@@ -246,6 +246,21 @@ export interface Trade {
   xtras?: Record<string, unknown>;
 }
 
+/**
+ * Point d'historique de **taux de funding** au format unifié (cœur identique entre SDK).
+ * `xtras` porte le natif hors cœur (oracle/impact/next Pacifica…), omis si vide.
+ */
+export interface FundingRate {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Taux de funding (chaîne décimale). */
+  fundingRate: string;
+  /** Timestamp du funding (ms). */
+  time: number;
+  /** Champs natifs hors cœur (rien jeté), omis si vide. */
+  xtras?: Record<string, unknown>;
+}
+
 export interface Signer {
   secretKey: string;
   publicKey: string;
