@@ -82,6 +82,9 @@ export interface HardwareSignature {
 
 export type Network = 'mainnet' | 'testnet';
 
+/** Type de marché d'une paire : perpetual ou spot. */
+export type MarketKind = 'perp' | 'spot';
+
 export interface Signer {
   secretKey: string;
   publicKey: string;

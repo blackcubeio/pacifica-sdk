@@ -78,8 +78,10 @@ describe('markets (testnet, réseau réel)', () => {
       ).then((candles) => {
         expect(candles.length).toBeGreaterThan(0);
         const candle = candles[0];
-        expect(typeof candle?.openTime).toBe('number');
-        expect(typeof candle?.open).toBe('string');
+        expect(typeof candle?.t).toBe('number');
+        expect(typeof candle?.o).toBe('string');
+        expect(candle?.s).toBe('BTC');
+        expect(candle?.kind).toBe('perp');
       });
     },
     NETWORK_TIMEOUT,

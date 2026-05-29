@@ -28,8 +28,9 @@ const candles = getCandleData({ symbol: 'BTC', interval: CandleInterval.OneMinut
 
 - **Orderbook**: the API returns a single array `l = [bids[], asks[]]`; the SDK exposes it as
   separate `bids` / `asks` (`{ price, amount, orderCount }`, up to 10 levels).
-- **Candles**: short API keys (`t,T,o,c,h,l,v,n`) are mapped to
-  `openTime/closeTime/open/close/high/low/volume/tradeCount`. Intervals via `CandleInterval`.
+- **Candles**: format unifié Blackcube à clés courtes `{ t, T, s, i, o, c, h, l, v, n, kind }`
+  (t/T = open/close ms, s = symbole, i = intervalle, v = volume base, n = nb trades,
+  kind = `'perp'`). Identique aux SDK hyperliquid/aster. Intervalles via `CandleInterval`.
 - `getRecentTrades` exposes `lastOrderId` (exchange-wide nonce) alongside `trades`.
 - `Market.createdAt` is typed as `number` (ms); the Pacifica docs claim "ISO 8601 string" but
   the API returns a millisecond timestamp.

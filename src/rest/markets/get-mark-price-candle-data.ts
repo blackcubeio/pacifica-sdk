@@ -27,17 +27,7 @@ export function getMarkPriceCandleData(query: CandleQuery, label?: string): Prom
   ).then((envelope) => envelope.data.map((candle) => mapCandle(candle)));
 }
 
+/** Le wire Pacifica utilise déjà les clés courtes ; on ajoute juste `kind: 'perp'`. */
 function mapCandle(wire: CandleWire): Candle {
-  return {
-    symbol: wire.s,
-    interval: wire.i,
-    openTime: wire.t,
-    closeTime: wire.T,
-    open: wire.o,
-    close: wire.c,
-    high: wire.h,
-    low: wire.l,
-    volume: wire.v,
-    tradeCount: wire.n,
-  };
+  return { ...wire, kind: 'perp' };
 }
