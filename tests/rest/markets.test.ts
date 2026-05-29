@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
+import { getOrderBook } from '../../src/rest/get-order-book';
 import { getPairs } from '../../src/rest/get-pairs';
 import { getCandleData } from '../../src/rest/markets/get-candle-data';
 import { getMarketInfo } from '../../src/rest/markets/get-market-info';
-import { getOrderbook } from '../../src/rest/markets/get-orderbook';
 import { getPrices } from '../../src/rest/markets/get-prices';
 import { getSpotAssets } from '../../src/rest/spot/get-spot-assets';
 import { CandleInterval } from '../../src/rest/types';
@@ -75,12 +75,13 @@ describe('markets (testnet, réseau réel)', () => {
   );
 
   it(
-    'getOrderbook splits bids and asks',
+    'getOrderBook renvoie le carnet unifié',
     () => {
-      return getOrderbook({ symbol: 'BTC' }, account).then((orderbook) => {
-        expect(orderbook.symbol).toBe('BTC');
-        expect(Array.isArray(orderbook.bids)).toBe(true);
-        expect(Array.isArray(orderbook.asks)).toBe(true);
+      return getOrderBook({ name: 'BTC' }, account).then((book) => {
+        expect(book.name).toBe('BTC');
+        expect(book.kind).toBe('perp');
+        expect(Array.isArray(book.bids)).toBe(true);
+        expect(Array.isArray(book.asks)).toBe(true);
       });
     },
     NETWORK_TIMEOUT,

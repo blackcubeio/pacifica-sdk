@@ -79,19 +79,6 @@ export interface FeeLevel {
   takerFeeRate: string;
 }
 
-export interface OrderbookLevel {
-  price: string;
-  amount: string;
-  orderCount: number;
-}
-
-export interface Orderbook {
-  symbol: string;
-  bids: OrderbookLevel[];
-  asks: OrderbookLevel[];
-  timestamp: number;
-}
-
 export interface Trade {
   eventType: TradeEventType;
   price: string;
@@ -155,11 +142,6 @@ export interface CandleQuery {
   interval: CandleInterval;
   startTime: number;
   endTime?: number;
-}
-
-export interface OrderbookQuery {
-  symbol: string;
-  aggLevel?: number;
 }
 
 export interface RecentTradesQuery {
