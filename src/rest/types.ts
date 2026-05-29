@@ -4,7 +4,7 @@ import type { Signer } from '../common/types';
 export { OrderSide, TimeInForce, TriggerPriceType };
 export type { Signer };
 // Formats unifiés (vivent dans common/types) ; ré-export pour compat des imports.
-export type { Balance, Candle, FundingRate, Price, Trade } from '../common/types';
+export type { Balance, Candle, FundingRate, Position, Price, Trade } from '../common/types';
 
 export enum CandleInterval {
   OneMinute = '1m',
@@ -232,19 +232,6 @@ export interface AccountSettings {
   autoLendDisabled: boolean | null;
   marginSettings: MarginSetting[];
   spotSettings: SpotSetting[];
-}
-
-export interface Position {
-  symbol: string;
-  side: OrderSide;
-  amount: string;
-  entryPrice: string;
-  margin: string;
-  funding: string;
-  isolated: boolean;
-  liquidationPrice: string | null;
-  createdAt: number;
-  updatedAt: number;
 }
 
 export interface LoanSpotBalance {

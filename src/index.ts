@@ -12,6 +12,7 @@ export * from './rest/get-prices';
 export * from './rest/get-trades';
 export * from './rest/get-funding-history';
 export * from './rest/get-balances';
+export * from './rest/get-positions';
 
 export * from './rest/markets/get-market-info';
 export * from './rest/markets/get-fee-levels';
@@ -25,7 +26,6 @@ export * from './rest/spot/get-bridge-params';
 
 export * from './rest/account/get-account-info';
 export * from './rest/account/get-account-settings';
-export * from './rest/account/get-positions';
 export * from './rest/account/get-account-loan';
 export * from './rest/account/get-trade-history';
 export * from './rest/account/get-funding-history';
