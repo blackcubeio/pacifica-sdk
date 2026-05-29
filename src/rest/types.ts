@@ -3,8 +3,8 @@ import type { Signer } from '../common/types';
 
 export { OrderSide, TimeInForce, TriggerPriceType };
 export type { Signer };
-// `Candle` (format unifié) vit dans common/types ; ré-export pour compat des imports existants.
-export type { Candle } from '../common/types';
+// `Candle`/`Price` (formats unifiés) vivent dans common/types ; ré-export pour compat.
+export type { Candle, Price } from '../common/types';
 
 export enum CandleInterval {
   OneMinute = '1m',
@@ -58,19 +58,6 @@ export interface Market {
   fundingRate: string;
   nextFundingRate: string;
   createdAt: number;
-}
-
-export interface Price {
-  symbol: string;
-  mark: string;
-  mid: string;
-  oracle: string;
-  funding: string;
-  nextFunding: string;
-  openInterest: string;
-  volume24h: string;
-  yesterdayPrice: string;
-  timestamp: number;
 }
 
 export interface FeeLevel {

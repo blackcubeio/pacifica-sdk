@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
+import { getPrices } from '../src/rest/get-prices';
 import { getMarketInfo } from '../src/rest/markets/get-market-info';
-import { getPrices } from '../src/rest/markets/get-prices';
 
 export function readEnv(name: string): string {
   const content = readFileSync(new URL('../.env', import.meta.url), 'utf-8');
@@ -46,7 +46,7 @@ export function hasClientOrderId(
 export function buildFarBtcLimit(): Promise<{ price: string; amount: string }> {
   return Promise.all([getMarketInfo(), getPrices()]).then(([markets, prices]) => {
     const market = markets.find((entry) => entry.symbol === 'BTC');
-    const price = prices.find((entry) => entry.symbol === 'BTC');
+    const price = prices.find((entry) => entry.name === 'BTC');
     if (market === undefined || price === undefined) {
       throw new Error('BTC market/price not found on testnet');
     }

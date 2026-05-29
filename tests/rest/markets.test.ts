@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
 import { getOrderBook } from '../../src/rest/get-order-book';
 import { getPairs } from '../../src/rest/get-pairs';
+import { getPrices } from '../../src/rest/get-prices';
 import { getCandleData } from '../../src/rest/markets/get-candle-data';
 import { getMarketInfo } from '../../src/rest/markets/get-market-info';
-import { getPrices } from '../../src/rest/markets/get-prices';
 import { getSpotAssets } from '../../src/rest/spot/get-spot-assets';
 import { CandleInterval } from '../../src/rest/types';
 import { readEnv } from '../helpers';
@@ -61,14 +61,16 @@ describe('markets (testnet, réseau réel)', () => {
   );
 
   it(
-    'getPrices returns mark/oracle prices',
+    'getPrices renvoie les prix unifiés (mark/oracle/time)',
     () => {
       return getPrices(account).then((prices) => {
         expect(prices.length).toBeGreaterThan(0);
         const price = prices[0];
+        expect(price?.kind).toBe('perp');
         expect(typeof price?.mark).toBe('string');
         expect(typeof price?.oracle).toBe('string');
-        expect(typeof price?.timestamp).toBe('number');
+        expect(typeof price?.time).toBe('number');
+        expect(typeof price?.xtras?.next_funding).toBe('string');
       });
     },
     NETWORK_TIMEOUT,
