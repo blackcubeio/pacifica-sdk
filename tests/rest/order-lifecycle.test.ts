@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
 import { OrderSide } from '../../src/common/types';
+import { getOpenOrders } from '../../src/rest/get-open-orders';
 import { cancelOrder } from '../../src/rest/orders/cancel-order';
 import { createLimitOrder } from '../../src/rest/orders/create-limit-order';
-import { getOpenOrders } from '../../src/rest/orders/get-open-orders';
 import { buildFarBtcLimit, hasClientOrderId, poll, readEnv } from '../helpers';
 
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
@@ -31,14 +31,14 @@ describe('order lifecycle REST (testnet, do → visible → undo → gone)', () 
           .then((created) => {
             expect(typeof created.orderId).toBe('number');
             return poll(
-              () => getOpenOrders({ account }, account),
+              () => getOpenOrders({ user: account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId),
             );
           })
           .then(() => cancelOrder({ symbol: 'BTC', clientOrderId }, account))
           .then(() =>
             poll(
-              () => getOpenOrders({ account }, account),
+              () => getOpenOrders({ user: account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId) === false,
             ),
           )

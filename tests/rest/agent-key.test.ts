@@ -4,9 +4,9 @@ import { OrderSide } from '../../src/common/types';
 import { bindAgentWallet } from '../../src/rest/agent/bind-agent-wallet';
 import { listAgentWallets } from '../../src/rest/agent/list-agent-wallets';
 import { PacificaApiError } from '../../src/rest/client';
+import { getOpenOrders } from '../../src/rest/get-open-orders';
 import { cancelOrder } from '../../src/rest/orders/cancel-order';
 import { createLimitOrder } from '../../src/rest/orders/create-limit-order';
-import { getOpenOrders } from '../../src/rest/orders/get-open-orders';
 import { buildFarBtcLimit, hasClientOrderId, poll, readEnv } from '../helpers';
 
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
@@ -70,7 +70,7 @@ describe('API agent key (testnet, réel)', () => {
         )
           .then(() =>
             poll(
-              () => getOpenOrders({ account }, account),
+              () => getOpenOrders({ user: account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId),
             ),
           )
@@ -81,7 +81,7 @@ describe('API agent key (testnet, réel)', () => {
           })
           .then(() =>
             poll(
-              () => getOpenOrders({ account }, account),
+              () => getOpenOrders({ user: account }, account),
               (orders) => hasClientOrderId(orders, clientOrderId) === false,
             ),
           ),

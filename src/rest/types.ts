@@ -4,7 +4,7 @@ import type { Signer } from '../common/types';
 export { OrderSide, TimeInForce, TriggerPriceType };
 export type { Signer };
 // Formats unifiés (vivent dans common/types) ; ré-export pour compat des imports.
-export type { Balance, Candle, FundingRate, Position, Price, Trade } from '../common/types';
+export type { Balance, Candle, FundingRate, Order, Position, Price, Trade } from '../common/types';
 
 export enum CandleInterval {
   OneMinute = '1m',
@@ -322,23 +322,6 @@ export interface PendingSpotWithdrawal {
   feeAmount: string;
   batchNonce: number;
   createdAt: number;
-}
-
-export interface Order {
-  orderId: number;
-  clientOrderId: string | null;
-  symbol: string;
-  side: OrderSide;
-  price: string;
-  initialAmount: string;
-  filledAmount: string;
-  cancelledAmount: string;
-  stopPrice: string | null;
-  orderType: OrderType;
-  stopParentOrderId: number | null;
-  reduceOnly: boolean;
-  createdAt: number;
-  updatedAt: number;
 }
 
 export interface OrderHistoryEntry {

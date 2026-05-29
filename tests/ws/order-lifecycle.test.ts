@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
 import { OrderSide } from '../../src/common/types';
-import { getOpenOrders } from '../../src/rest/orders/get-open-orders';
+import { getOpenOrders } from '../../src/rest/get-open-orders';
 import { WsClient } from '../../src/ws/client';
 import { buildFarBtcLimit, hasClientOrderId, poll, readEnv } from '../helpers';
 
@@ -38,14 +38,14 @@ describe('order lifecycle WS (testnet, WS write visible via REST then undone via
         .then((response) => {
           expect(response).not.toBeNull();
           return poll(
-            () => getOpenOrders({ account }, account),
+            () => getOpenOrders({ user: account }, account),
             (orders) => hasClientOrderId(orders, clientOrderId),
           );
         })
         .then(() => client.cancelOrder({ symbol: 'BTC', clientOrderId }))
         .then(() =>
           poll(
-            () => getOpenOrders({ account }, account),
+            () => getOpenOrders({ user: account }, account),
             (orders) => hasClientOrderId(orders, clientOrderId) === false,
           ),
         )

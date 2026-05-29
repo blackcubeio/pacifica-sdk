@@ -37,10 +37,10 @@ export function poll<TValue>(
 }
 
 export function hasClientOrderId(
-  orders: { clientOrderId: string | null }[],
+  orders: { clientId: string | null }[],
   clientOrderId: string,
 ): boolean {
-  return orders.some((order) => order.clientOrderId === clientOrderId);
+  return orders.some((order) => order.clientId === clientOrderId);
 }
 
 export function buildFarBtcLimit(): Promise<{ price: string; amount: string }> {

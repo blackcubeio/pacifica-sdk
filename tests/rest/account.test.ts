@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
 import { getAccountInfo } from '../../src/rest/account/get-account-info';
+import { getOpenOrders } from '../../src/rest/get-open-orders';
 import { getPositions } from '../../src/rest/get-positions';
-import { getOpenOrders } from '../../src/rest/orders/get-open-orders';
 import { getOrderHistory } from '../../src/rest/orders/get-order-history';
 import { getOpenTwapOrder } from '../../src/rest/orders/twap/get-open-twap-order';
 
@@ -54,7 +54,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getOpenOrders returns an array',
     () => {
-      return getOpenOrders({ account }, account).then((orders) => {
+      return getOpenOrders({ user: account }, account).then((orders) => {
         expect(Array.isArray(orders)).toBe(true);
       });
     },
