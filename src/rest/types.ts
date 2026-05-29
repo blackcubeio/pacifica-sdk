@@ -1,8 +1,10 @@
 import { OrderSide, TimeInForce, TriggerPriceType } from '../common/types';
-import type { MarketKind, Signer } from '../common/types';
+import type { Signer } from '../common/types';
 
 export { OrderSide, TimeInForce, TriggerPriceType };
 export type { Signer };
+// `Candle` (format unifié) vit dans common/types ; ré-export pour compat des imports existants.
+export type { Candle } from '../common/types';
 
 export enum CandleInterval {
   OneMinute = '1m',
@@ -75,35 +77,6 @@ export interface FeeLevel {
   level: number;
   makerFeeRate: string;
   takerFeeRate: string;
-}
-
-/**
- * Bougie OHLCV au **format unifié Blackcube** (clés courtes, identiques entre les SDK
- * hyperliquid/pacifica/aster). Prix et volume sont des **chaînes décimales**.
- */
-export interface Candle {
-  /** Open time — début de la bougie (timestamp ms). */
-  t: number;
-  /** Close time — fin de la bougie (timestamp ms). */
-  T: number;
-  /** Symbol — symbole/paire (ex. `BTC`). */
-  s: string;
-  /** Interval — intervalle (ex. `1h`). */
-  i: string;
-  /** Open — prix d'ouverture. */
-  o: string;
-  /** Close — prix de clôture. */
-  c: string;
-  /** High — plus haut. */
-  h: string;
-  /** Low — plus bas. */
-  l: string;
-  /** Volume — volume en actif de base. */
-  v: string;
-  /** Number of trades — nombre de trades. */
-  n: number;
-  /** Type de marché — `'perp'` (les klines Pacifica sont des marchés perp). */
-  kind: MarketKind;
 }
 
 export interface OrderbookLevel {
