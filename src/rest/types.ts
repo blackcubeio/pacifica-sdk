@@ -556,8 +556,21 @@ export interface UpdateSpotSettingsParams {
   unifiedMarginExcluded: boolean;
 }
 
+/**
+ * Paramètres unifiés de retrait (mêmes champs sur les 3 SDK ; chaque exchange lit ce qu'il
+ * lui faut). Pacifica n'utilise que `amount` (retrait vers l'adresse liée).
+ */
 export interface WithdrawParams {
+  /** Montant à retirer (chaîne décimale). */
   amount: string;
+  /** Adresse de destination (HL requise ; Aster `receiver` ; Pacifica ignorée). */
+  address?: string;
+  /** Actif (Aster requis). */
+  asset?: string;
+  /** Chaîne de destination (Aster requise : `1`/`56`/`42161`). */
+  chainId?: string;
+  /** Frais (Aster requis). */
+  fee?: string;
 }
 
 export interface WithdrawSpotAssetParams {
