@@ -1,9 +1,14 @@
+import type { PacificaClient } from '../../common/config';
+import type { CreateVaultParams, CreateVaultResult } from '../../common/native';
 import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { CreateVaultParams, CreateVaultResult } from '../types';
 
-export function createVault(params: CreateVaultParams, label: string): Promise<CreateVaultResult> {
+export function createVault(
+  client: PacificaClient,
+  params: CreateVaultParams,
+  label: string,
+): Promise<CreateVaultResult> {
   const payload: JsonObject = {
     nickname: params.nickname,
     initial_deposit: params.initialDeposit,
@@ -18,8 +23,10 @@ export function createVault(params: CreateVaultParams, label: string): Promise<C
   if (params.referralCode !== undefined) {
     payload.referral_code = params.referralCode;
   }
-  const request = buildSignedRequest(OperationType.CreateLake, payload, label);
-  return httpPost<{ lake_address: string }>('/lake/create', request, label).then((envelope) => ({
-    lakeAddress: envelope.data.lake_address,
-  }));
+  const request = buildSignedRequest(client, OperationType.CreateLake, payload, label);
+  return httpPost<{ lake_address: string }>(client, '/lake/create', request, label).then(
+    (envelope) => ({
+      lakeAddress: envelope.data.lake_address,
+    }),
+  );
 }

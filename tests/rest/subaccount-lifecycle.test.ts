@@ -1,15 +1,17 @@
 import { ed25519 } from '@noble/curves/ed25519';
 import bs58 from 'bs58';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
 import type { Signer } from '../../src/common/types';
 import { publicKeyFromBase58 } from '../../src/common/utils';
 import { createSubaccount } from '../../src/rest/account/create-subaccount';
 import { getAccountInfo } from '../../src/rest/account/get-account-info';
-import { listSubaccounts } from '../../src/rest/account/list-subaccounts';
+import { getSubAccounts } from '../../src/rest/account/list-subaccounts';
 import { transferSubaccountFund } from '../../src/rest/account/transfer-subaccount-fund';
 import { PacificaApiError } from '../../src/rest/client';
 import { poll, readEnv } from '../helpers';
+
+let client: PacificaClient;
 
 const mainSecretKey = readEnv('SOLANA_PRIVATE_KEY');
 const mainAccount = readEnv('SOLANA_PUBLIC_KEY');
@@ -22,11 +24,7 @@ const subSigner: Signer = { secretKey: subSecretKey, publicKey: subAccount, netw
 
 describe('subaccount lifecycle (testnet, réel)', () => {
   beforeAll(() => {
-    init({ signers: { [mainAccount]: mainSigner, [subAccount]: subSigner } });
-  });
-
-  afterAll(() => {
-    resetConfig();
+    client = init({ signers: { [mainAccount]: mainSigner, [subAccount]: subSigner } });
   });
 
   it(
@@ -34,13 +32,13 @@ describe('subaccount lifecycle (testnet, réel)', () => {
     () => {
       const freshSecret = bs58.encode(ed25519.utils.randomPrivateKey());
       const freshAddress = publicKeyFromBase58(freshSecret);
-      return createSubaccount({
+      return createSubaccount(client, {
         main: mainSigner,
         sub: { secretKey: freshSecret, publicKey: freshAddress, network: 'testnet' },
       })
         .then(() =>
           poll(
-            () => listSubaccounts(mainAccount),
+            () => getSubAccounts(client, mainAccount),
             (subs) => subs.some((entry) => entry.address === freshAddress),
           ),
         )
@@ -62,22 +60,26 @@ describe('subaccount lifecycle (testnet, réel)', () => {
   it(
     'transfers funds main → subaccount and back (round-trip with read-back)',
     () => {
-      return getAccountInfo({ account: subAccount }, subAccount).then((before) => {
+      return getAccountInfo(client, { account: subAccount }, subAccount).then((before) => {
         const subBefore = Number(before.balance);
-        return transferSubaccountFund({ toAccount: subAccount, amount: '20' }, mainAccount)
+        return transferSubaccountFund(client, { toAccount: subAccount, amount: '20' }, mainAccount)
           .then(() =>
             poll(
-              () => getAccountInfo({ account: subAccount }, subAccount),
+              () => getAccountInfo(client, { account: subAccount }, subAccount),
               (info) => Number(info.balance) >= subBefore + 19,
             ),
           )
           .then((credited) => {
             expect(Number(credited.balance)).toBeGreaterThanOrEqual(subBefore + 19);
-            return transferSubaccountFund({ toAccount: mainAccount, amount: '20' }, subAccount);
+            return transferSubaccountFund(
+              client,
+              { toAccount: mainAccount, amount: '20' },
+              subAccount,
+            );
           })
           .then(() =>
             poll(
-              () => getAccountInfo({ account: subAccount }, subAccount),
+              () => getAccountInfo(client, { account: subAccount }, subAccount),
               (info) => Number(info.balance) < subBefore + 19,
             ),
           )

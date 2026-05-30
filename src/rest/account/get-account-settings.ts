@@ -1,5 +1,11 @@
+import type { PacificaClient } from '../../common/config';
+import type {
+  AccountQuery,
+  AccountSettings,
+  MarginSetting,
+  SpotSetting,
+} from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountQuery, AccountSettings, MarginSetting, SpotSetting } from '../types';
 
 interface MarginSettingWire {
   symbol: string;
@@ -20,10 +26,17 @@ interface AccountSettingsWire {
   spot_settings?: SpotSettingWire[];
 }
 
-export function getAccountSettings(query: AccountQuery, label?: string): Promise<AccountSettings> {
-  return httpGet<AccountSettingsWire>('/account/settings', { account: query.account }, label).then(
-    (envelope) => mapAccountSettings(envelope.data),
-  );
+export function getAccountSettings(
+  client: PacificaClient,
+  query: AccountQuery,
+  label?: string,
+): Promise<AccountSettings> {
+  return httpGet<AccountSettingsWire>(
+    client,
+    '/account/settings',
+    { account: query.account },
+    label,
+  ).then((envelope) => mapAccountSettings(envelope.data));
 }
 
 function mapAccountSettings(wire: AccountSettingsWire): AccountSettings {

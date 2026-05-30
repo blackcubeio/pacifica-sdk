@@ -1,21 +1,16 @@
+import type { PacificaClient } from '../../common/config';
+import type { Candle, CandleQuery } from '../../common/native';
+import { CandleConverter, type CandleNative } from '../../converters/candle';
 import { httpGet } from '../client';
-import type { Candle, CandleQuery } from '../types';
 
-interface CandleWire {
-  t: number;
-  T: number;
-  s: string;
-  i: string;
-  o: string;
-  c: string;
-  h: string;
-  l: string;
-  v: string;
-  n: number;
-}
-
-export function getMarkPriceCandleData(query: CandleQuery, label?: string): Promise<Candle[]> {
-  return httpGet<CandleWire[]>(
+export function getMarkPriceCandleData(
+  client: PacificaClient,
+  query: CandleQuery,
+  label?: string,
+): Promise<Candle[]> {
+  const converter = new CandleConverter('perp');
+  return httpGet<CandleNative[]>(
+    client,
     '/kline/mark',
     {
       symbol: query.symbol,
@@ -24,20 +19,5 @@ export function getMarkPriceCandleData(query: CandleQuery, label?: string): Prom
       end_time: query.endTime,
     },
     label,
-  ).then((envelope) => envelope.data.map((candle) => mapCandle(candle)));
-}
-
-function mapCandle(wire: CandleWire): Candle {
-  return {
-    symbol: wire.s,
-    interval: wire.i,
-    openTime: wire.t,
-    closeTime: wire.T,
-    open: wire.o,
-    close: wire.c,
-    high: wire.h,
-    low: wire.l,
-    volume: wire.v,
-    tradeCount: wire.n,
-  };
+  ).then((envelope) => envelope.data.map((candle) => converter.toCommon(candle)));
 }

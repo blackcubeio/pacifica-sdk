@@ -1,11 +1,13 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
 import type { JsonValue } from '../../src/common/types';
 import { OrderSide } from '../../src/common/types';
-import { cancelOrder } from '../../src/rest/orders/cancel-order';
+import { cancelOrder } from '../../src/rest/cancel-order';
 import { createLimitOrder } from '../../src/rest/orders/create-limit-order';
 import { WsClient } from '../../src/ws/client';
 import { buildFarBtcLimit, poll, readEnv } from '../helpers';
+
+let ctx: PacificaClient;
 
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
@@ -13,11 +15,7 @@ const NETWORK_TIMEOUT = 40_000;
 
 describe('WS account stream (testnet, voir passer les opérations)', () => {
   beforeAll(() => {
-    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
-  });
-
-  afterAll(() => {
-    resetConfig();
+    ctx = init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
   });
 
   it(
@@ -25,16 +23,17 @@ describe('WS account stream (testnet, voir passer les opérations)', () => {
     () => {
       const clientOrderId = globalThis.crypto.randomUUID();
       const events: JsonValue[] = [];
-      const client = new WsClient({ label: account });
+      const ws = new WsClient(ctx, { label: account });
 
-      return client
+      return ws
         .connect()
         .then(() => {
-          client.subscribeAccountOrderUpdates((data) => events.push(data));
-          return buildFarBtcLimit();
+          ws.subscribeAccountOrderUpdates((data) => events.push(data));
+          return buildFarBtcLimit(ctx);
         })
         .then(({ price, amount }) =>
           createLimitOrder(
+            ctx,
             { symbol: 'BTC', price, amount, side: OrderSide.Bid, clientOrderId },
             account,
           ),
@@ -49,10 +48,10 @@ describe('WS account stream (testnet, voir passer les opérations)', () => {
           expect(received.some((event) => JSON.stringify(event).includes(clientOrderId))).toBe(
             true,
           );
-          return cancelOrder({ symbol: 'BTC', clientOrderId }, account);
+          return cancelOrder(ctx, { name: 'BTC', clientId: clientOrderId }, account);
         })
         .then(() => {
-          client.disconnect();
+          ws.disconnect();
         });
     },
     NETWORK_TIMEOUT,

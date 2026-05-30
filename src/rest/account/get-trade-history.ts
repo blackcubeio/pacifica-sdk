@@ -1,4 +1,4 @@
-import { httpGet } from '../client';
+import type { PacificaClient } from '../../common/config';
 import type {
   Paginated,
   TradeCause,
@@ -6,7 +6,8 @@ import type {
   TradeHistoryEntry,
   TradeHistoryQuery,
   TradeSide,
-} from '../types';
+} from '../../common/native';
+import { httpGet } from '../client';
 
 interface TradeHistoryWire {
   history_id: number;
@@ -25,10 +26,12 @@ interface TradeHistoryWire {
 }
 
 export function getTradeHistory(
+  client: PacificaClient,
   query: TradeHistoryQuery,
   label?: string,
 ): Promise<Paginated<TradeHistoryEntry>> {
   return httpGet<TradeHistoryWire[]>(
+    client,
     '/trades/history',
     {
       account: query.account,

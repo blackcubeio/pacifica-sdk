@@ -1,5 +1,6 @@
+import type { PacificaClient } from '../../common/config';
+import type { FeeLevel } from '../../common/native';
 import { httpGet } from '../client';
-import type { FeeLevel } from '../types';
 
 interface FeeLevelWire {
   level: number;
@@ -7,8 +8,8 @@ interface FeeLevelWire {
   taker_fee_rate: string;
 }
 
-export function getFeeLevels(label?: string): Promise<FeeLevel[]> {
-  return httpGet<FeeLevelWire[]>('/info/fees', undefined, label).then((envelope) =>
+export function getFeeLevels(client: PacificaClient, label?: string): Promise<FeeLevel[]> {
+  return httpGet<FeeLevelWire[]>(client, '/info/fees', undefined, label).then((envelope) =>
     envelope.data.map((feeLevel) => mapFeeLevel(feeLevel)),
   );
 }

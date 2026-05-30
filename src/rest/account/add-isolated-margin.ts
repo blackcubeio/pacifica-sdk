@@ -1,10 +1,17 @@
+import type { PacificaClient } from '../../common/config';
+import type { AddIsolatedMarginParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { AddIsolatedMarginParams } from '../types';
 
-export function addIsolatedMargin(params: AddIsolatedMarginParams, label: string): Promise<void> {
+export function addIsolatedMargin(
+  client: PacificaClient,
+  params: AddIsolatedMarginParams,
+  label: string,
+): Promise<void> {
   const payload = { symbol: params.symbol, amount: params.amount };
-  const request = buildSignedRequest(OperationType.AddIsolatedMargin, payload, label);
-  return httpPost<null>('/positions/add_isolated_margin', request, label).then(() => undefined);
+  const request = buildSignedRequest(client, OperationType.AddIsolatedMargin, payload, label);
+  return httpPost<null>(client, '/positions/add_isolated_margin', request, label).then(
+    () => undefined,
+  );
 }

@@ -1,18 +1,18 @@
-import type { JsonObject } from '../../common/types';
-import { newClientOrderId } from '../signing';
 import {
-  type CancelAllOrdersParams,
-  type CancelOrderParams,
+  type CancelAllOrdersRef,
+  type CancelOrderRef,
   type CancelStopOrderParams,
   type CreateLimitOrderParams,
   type CreateMarketOrderParams,
   type CreatePositionTpslParams,
   type CreateStopOrderParams,
-  type EditOrderParams,
+  type EditOrderRef,
   type StopConfig,
   type StopOrderConfig,
   TimeInForce,
-} from '../types';
+} from '../../common/native';
+import type { JsonObject } from '../../common/types';
+import { newClientOrderId } from '../signing';
 
 function buildStopConfig(config: StopConfig): JsonObject {
   const payload: JsonObject = { stop_price: config.stopPrice };
@@ -91,7 +91,7 @@ function buildOrderRef(symbol: string, orderId?: number, clientOrderId?: string)
   return payload;
 }
 
-export function buildCancelOrderPayload(params: CancelOrderParams): JsonObject {
+export function buildCancelOrderPayload(params: CancelOrderRef): JsonObject {
   return buildOrderRef(params.symbol, params.orderId, params.clientOrderId);
 }
 
@@ -99,7 +99,7 @@ export function buildCancelStopOrderPayload(params: CancelStopOrderParams): Json
   return buildOrderRef(params.symbol, params.orderId, params.clientOrderId);
 }
 
-export function buildCancelAllOrdersPayload(params: CancelAllOrdersParams): JsonObject {
+export function buildCancelAllOrdersPayload(params: CancelAllOrdersRef): JsonObject {
   const payload: JsonObject = {
     all_symbols: params.allSymbols,
     exclude_reduce_only: params.excludeReduceOnly,
@@ -110,7 +110,7 @@ export function buildCancelAllOrdersPayload(params: CancelAllOrdersParams): Json
   return payload;
 }
 
-export function buildEditOrderPayload(params: EditOrderParams): JsonObject {
+export function buildEditOrderPayload(params: EditOrderRef): JsonObject {
   const payload: JsonObject = {
     symbol: params.symbol,
     price: params.price,

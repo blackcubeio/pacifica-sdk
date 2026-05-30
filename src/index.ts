@@ -1,97 +1,36 @@
-export * from './common/constants';
-export * from './common/config';
-export * from './common/types';
-export * from './common/utils';
+// ── Surface publique du SDK Pacifica ──────────────────────────────────────────
+// Point d'entrée unique : la classe `Pacifica`. Tout le reste (fonctions REST, clients WS
+// bruts, signing, types natifs) est interne et n'est pas exporté.
 
-export * from './rest/client';
-export * from './rest/types';
+/** Façade : `new Pacifica(signers, { default })` puis `.perp()/.account()/.system()/.helpers()/.ws()`. */
+export { Pacifica, type PacificaDexOptions } from './dex/pacifica';
 
-export * from './rest/markets/get-market-info';
-export * from './rest/markets/get-prices';
-export * from './rest/markets/get-fee-levels';
-export * from './rest/markets/get-loan-pool';
-export * from './rest/markets/get-candle-data';
-export * from './rest/markets/get-mark-price-candle-data';
-export * from './rest/markets/get-orderbook';
-export * from './rest/markets/get-recent-trades';
-export * from './rest/markets/get-historical-funding';
+/** Contrat commun aux 3 DEX : interfaces de capacités + types d'entrée (Input) des méthodes. */
+export type * from './dex/contract';
 
-export * from './rest/spot/get-spot-assets';
-export * from './rest/spot/get-bridge-info';
-export * from './rest/spot/get-bridge-params';
+/** Interfaces **complémentaires** Pacifica (vaults/agent/apiKeys/spot/lending/portfolio/subaccounts/advancedOrders). */
+export type * from './dex/pacifica-contract';
 
-export * from './rest/account/get-account-info';
-export * from './rest/account/get-account-settings';
-export * from './rest/account/get-positions';
-export * from './rest/account/get-account-loan';
-export * from './rest/account/get-trade-history';
-export * from './rest/account/get-funding-history';
-export * from './rest/account/get-portfolio';
-export * from './rest/account/get-balance-history';
-export * from './rest/account/get-spot-balance-history';
-export * from './rest/account/get-spot-deposit-history';
-export * from './rest/account/get-spot-withdrawal-history';
-export * from './rest/account/get-pending-spot-withdrawals';
+/** Configuration d'un signer (passé au constructeur) et réseau. */
+export type { Signer, Network } from './common/types';
 
-export * from './rest/signing';
+/** Types **de sortie** unifiés renvoyés par les méthodes de la façade. */
+export type {
+  Balance,
+  Candle,
+  FundingRate,
+  MarketKind,
+  Order,
+  OrderBook,
+  OrderBookLevel,
+  Pair,
+  Position,
+  Price,
+  Side,
+  SubAccount,
+  Trade,
+  UserTrade,
+} from './common/types';
 
-export * from './rest/orders/get-open-orders';
-export * from './rest/orders/get-order-history';
-export * from './rest/orders/get-order-history-by-id';
-
-export * from './rest/orders/create-limit-order';
-export * from './rest/orders/create-market-order';
-export * from './rest/orders/cancel-order';
-export * from './rest/orders/cancel-all-orders';
-export * from './rest/orders/edit-order';
-export * from './rest/orders/create-stop-order';
-export * from './rest/orders/cancel-stop-order';
-export * from './rest/orders/batch-order';
-
-export * from './rest/orders/twap/get-open-twap-order';
-export * from './rest/orders/twap/get-twap-order-history';
-export * from './rest/orders/twap/get-twap-order-history-by-id';
-
-export * from './rest/account/update-leverage';
-export * from './rest/account/update-margin-mode';
-export * from './rest/account/add-isolated-margin';
-export * from './rest/account/toggle-auto-lending';
-export * from './rest/account/update-spot-settings';
-export * from './rest/account/withdraw';
-export * from './rest/account/withdraw-spot-asset';
-export * from './rest/account/create-subaccount';
-export * from './rest/account/list-subaccounts';
-export * from './rest/account/transfer-subaccount-fund';
-export * from './rest/account/subaccount-spot-transfer';
-export * from './rest/account/create-api-config-key';
-export * from './rest/account/revoke-api-config-key';
-export * from './rest/account/list-api-config-keys';
-
-export * from './rest/agent/bind-agent-wallet';
-export * from './rest/agent/list-agent-wallets';
-export * from './rest/agent/revoke-agent-wallet';
-export * from './rest/agent/revoke-all-agent-wallets';
-export * from './rest/agent/list-agent-ip-whitelist';
-export * from './rest/agent/add-agent-whitelisted-ip';
-export * from './rest/agent/remove-agent-whitelisted-ip';
-export * from './rest/agent/set-agent-ip-whitelist-enabled';
-
-export * from './rest/positions/create-position-tpsl';
-
-export * from './rest/vaults/get-vaults';
-export * from './rest/vaults/create-vault';
-export * from './rest/vaults/vault-deposit';
-export * from './rest/vaults/vault-withdraw';
-export * from './rest/vaults/claim-referral-code';
-export * from './rest/vaults/claim-manager';
-export * from './rest/vaults/update-deposit-cap';
-export * from './rest/vaults/add-to-whitelist';
-export * from './rest/vaults/remove-from-whitelist';
-export * from './rest/vaults/add-to-blacklist';
-export * from './rest/vaults/remove-from-blacklist';
-export * from './rest/vaults/add-max-leverage';
-export * from './rest/vaults/remove-max-leverage';
-
-export * from './rest/deposit';
-
-export * from './ws/client';
+/** Unsubscribe : valeur de retour des souscriptions WS. */
+export type { Unsubscribe } from './common/ws';

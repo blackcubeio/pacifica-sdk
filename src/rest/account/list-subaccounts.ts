@@ -1,7 +1,10 @@
+import type { PacificaClient } from '../../common/config';
+import type { Subaccount } from '../../common/native';
+import type { SubAccount } from '../../common/types';
 import { OperationType } from '../../common/types';
+import { SubAccountConverter } from '../../converters/subaccount';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { Subaccount } from '../types';
 
 interface SubaccountWire {
   address: string;
@@ -11,13 +14,22 @@ interface SubaccountWire {
   created_at: number;
 }
 
-export function listSubaccounts(label: string): Promise<Subaccount[]> {
-  const request = buildSignedRequest(OperationType.ListSubaccounts, {}, label);
+const converter = new SubAccountConverter();
+
+/**
+ * List the master account's sub-accounts, au **format unifié** {@link SubAccount}.
+ * Seule l'`address` est dans le cœur ; balance/feeLevel/feeMode/createdAt → `xtras`.
+ */
+export function getSubAccounts(client: PacificaClient, label: string): Promise<SubAccount[]> {
+  const request = buildSignedRequest(client, OperationType.ListSubaccounts, {}, label);
   return httpPost<{ subaccounts: SubaccountWire[] }>(
+    client,
     '/account/subaccount/list',
     request,
     label,
-  ).then((envelope) => envelope.data.subaccounts.map((subaccount) => mapSubaccount(subaccount)));
+  ).then((envelope) =>
+    envelope.data.subaccounts.map((wire) => converter.toCommon(mapSubaccount(wire))),
+  );
 }
 
 function mapSubaccount(wire: SubaccountWire): Subaccount {

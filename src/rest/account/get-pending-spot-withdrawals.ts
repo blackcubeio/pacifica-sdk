@@ -1,5 +1,6 @@
+import type { PacificaClient } from '../../common/config';
+import type { AccountQuery, PendingSpotWithdrawal } from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountQuery, PendingSpotWithdrawal } from '../types';
 
 interface PendingSpotWithdrawalWire {
   symbol: string;
@@ -11,10 +12,12 @@ interface PendingSpotWithdrawalWire {
 }
 
 export function getPendingSpotWithdrawals(
+  client: PacificaClient,
   query: AccountQuery,
   label?: string,
 ): Promise<PendingSpotWithdrawal[]> {
   return httpGet<PendingSpotWithdrawalWire[]>(
+    client,
     '/account/spot_asset/withdraw/pending',
     {
       account: query.account,

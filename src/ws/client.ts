@@ -1,6 +1,16 @@
-import { type WebSocketFactory, type WebSocketLike, getConfig } from '../common/config';
+import type { PacificaClient, WebSocketFactory, WebSocketLike } from '../common/config';
 import { WS_HEARTBEAT_INTERVAL } from '../common/constants';
+import type {
+  BatchAction,
+  CancelAllOrdersRef,
+  CancelOrderRef,
+  CandleInterval,
+  CreateLimitOrderParams,
+  CreateMarketOrderParams,
+  EditOrderRef,
+} from '../common/native';
 import { type JsonObject, type JsonValue, OperationType } from '../common/types';
+import type { StreamHandler, Unsubscribe, WsClientOptions } from '../common/ws';
 import { resolveReadNetwork } from '../rest/client';
 import { buildSignedBatchActions } from '../rest/orders/batch-order';
 import {
@@ -11,25 +21,6 @@ import {
   buildMarketOrderPayload,
 } from '../rest/orders/payloads';
 import { buildSignedRequest, resolveSigner } from '../rest/signing';
-import type {
-  BatchAction,
-  CancelAllOrdersParams,
-  CancelOrderParams,
-  CandleInterval,
-  CreateLimitOrderParams,
-  CreateMarketOrderParams,
-  EditOrderParams,
-} from '../rest/types';
-
-export type StreamHandler = (data: JsonValue) => void;
-export type Unsubscribe = () => void;
-
-export interface WsClientOptions {
-  url?: string;
-  webSocket?: WebSocketFactory;
-  /** Label du signer : choisit le réseau (défaut mainnet) et signe les actions. */
-  label?: string;
-}
 
 interface PendingAction {
   resolve: (value: JsonValue) => void;
@@ -42,6 +33,7 @@ export class WsClient {
   public onClose: (() => void) | null = null;
   public onReconnect: (() => void) | null = null;
 
+  private readonly client: PacificaClient;
   private readonly url: string;
   private readonly createSocket: WebSocketFactory;
   private readonly label: string | undefined;
@@ -51,11 +43,14 @@ export class WsClient {
   private readonly handlers = new Map<string, Set<StreamHandler>>();
   private readonly activeSubscriptions = new Map<string, JsonObject>();
   private shouldReconnect = false;
+  /** Messages émis avant l'ouverture du socket, rejoués à `onopen` (connexion paresseuse). */
+  private pendingSends: string[] = [];
+  private open = false;
 
-  constructor(options: WsClientOptions = {}) {
-    const config = getConfig();
-    this.url = options.url ?? config.wsUrls[resolveReadNetwork(options.label)];
-    this.createSocket = options.webSocket ?? config.webSocket;
+  constructor(client: PacificaClient, options: WsClientOptions = {}) {
+    this.client = client;
+    this.url = options.url ?? client.wsUrls[resolveReadNetwork(client, options.label)];
+    this.createSocket = options.webSocket ?? client.webSocket;
     this.label = options.label;
   }
 
@@ -65,6 +60,11 @@ export class WsClient {
       const socket = this.createSocket(this.url);
       this.socket = socket;
       socket.onopen = () => {
+        this.open = true;
+        for (const payload of this.pendingSends) {
+          socket.send(payload);
+        }
+        this.pendingSends = [];
         this.startHeartbeat();
         resolve();
       };
@@ -81,6 +81,8 @@ export class WsClient {
 
   public disconnect(): void {
     this.shouldReconnect = false;
+    this.open = false;
+    this.pendingSends = [];
     this.stopHeartbeat();
     if (this.socket !== null) {
       this.socket.close();
@@ -201,6 +203,7 @@ export class WsClient {
 
   public createLimitOrder(params: CreateLimitOrderParams): Promise<JsonValue> {
     const data = buildSignedRequest(
+      this.client,
       OperationType.CreateOrder,
       buildLimitOrderPayload(params),
       this.label,
@@ -210,6 +213,7 @@ export class WsClient {
 
   public createMarketOrder(params: CreateMarketOrderParams): Promise<JsonValue> {
     const data = buildSignedRequest(
+      this.client,
       OperationType.CreateMarketOrder,
       buildMarketOrderPayload(params),
       this.label,
@@ -217,8 +221,9 @@ export class WsClient {
     return this.sendAction({ create_market_order: data });
   }
 
-  public cancelOrder(params: CancelOrderParams): Promise<JsonValue> {
+  public cancelOrder(params: CancelOrderRef): Promise<JsonValue> {
     const data = buildSignedRequest(
+      this.client,
       OperationType.CancelOrder,
       buildCancelOrderPayload(params),
       this.label,
@@ -226,8 +231,9 @@ export class WsClient {
     return this.sendAction({ cancel_order: data });
   }
 
-  public cancelAllOrders(params: CancelAllOrdersParams): Promise<JsonValue> {
+  public cancelAllOrders(params: CancelAllOrdersRef): Promise<JsonValue> {
     const data = buildSignedRequest(
+      this.client,
       OperationType.CancelAllOrders,
       buildCancelAllOrdersPayload(params),
       this.label,
@@ -235,8 +241,9 @@ export class WsClient {
     return this.sendAction({ cancel_all_orders: data });
   }
 
-  public editOrder(params: EditOrderParams): Promise<JsonValue> {
+  public editOrder(params: EditOrderRef): Promise<JsonValue> {
     const data = buildSignedRequest(
+      this.client,
       OperationType.EditOrder,
       buildEditOrderPayload(params),
       this.label,
@@ -245,11 +252,11 @@ export class WsClient {
   }
 
   public batchOrders(actions: BatchAction[]): Promise<JsonValue> {
-    return this.sendAction({ actions: buildSignedBatchActions(actions, this.label) });
+    return this.sendAction({ actions: buildSignedBatchActions(this.client, actions, this.label) });
   }
 
   private subscribeAccount(source: string, handler: StreamHandler, account?: string): Unsubscribe {
-    const resolvedAccount = account ?? resolveSigner(this.label).account;
+    const resolvedAccount = account ?? resolveSigner(this.client, this.label).account;
     return this.subscribeChannel(source, { source, account: resolvedAccount }, handler);
   }
 
@@ -272,10 +279,13 @@ export class WsClient {
   }
 
   private send(payload: JsonObject): void {
-    if (this.socket === null) {
-      throw new Error('WebSocket is not connected; call connect() first');
+    const serialized = JSON.stringify(payload);
+    // Connexion paresseuse : tant que le socket n'est pas ouvert, on met en file (rejoué à onopen).
+    if (this.socket === null || this.open === false) {
+      this.pendingSends.push(serialized);
+      return;
     }
-    this.socket.send(JSON.stringify(payload));
+    this.socket.send(serialized);
   }
 
   private handleMessage(raw: unknown): void {
@@ -313,6 +323,7 @@ export class WsClient {
   private handleClose(): void {
     this.stopHeartbeat();
     this.socket = null;
+    this.open = false;
     if (this.onClose !== null) {
       this.onClose();
     }

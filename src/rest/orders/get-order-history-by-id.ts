@@ -1,4 +1,4 @@
-import { httpGet } from '../client';
+import type { PacificaClient } from '../../common/config';
 import type {
   OrderHistoryByIdEntry,
   OrderHistoryByIdQuery,
@@ -6,7 +6,8 @@ import type {
   OrderSide,
   OrderStatus,
   OrderType,
-} from '../types';
+} from '../../common/native';
+import { httpGet } from '../client';
 
 interface OrderHistoryByIdWire {
   history_id: number;
@@ -28,10 +29,12 @@ interface OrderHistoryByIdWire {
 }
 
 export function getOrderHistoryById(
+  client: PacificaClient,
   query: OrderHistoryByIdQuery,
   label?: string,
 ): Promise<OrderHistoryByIdEntry[]> {
   return httpGet<OrderHistoryByIdWire[]>(
+    client,
     '/orders/history_by_id',
     {
       order_id: query.orderId,

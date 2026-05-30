@@ -1,5 +1,11 @@
+import type { PacificaClient } from '../../common/config';
+import type {
+  AccountFundingEntry,
+  FundingHistoryQuery,
+  OrderSide,
+  Paginated,
+} from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountFundingEntry, FundingHistoryQuery, OrderSide, Paginated } from '../types';
 
 interface AccountFundingWire {
   history_id: number;
@@ -11,11 +17,17 @@ interface AccountFundingWire {
   created_at: number;
 }
 
-export function getFundingHistory(
+/**
+ * Paiements de funding du **compte** (payouts) — spécifique Pacifica.
+ * À ne pas confondre avec `getFundingHistory` (taux public unifié).
+ */
+export function getAccountFunding(
+  client: PacificaClient,
   query: FundingHistoryQuery,
   label?: string,
 ): Promise<Paginated<AccountFundingEntry>> {
   return httpGet<AccountFundingWire[]>(
+    client,
     '/funding/history',
     {
       account: query.account,

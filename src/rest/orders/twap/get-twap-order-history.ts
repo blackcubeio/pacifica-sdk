@@ -1,12 +1,15 @@
+import type { PacificaClient } from '../../../common/config';
+import type { Paginated, TwapHistoryQuery } from '../../../common/native';
 import type { JsonObject } from '../../../common/types';
 import { httpGet } from '../../client';
-import type { Paginated, TwapHistoryQuery } from '../../types';
 
 export function getTwapOrderHistory(
+  client: PacificaClient,
   query: TwapHistoryQuery,
   label?: string,
 ): Promise<Paginated<JsonObject>> {
   return httpGet<JsonObject[]>(
+    client,
     '/orders/twap/history',
     {
       account: query.account,
