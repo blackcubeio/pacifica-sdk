@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PositionConverter, type PositionNative } from '../../src/rest/converters/position';
+import { PositionConverter, type PositionNative } from '../../src/converters/position';
 import { OrderSide } from '../../src/rest/types';
 
 const POSITION_CORE_KEYS = [

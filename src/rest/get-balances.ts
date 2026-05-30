@@ -1,6 +1,6 @@
 import type { Balance } from '../common/types';
 import { getAccountInfo } from './account/get-account-info';
-import { BalanceConverter } from './converters/balance';
+import { BalanceConverter } from '../converters/balance';
 
 /** Paramètres unifiés (mêmes champs sur les 3 SDK). */
 export interface GetBalancesParams {

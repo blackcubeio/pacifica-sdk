@@ -1,6 +1,6 @@
 import type { Order } from '../common/types';
 import { httpGet } from './client';
-import { OrderHistoryConverter, type OrderHistoryNative } from './converters/order-history';
+import { OrderHistoryConverter, type OrderHistoryNative } from '../converters/order-history';
 
 /** Paramètres unifiés (mêmes champs sur les SDK concernés). */
 export interface GetOrderHistoryParams {

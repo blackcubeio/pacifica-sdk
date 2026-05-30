@@ -1,4 +1,4 @@
-import type { Candle, MarketKind } from '../../common/types';
+import type { Candle, MarketKind } from '../common/types';
 
 /**
  * Bougie native Pacifica (réponse `/kline`) — objet aux clés courtes.

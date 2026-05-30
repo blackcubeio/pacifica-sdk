@@ -1,6 +1,6 @@
 import type { Position } from '../common/types';
 import { httpGet } from './client';
-import { PositionConverter, type PositionNative } from './converters/position';
+import { PositionConverter, type PositionNative } from '../converters/position';
 
 /** Paramètres unifiés (mêmes champs sur les 3 SDK). */
 export interface GetPositionsParams {

@@ -1,4 +1,4 @@
-import type { MarketKind, OrderBook } from '../../common/types';
+import type { MarketKind, OrderBook } from '../common/types';
 
 /** Payload WS `bbo` Pacifica — `{s, i, li, t, b, B, a, A}` (b/B = bid px/sz, a/A = ask px/sz). */
 export interface BboWsNative {

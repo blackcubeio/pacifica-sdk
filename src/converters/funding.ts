@@ -1,4 +1,4 @@
-import type { FundingRate } from '../../common/types';
+import type { FundingRate } from '../common/types';
 
 /** Point de funding natif Pacifica (`/funding_rate/history`) — `name` vient de la requête. */
 export interface FundingRateNative {

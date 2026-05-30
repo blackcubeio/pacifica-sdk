@@ -1,7 +1,7 @@
 import type { SubAccount } from '../../common/types';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
-import { SubAccountConverter } from '../converters/subaccount';
+import { SubAccountConverter } from '../../converters/subaccount';
 import { buildSignedRequest } from '../signing';
 import type { Subaccount } from '../types';
 

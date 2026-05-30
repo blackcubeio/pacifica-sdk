@@ -1,5 +1,5 @@
-import type { SubAccount } from '../../common/types';
-import type { Subaccount } from '../types';
+import type { SubAccount } from '../common/types';
+import type { Subaccount } from '../rest/types';
 
 /** Sous-compte natif Pacifica (`/account/subaccount/list`). */
 export type SubAccountNative = Subaccount;

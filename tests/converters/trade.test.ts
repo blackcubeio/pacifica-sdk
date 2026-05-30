@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Trade } from '../../src/common/types';
-import { TradeConverter, type TradeNative } from '../../src/rest/converters/trade';
+import { TradeConverter, type TradeNative } from '../../src/converters/trade';
 import { TradeCause, TradeEventType, TradeSide } from '../../src/rest/types';
 
 /** Clés du cœur unifié (hors xtras) — DOIVENT être identiques sur les 3 SDK. */

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   OrderHistoryConverter,
   type OrderHistoryNative,
-} from '../../src/rest/converters/order-history';
+} from '../../src/converters/order-history';
 import { OrderCancelReason, OrderSide, OrderStatus, OrderType } from '../../src/rest/types';
 
 const ORDER_CORE_KEYS = [

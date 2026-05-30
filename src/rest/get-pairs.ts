@@ -1,5 +1,5 @@
 import type { Pair } from '../common/types';
-import { PairConverter } from './converters/pair';
+import { PairConverter } from '../converters/pair';
 import { getMarketInfo } from './markets/get-market-info';
 
 /**

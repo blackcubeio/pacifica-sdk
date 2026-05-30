@@ -1,5 +1,5 @@
-import type { Pair } from '../../common/types';
-import type { Market } from '../types';
+import type { Pair } from '../common/types';
+import type { Market } from '../rest/types';
 
 /** Décimales déduites d'un pas (`"0.001"` → 3, `"1"` → 0). */
 function decimalsFromStep(step: string): number {

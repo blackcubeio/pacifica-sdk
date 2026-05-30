@@ -1,5 +1,5 @@
 import { httpGet } from '../client';
-import { CandleConverter, type CandleNative } from '../converters/candle';
+import { CandleConverter, type CandleNative } from '../../converters/candle';
 import type { Candle, CandleQuery } from '../types';
 
 export function getMarkPriceCandleData(query: CandleQuery, label?: string): Promise<Candle[]> {

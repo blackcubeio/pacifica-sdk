@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Pair } from '../../src/common/types';
-import { PairConverter } from '../../src/rest/converters/pair';
+import { PairConverter } from '../../src/converters/pair';
 import type { Market } from '../../src/rest/types';
 
 const MARKET: Market = {

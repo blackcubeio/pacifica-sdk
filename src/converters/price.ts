@@ -1,4 +1,4 @@
-import type { Price } from '../../common/types';
+import type { Price } from '../common/types';
 
 /** Snapshot natif Pacifica (`/info/prices`, clés snake_case). */
 export interface PriceNative {
