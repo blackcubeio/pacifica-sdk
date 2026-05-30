@@ -1,7 +1,7 @@
+import type { WithdrawSpotAssetParams, WithdrawSpotResult } from '../../common/native';
 import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { WithdrawSpotAssetParams, WithdrawSpotResult } from '../types';
 
 interface WithdrawSpotWire {
   symbol: string;

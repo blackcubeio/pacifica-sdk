@@ -1,5 +1,5 @@
+import type { FeeLevel } from '../../common/native';
 import { httpGet } from '../client';
-import type { FeeLevel } from '../types';
 
 interface FeeLevelWire {
   level: number;

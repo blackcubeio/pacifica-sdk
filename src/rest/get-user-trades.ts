@@ -1,20 +1,7 @@
+import type { GetUserTradesParams } from '../common/types';
 import type { UserTrade } from '../common/types';
-import { httpGet } from './client';
 import { UserTradeConverter, type UserTradeNative } from '../converters/user-trade';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface GetUserTradesParams {
-  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
-  user: string;
-  /** Filtre optionnel sur une paire. */
-  name?: string;
-  /** Début (ms). */
-  startTime?: number;
-  /** Fin (ms). */
-  endTime?: number;
-  /** Nombre max. */
-  limit?: number;
-}
+import { httpGet } from './client';
 
 /**
  * Exécutions (fills) du compte au **format unifié** `UserTrade` (Pacifica `/trades/history`).

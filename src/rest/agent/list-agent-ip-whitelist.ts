@@ -1,7 +1,7 @@
+import type { ListAgentIpWhitelistParams } from '../../common/native';
 import { type JsonValue, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { ListAgentIpWhitelistParams } from '../types';
 
 export function listAgentIpWhitelist(
   params: ListAgentIpWhitelistParams,

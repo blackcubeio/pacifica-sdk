@@ -1,5 +1,5 @@
+import type { SpotAsset, SpotAssetsQuery } from '../../common/native';
 import { httpGet } from '../client';
-import type { SpotAsset, SpotAssetsQuery } from '../types';
 
 interface SpotAssetWire {
   symbol: string;

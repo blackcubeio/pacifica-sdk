@@ -1,12 +1,12 @@
-import { type JsonObject, OperationType } from '../../common/types';
-import { httpPost } from '../client';
-import { buildSignedRequest } from '../signing';
 import {
   type BatchAction,
   type BatchActionResult,
   BatchActionType,
   type BatchResult,
-} from '../types';
+} from '../../common/native';
+import { type JsonObject, OperationType } from '../../common/types';
+import { httpPost } from '../client';
+import { buildSignedRequest } from '../signing';
 import {
   buildCancelOrderPayload,
   buildCancelStopOrderPayload,

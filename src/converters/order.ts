@@ -1,5 +1,5 @@
+import { OrderSide, type OrderType } from '../common/native';
 import type { Order } from '../common/types';
-import { OrderSide, type OrderType } from '../rest/types';
 
 /** Ordre natif Pacifica (`/orders`, clés snake_case). */
 export interface OrderNative {

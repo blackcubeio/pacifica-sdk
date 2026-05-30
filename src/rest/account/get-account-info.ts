@@ -1,5 +1,5 @@
+import type { AccountInfo, AccountQuery, AccountSpotBalance } from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountInfo, AccountQuery, AccountSpotBalance } from '../types';
 
 interface SpotBalanceWire {
   symbol: string;

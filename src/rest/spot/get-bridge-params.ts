@@ -1,5 +1,5 @@
+import type { BridgeAsset, BridgeParamsQuery } from '../../common/native';
 import { httpGet } from '../client';
-import type { BridgeAsset, BridgeParamsQuery } from '../types';
 
 interface BridgeAssetWire {
   symbol: string;

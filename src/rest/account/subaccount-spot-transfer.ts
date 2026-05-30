@@ -1,7 +1,7 @@
+import type { SubaccountSpotTransferParams } from '../../common/native';
 import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { SubaccountSpotTransferParams } from '../types';
 
 export function subaccountSpotTransfer(
   params: SubaccountSpotTransferParams,

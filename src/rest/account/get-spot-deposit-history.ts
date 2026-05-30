@@ -1,5 +1,5 @@
+import type { Paginated, SpotDepositEntry, SpotHistoryQuery } from '../../common/native';
 import { httpGet } from '../client';
-import type { Paginated, SpotDepositEntry, SpotHistoryQuery } from '../types';
 
 interface SpotDepositWire {
   symbol: string;

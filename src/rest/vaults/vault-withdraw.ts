@@ -1,7 +1,7 @@
+import type { VaultWithdrawParams } from '../../common/native';
 import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { VaultWithdrawParams } from '../types';
 
 export function vaultWithdraw(params: VaultWithdrawParams, label: string): Promise<void> {
   const payload: JsonObject = { lake: params.lake, shares: params.shares };

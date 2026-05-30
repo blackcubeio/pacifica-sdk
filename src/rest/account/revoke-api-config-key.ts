@@ -1,7 +1,7 @@
+import type { RevokeApiConfigKeyParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { RevokeApiConfigKeyParams } from '../types';
 
 export function revokeApiConfigKey(params: RevokeApiConfigKeyParams, label: string): Promise<void> {
   const payload = { api_key: params.apiKey };

@@ -1,15 +1,8 @@
 import { getConfig } from '../common/config';
 import { DEFAULT_EXPIRY_WINDOW } from '../common/constants';
+import type { ResolvedSigner } from '../common/types';
 import type { JsonObject, Network, OperationType, Signer } from '../common/types';
 import { publicKeyFromBase58, signMessage } from '../common/utils';
-
-export interface ResolvedSigner {
-  label: string;
-  account: string;
-  secretKey: string;
-  network: Network;
-  agentWallet?: string;
-}
 
 /**
  * Résout le signer d'une **écriture** par son label. Le signer est **obligatoire** : on lève

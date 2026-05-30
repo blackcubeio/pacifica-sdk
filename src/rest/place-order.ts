@@ -1,36 +1,8 @@
+import { OrderSide, TimeInForce } from '../common/native';
+import type { PlaceOrderParams, PlaceOrderTif, PlaceOrderType } from '../common/types';
 import type { MarketKind, Order, Side } from '../common/types';
 import { createLimitOrder } from './orders/create-limit-order';
 import { createMarketOrder } from './orders/create-market-order';
-import { OrderSide, TimeInForce } from './types';
-
-/** Type d'ordre unifié supporté par Pacifica (`placeOrder`). */
-export type PlaceOrderType = 'limit' | 'market';
-/** Time-in-force unifié. */
-export type PlaceOrderTif = 'gtc' | 'ioc' | 'fok' | 'alo';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface PlaceOrderParams {
-  /** Paire/symbole (= `Pair.name`). */
-  name: string;
-  /** Type de marché ; défaut `perp`. */
-  kind?: MarketKind;
-  /** Sens. */
-  side: Side;
-  /** Type d'ordre (`limit`/`market`). */
-  type: PlaceOrderType;
-  /** Quantité (chaîne décimale). */
-  size: string;
-  /** Prix limite (requis pour `limit`). */
-  price?: string;
-  /** Time-in-force (limit). */
-  tif?: PlaceOrderTif;
-  /** Reduce-only. */
-  reduceOnly?: boolean;
-  /** Client order id. */
-  clientId?: string;
-  /** Slippage max en % (ordres `market` Pacifica) ; défaut `1`. */
-  slippagePercent?: string;
-}
 
 const SIDE: Record<Side, OrderSide> = { buy: OrderSide.Bid, sell: OrderSide.Ask };
 const TIF: Record<PlaceOrderTif, TimeInForce> = {

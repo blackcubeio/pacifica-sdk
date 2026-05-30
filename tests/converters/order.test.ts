@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { OrderConverter, type OrderNative } from '../../src/converters/order';
-import { OrderSide, OrderType } from '../../src/rest/types';
+import { OrderSide, OrderType } from '../../src/common/native';
 
 const ORDER_CORE_KEYS = [
   'clientId',

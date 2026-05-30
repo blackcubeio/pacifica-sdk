@@ -423,3 +423,256 @@ export interface SignedMessage<TSignature extends Signature = string> {
   message: string;
   signature: TSignature;
 }
+
+// ── depuis rest/cancel-all-orders.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface CancelAllOrdersParams {
+  /** Paire/symbole (= `Pair.name`) ; toutes les paires si omis. */
+  name?: string;
+  /** Type de marché ; défaut `perp`. */
+  kind?: MarketKind;
+}
+
+/** Résultat unifié d'une annulation globale. */
+export interface CancelAllResult {
+  /** Nombre d'ordres annulés ; `null` si non fourni. */
+  cancelled: number | null;
+}
+
+// ── depuis rest/cancel-order.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface CancelOrderParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** ID d'ordre exchange (l'un de `id`/`clientId` requis). */
+  id?: string;
+  /** Client order id. */
+  clientId?: string;
+  /** Type de marché ; défaut `perp`. */
+  kind?: MarketKind;
+}
+
+// ── depuis rest/client.ts ──
+export type QueryValue = string | number | boolean;
+
+export type QueryParams = Record<string, QueryValue | undefined>;
+
+export interface ApiEnvelope<TData> {
+  success: boolean;
+  data: TData;
+  error: string | null;
+  code: number | null;
+  next_cursor?: string | null;
+  has_more?: boolean;
+  last_order_id?: number;
+}
+
+// ── depuis rest/deposit.ts ──
+export interface DepositParams {
+  amount: number;
+  rpcUrl?: string;
+  rpcSubscriptionsUrl?: string;
+  programId?: string;
+  centralState?: string;
+  collateralMint?: string;
+  decimals?: number;
+}
+
+// ── depuis rest/edit-order.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface EditOrderParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Nouvelle quantité. */
+  size: string;
+  /** Nouveau prix. */
+  price: string;
+  /** ID d'ordre exchange (l'un de `id`/`clientId` requis). */
+  id?: string;
+  /** Client order id. */
+  clientId?: string;
+  /** Type de marché ; défaut `perp`. */
+  kind?: MarketKind;
+}
+
+/** Résultat unifié d'une modification d'ordre (référence du nouvel ordre). */
+export interface EditOrderResult {
+  /** Paire/symbole. */
+  name: string;
+  /** ID du nouvel ordre. */
+  id: string;
+  /** Détails natifs hors cœur (rien jeté), omis si vide. */
+  xtras?: Record<string, unknown>;
+}
+
+// ── depuis rest/get-balances.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface GetBalancesParams {
+  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
+  user: string;
+}
+
+// ── depuis rest/get-candles.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface GetCandlesParams {
+  /** Identifiant de la paire (= `Pair.name`). */
+  name: string;
+  /** Intervalle (`1m`, `1h`, `1d`…). */
+  interval: string;
+  /** Début (ms). */
+  startTime: number;
+  /** Fin (ms), optionnel. */
+  endTime?: number;
+  /** Type de marché (Pacifica : `perp` uniquement). */
+  kind?: MarketKind;
+  /** Ignoré par Pacifica. */
+  limit?: number;
+}
+
+// ── depuis rest/get-funding-history.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface GetFundingHistoryParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Nombre de points. */
+  limit?: number;
+  /** Curseur de pagination (Pacifica). */
+  cursor?: string;
+}
+
+// ── depuis rest/get-open-orders.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface GetOpenOrdersParams {
+  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
+  user: string;
+  /** Filtre optionnel sur une paire (appliqué côté client). */
+  name?: string;
+}
+
+// ── depuis rest/get-order-book.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface GetOrderBookParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Type de marché (Pacifica : `perp` uniquement). */
+  kind?: MarketKind;
+  /** Ignoré par Pacifica. */
+  limit?: number;
+}
+
+// ── depuis rest/get-order-history.ts ──
+/** Paramètres unifiés (mêmes champs sur les SDK concernés). */
+export interface GetOrderHistoryParams {
+  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
+  user: string;
+  /** Filtre optionnel sur une paire. */
+  name?: string;
+  /** Nombre max. */
+  limit?: number;
+  /** Curseur de pagination (Pacifica). */
+  cursor?: string;
+}
+
+// ── depuis rest/get-positions.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface GetPositionsParams {
+  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
+  user: string;
+  /** Filtre optionnel sur une paire (appliqué côté client). */
+  name?: string;
+}
+
+// ── depuis rest/get-trades.ts ──
+/** Paramètres unifiés (mêmes champs sur les SDK qui exposent les trades publics). */
+export interface GetTradesParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Type de marché (Pacifica : `perp` uniquement). */
+  kind?: MarketKind;
+  /** Ignoré par Pacifica. */
+  limit?: number;
+}
+
+// ── depuis rest/get-user-trades.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface GetUserTradesParams {
+  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
+  user: string;
+  /** Filtre optionnel sur une paire. */
+  name?: string;
+  /** Début (ms). */
+  startTime?: number;
+  /** Fin (ms). */
+  endTime?: number;
+  /** Nombre max. */
+  limit?: number;
+}
+
+// ── depuis rest/place-order.ts ──
+/** Type d'ordre unifié supporté par Pacifica (`placeOrder`). */
+export type PlaceOrderType = 'limit' | 'market';
+
+/** Time-in-force unifié. */
+export type PlaceOrderTif = 'gtc' | 'ioc' | 'fok' | 'alo';
+
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface PlaceOrderParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Type de marché ; défaut `perp`. */
+  kind?: MarketKind;
+  /** Sens. */
+  side: Side;
+  /** Type d'ordre (`limit`/`market`). */
+  type: PlaceOrderType;
+  /** Quantité (chaîne décimale). */
+  size: string;
+  /** Prix limite (requis pour `limit`). */
+  price?: string;
+  /** Time-in-force (limit). */
+  tif?: PlaceOrderTif;
+  /** Reduce-only. */
+  reduceOnly?: boolean;
+  /** Client order id. */
+  clientId?: string;
+  /** Slippage max en % (ordres `market` Pacifica) ; défaut `1`. */
+  slippagePercent?: string;
+}
+
+// ── depuis rest/signing.ts ──
+export interface ResolvedSigner {
+  label: string;
+  account: string;
+  secretKey: string;
+  network: Network;
+  agentWallet?: string;
+}
+
+// ── depuis rest/update-leverage.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface UpdateLeverageParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Levier cible (entier). */
+  leverage: number;
+  /** Type de marché ; défaut `perp`. */
+  kind?: MarketKind;
+}
+
+/** Confirmation unifiée d'un changement de levier. */
+export interface LeverageUpdate {
+  name: string;
+  leverage: number;
+  xtras?: Record<string, unknown>;
+}
+
+// ── depuis rest/update-margin-mode.ts ──
+/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
+export interface UpdateMarginModeParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** `true` = marge isolée, `false` = cross. */
+  isolated: boolean;
+  /** Type de marché ; défaut `perp`. */
+  kind?: MarketKind;
+}

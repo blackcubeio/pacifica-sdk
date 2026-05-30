@@ -1,5 +1,10 @@
+import type {
+  AccountQuery,
+  AccountSettings,
+  MarginSetting,
+  SpotSetting,
+} from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountQuery, AccountSettings, MarginSetting, SpotSetting } from '../types';
 
 interface MarginSettingWire {
   symbol: string;

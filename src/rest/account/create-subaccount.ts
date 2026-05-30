@@ -1,9 +1,9 @@
 import { DEFAULT_EXPIRY_WINDOW } from '../../common/constants';
+import type { CreateSubaccountParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { signMessage } from '../../common/utils';
 import { httpPostTo } from '../client';
 import { signerAccount } from '../signing';
-import type { CreateSubaccountParams } from '../types';
 
 export function createSubaccount(params: CreateSubaccountParams): Promise<void> {
   const timestamp = Date.now();

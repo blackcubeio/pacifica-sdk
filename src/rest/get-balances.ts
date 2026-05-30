@@ -1,12 +1,7 @@
+import type { GetBalancesParams } from '../common/types';
 import type { Balance } from '../common/types';
-import { getAccountInfo } from './account/get-account-info';
 import { BalanceConverter } from '../converters/balance';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface GetBalancesParams {
-  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
-  user: string;
-}
+import { getAccountInfo } from './account/get-account-info';
 
 /**
  * Soldes **spot** par actif au **format unifié** `Balance` (Pacifica `/account.spotBalances`).

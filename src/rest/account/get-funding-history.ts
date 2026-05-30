@@ -1,5 +1,10 @@
+import type {
+  AccountFundingEntry,
+  FundingHistoryQuery,
+  OrderSide,
+  Paginated,
+} from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountFundingEntry, FundingHistoryQuery, OrderSide, Paginated } from '../types';
 
 interface AccountFundingWire {
   history_id: number;

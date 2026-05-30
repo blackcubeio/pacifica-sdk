@@ -1,4 +1,5 @@
 import { getConfig } from '../common/config';
+import type { ApiEnvelope, QueryParams, QueryValue } from '../common/types';
 import type { JsonObject, Network } from '../common/types';
 
 /**
@@ -25,19 +26,6 @@ export class PacificaApiError extends Error {
     super(message);
     this.name = 'PacificaApiError';
   }
-}
-
-export type QueryValue = string | number | boolean;
-export type QueryParams = Record<string, QueryValue | undefined>;
-
-export interface ApiEnvelope<TData> {
-  success: boolean;
-  data: TData;
-  error: string | null;
-  code: number | null;
-  next_cursor?: string | null;
-  has_more?: boolean;
-  last_order_id?: number;
 }
 
 export function buildUrl(baseUrl: string, path: string, query?: QueryParams): string {

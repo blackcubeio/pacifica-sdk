@@ -1,5 +1,3 @@
-import type { JsonObject } from '../../common/types';
-import { newClientOrderId } from '../signing';
 import {
   type CancelAllOrdersRef,
   type CancelOrderRef,
@@ -12,7 +10,9 @@ import {
   type StopConfig,
   type StopOrderConfig,
   TimeInForce,
-} from '../types';
+} from '../../common/native';
+import type { JsonObject } from '../../common/types';
+import { newClientOrderId } from '../signing';
 
 function buildStopConfig(config: StopConfig): JsonObject {
   const payload: JsonObject = { stop_price: config.stopPrice };

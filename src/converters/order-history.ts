@@ -1,5 +1,10 @@
+import {
+  type OrderCancelReason,
+  OrderSide,
+  type OrderStatus,
+  type OrderType,
+} from '../common/native';
 import type { Order } from '../common/types';
-import { type OrderCancelReason, OrderSide, type OrderStatus, type OrderType } from '../rest/types';
 
 /** Ordre d'historique natif Pacifica (`/orders/history`, clés snake_case). */
 export interface OrderHistoryNative {

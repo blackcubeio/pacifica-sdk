@@ -1,7 +1,7 @@
+import type { CreateVaultParams, CreateVaultResult } from '../../common/native';
 import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { CreateVaultParams, CreateVaultResult } from '../types';
 
 export function createVault(params: CreateVaultParams, label: string): Promise<CreateVaultResult> {
   const payload: JsonObject = {

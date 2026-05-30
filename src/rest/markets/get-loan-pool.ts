@@ -1,5 +1,5 @@
+import type { LoanPool } from '../../common/native';
 import { httpGet } from '../client';
-import type { LoanPool } from '../types';
 
 interface LoanPoolWire {
   total_borrowed: string;

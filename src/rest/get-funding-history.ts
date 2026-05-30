@@ -1,16 +1,7 @@
+import type { GetFundingHistoryParams } from '../common/types';
 import type { FundingRate } from '../common/types';
-import { httpGet } from './client';
 import { FundingConverter, type FundingRateNative } from '../converters/funding';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface GetFundingHistoryParams {
-  /** Paire/symbole (= `Pair.name`). */
-  name: string;
-  /** Nombre de points. */
-  limit?: number;
-  /** Curseur de pagination (Pacifica). */
-  cursor?: string;
-}
+import { httpGet } from './client';
 
 /**
  * Historique du **taux de funding** au format unifié (Pacifica `/funding_rate/history`).

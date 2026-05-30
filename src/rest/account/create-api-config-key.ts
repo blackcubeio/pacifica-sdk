@@ -1,7 +1,7 @@
+import type { ApiConfigKeyResult } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { ApiConfigKeyResult } from '../types';
 
 export function createApiConfigKey(label: string): Promise<ApiConfigKeyResult> {
   const request = buildSignedRequest(OperationType.CreateApiKey, {}, label);

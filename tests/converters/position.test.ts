@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PositionConverter, type PositionNative } from '../../src/converters/position';
-import { OrderSide } from '../../src/rest/types';
+import { OrderSide } from '../../src/common/native';
 
 const POSITION_CORE_KEYS = [
   'entryPrice',

@@ -1,5 +1,5 @@
+import type { AccountLoan, AccountQuery, LoanSpotBalance } from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountLoan, AccountQuery, LoanSpotBalance } from '../types';
 
 interface LoanSpotBalanceWire {
   symbol: string;

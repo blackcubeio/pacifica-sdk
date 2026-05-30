@@ -4,7 +4,7 @@ export * from './common/types';
 export * from './common/utils';
 
 export * from './rest/client';
-export * from './rest/types';
+export * from './common/native';
 export * from './rest/get-pairs';
 export * from './rest/get-candles';
 export * from './rest/get-order-book';

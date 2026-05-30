@@ -1,6 +1,6 @@
+import type { TwapHistoryByIdQuery } from '../../../common/native';
 import type { JsonObject } from '../../../common/types';
 import { httpGet } from '../../client';
-import type { TwapHistoryByIdQuery } from '../../types';
 
 export function getTwapOrderHistoryById(
   query: TwapHistoryByIdQuery,

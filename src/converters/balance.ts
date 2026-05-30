@@ -1,5 +1,5 @@
+import type { AccountSpotBalance } from '../common/native';
 import type { Balance } from '../common/types';
-import type { AccountSpotBalance } from '../rest/types';
 
 /** Solde spot natif Pacifica (issu de `AccountInfo.spotBalances`). */
 export type BalanceNative = AccountSpotBalance;

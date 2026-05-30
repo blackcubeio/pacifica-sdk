@@ -1,7 +1,7 @@
+import type { CreateMarketOrderParams, CreateOrderResult } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { CreateMarketOrderParams, CreateOrderResult } from '../types';
 import { buildMarketOrderPayload } from './payloads';
 
 export function createMarketOrder(

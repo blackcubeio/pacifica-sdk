@@ -1,7 +1,7 @@
+import type { RevokeAgentWalletParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { RevokeAgentWalletParams } from '../types';
 
 export function revokeAgentWallet(params: RevokeAgentWalletParams, label: string): Promise<void> {
   const payload = { agent_wallet: params.agentWallet };

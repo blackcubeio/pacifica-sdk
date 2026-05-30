@@ -1,5 +1,5 @@
-import { OrderSide, TimeInForce, TriggerPriceType } from '../common/types';
-import type { Signer } from '../common/types';
+import { OrderSide, TimeInForce, TriggerPriceType } from './types';
+import type { Signer } from './types';
 
 export { OrderSide, TimeInForce, TriggerPriceType };
 export type { Signer };
@@ -13,7 +13,7 @@ export type {
   Price,
   Trade,
   UserTrade,
-} from '../common/types';
+} from './types';
 
 export enum CandleInterval {
   OneMinute = '1m',

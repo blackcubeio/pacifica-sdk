@@ -1,10 +1,10 @@
-import { httpGet } from '../client';
 import type {
   BalanceEventType,
   BalanceHistoryEntry,
   BalanceHistoryQuery,
   Paginated,
-} from '../types';
+} from '../../common/native';
+import { httpGet } from '../client';
 
 interface BalanceHistoryWire {
   amount: string;

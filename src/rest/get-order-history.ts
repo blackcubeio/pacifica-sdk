@@ -1,18 +1,7 @@
+import type { GetOrderHistoryParams } from '../common/types';
 import type { Order } from '../common/types';
-import { httpGet } from './client';
 import { OrderHistoryConverter, type OrderHistoryNative } from '../converters/order-history';
-
-/** Paramètres unifiés (mêmes champs sur les SDK concernés). */
-export interface GetOrderHistoryParams {
-  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
-  user: string;
-  /** Filtre optionnel sur une paire. */
-  name?: string;
-  /** Nombre max. */
-  limit?: number;
-  /** Curseur de pagination (Pacifica). */
-  cursor?: string;
-}
+import { httpGet } from './client';
 
 /**
  * Historique d'ordres au **format unifié** `Order` (Pacifica `/orders/history`).

@@ -1,7 +1,7 @@
+import type { AgentWhitelistedIpParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { AgentWhitelistedIpParams } from '../types';
 
 export function addAgentWhitelistedIp(
   params: AgentWhitelistedIpParams,

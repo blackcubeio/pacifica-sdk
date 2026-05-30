@@ -1,22 +1,9 @@
+import type { CancelAllOrdersParams, CancelAllResult } from '../common/types';
 import type { MarketKind } from '../common/types';
 import { OperationType } from '../common/types';
 import { httpPost } from './client';
 import { buildCancelAllOrdersPayload } from './orders/payloads';
 import { buildSignedRequest } from './signing';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface CancelAllOrdersParams {
-  /** Paire/symbole (= `Pair.name`) ; toutes les paires si omis. */
-  name?: string;
-  /** Type de marché ; défaut `perp`. */
-  kind?: MarketKind;
-}
-
-/** Résultat unifié d'une annulation globale. */
-export interface CancelAllResult {
-  /** Nombre d'ordres annulés ; `null` si non fourni. */
-  cancelled: number | null;
-}
 
 /** Annule tous les ordres ouverts (**écriture signée**, Pacifica `/orders/cancel_all`). */
 export function cancelAllOrders(

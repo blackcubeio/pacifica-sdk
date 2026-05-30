@@ -1,8 +1,8 @@
+import type { CreatePositionTpslParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildPositionTpslPayload } from '../orders/payloads';
 import { buildSignedRequest } from '../signing';
-import type { CreatePositionTpslParams } from '../types';
 
 export function createPositionTpsl(params: CreatePositionTpslParams, label: string): Promise<void> {
   const payload = buildPositionTpslPayload(params);

@@ -1,5 +1,5 @@
+import { type TradeCause, TradeEventType, TradeSide } from '../common/native';
 import type { Side, UserTrade } from '../common/types';
-import { type TradeCause, TradeEventType, TradeSide } from '../rest/types';
 
 /** Fill natif Pacifica (`/trades/history`, clés snake_case). */
 export interface UserTradeNative {

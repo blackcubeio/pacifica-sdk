@@ -1,5 +1,5 @@
+import { OrderSide } from '../common/native';
 import type { Position } from '../common/types';
-import { OrderSide } from '../rest/types';
 
 /** Position native Pacifica (`/positions`, clés snake_case). */
 export interface PositionNative {

@@ -1,3 +1,4 @@
+import type { CandleInterval } from '../common/native';
 import type {
   Candle,
   MarketKind,
@@ -8,16 +9,16 @@ import type {
   Trade,
   UserTrade,
 } from '../common/types';
-import { type CandleNative, CandleConverter } from '../converters/candle';
-import { type PriceNative, PriceConverter } from '../converters/price';
-import type { CandleInterval } from '../rest/types';
-import { type BboWsNative, BboWsConverter } from '../converters/bbo';
+import type { Unsubscribe, WsClientOptions } from '../common/ws';
+import { BboWsConverter, type BboWsNative } from '../converters/bbo';
+import { CandleConverter, type CandleNative } from '../converters/candle';
 import { type OrderUpdateWsNative, OrderWsConverter } from '../converters/order';
-import { type OrderBookWsNative, OrderBookWsConverter } from '../converters/order-book';
-import { type PositionWsNative, PositionWsConverter } from '../converters/position';
-import { type TradeWsNative, TradeWsConverter } from '../converters/trade';
-import { type UserTradeWsNative, UserTradeWsConverter } from '../converters/user-trade';
-import { WsClient, type Unsubscribe, type WsClientOptions } from './client';
+import { OrderBookWsConverter, type OrderBookWsNative } from '../converters/order-book';
+import { PositionWsConverter, type PositionWsNative } from '../converters/position';
+import { PriceConverter, type PriceNative } from '../converters/price';
+import { TradeWsConverter, type TradeWsNative } from '../converters/trade';
+import { UserTradeWsConverter, type UserTradeWsNative } from '../converters/user-trade';
+import { WsClient } from './client';
 
 /**
  * Client WebSocket **unifié Blackcube** : surface identique entre les SDK. Chaque méthode
@@ -58,10 +59,7 @@ export class UnifiedWsClient {
   }
 
   /** Trades publics temps réel : le handler est appelé **une fois par trade**. */
-  public subscribeTrades(
-    params: { name: string },
-    handler: (trade: Trade) => void,
-  ): Unsubscribe {
+  public subscribeTrades(params: { name: string }, handler: (trade: Trade) => void): Unsubscribe {
     const converter = new TradeWsConverter();
     return this.client.subscribeTrades({ symbol: params.name }, (raw) => {
       for (const native of raw as unknown as TradeWsNative[]) {
@@ -110,10 +108,7 @@ export class UnifiedWsClient {
    * Mises à jour d'ordres du compte (user-data) : le handler est appelé **une fois par ordre**.
    * `user` = compte à observer (défaut : compte du signer `label`).
    */
-  public subscribeOrders(
-    params: { user?: string },
-    handler: (order: Order) => void,
-  ): Unsubscribe {
+  public subscribeOrders(params: { user?: string }, handler: (order: Order) => void): Unsubscribe {
     const converter = new OrderWsConverter();
     return this.client.subscribeAccountOrderUpdates((raw) => {
       for (const native of raw as unknown as OrderUpdateWsNative[]) {

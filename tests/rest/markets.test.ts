@@ -6,7 +6,7 @@ import { getPrices } from '../../src/rest/get-prices';
 import { getCandleData } from '../../src/rest/markets/get-candle-data';
 import { getMarketInfo } from '../../src/rest/markets/get-market-info';
 import { getSpotAssets } from '../../src/rest/spot/get-spot-assets';
-import { CandleInterval } from '../../src/rest/types';
+import { CandleInterval } from '../../src/common/native';
 import { readEnv } from '../helpers';
 
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');

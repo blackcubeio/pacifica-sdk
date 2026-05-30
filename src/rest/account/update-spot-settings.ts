@@ -1,7 +1,7 @@
+import type { UpdateSpotSettingsParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { UpdateSpotSettingsParams } from '../types';
 
 export function updateSpotSettings(params: UpdateSpotSettingsParams, label: string): Promise<void> {
   const payload = {

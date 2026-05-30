@@ -1,7 +1,7 @@
+import type { TransferSubaccountFundParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { TransferSubaccountFundParams } from '../types';
 
 export function transferSubaccountFund(
   params: TransferSubaccountFundParams,

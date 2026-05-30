@@ -1,20 +1,9 @@
+import type { CancelOrderParams } from '../common/types';
 import type { MarketKind } from '../common/types';
 import { OperationType } from '../common/types';
 import { httpPost } from './client';
 import { buildCancelOrderPayload } from './orders/payloads';
 import { buildSignedRequest } from './signing';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface CancelOrderParams {
-  /** Paire/symbole (= `Pair.name`). */
-  name: string;
-  /** ID d'ordre exchange (l'un de `id`/`clientId` requis). */
-  id?: string;
-  /** Client order id. */
-  clientId?: string;
-  /** Type de marché ; défaut `perp`. */
-  kind?: MarketKind;
-}
 
 /** Annule un ordre actif (**écriture signée**, Pacifica `/orders/cancel`). */
 export function cancelOrder(params: CancelOrderParams, label: string): Promise<void> {

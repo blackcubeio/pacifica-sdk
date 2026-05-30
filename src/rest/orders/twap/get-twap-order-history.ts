@@ -1,6 +1,6 @@
+import type { Paginated, TwapHistoryQuery } from '../../../common/native';
 import type { JsonObject } from '../../../common/types';
 import { httpGet } from '../../client';
-import type { Paginated, TwapHistoryQuery } from '../../types';
 
 export function getTwapOrderHistory(
   query: TwapHistoryQuery,

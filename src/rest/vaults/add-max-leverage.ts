@@ -1,7 +1,7 @@
+import type { AddMaxLeverageParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { AddMaxLeverageParams } from '../types';
 
 export function addMaxLeverage(params: AddMaxLeverageParams, label: string): Promise<void> {
   const payload = {

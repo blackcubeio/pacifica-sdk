@@ -1,4 +1,3 @@
-import { httpGet } from '../client';
 import type {
   OrderHistoryByIdEntry,
   OrderHistoryByIdQuery,
@@ -6,7 +5,8 @@ import type {
   OrderSide,
   OrderStatus,
   OrderType,
-} from '../types';
+} from '../../common/native';
+import { httpGet } from '../client';
 
 interface OrderHistoryByIdWire {
   history_id: number;

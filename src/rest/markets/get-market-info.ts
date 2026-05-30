@@ -1,5 +1,5 @@
+import type { Market } from '../../common/native';
 import { httpGet } from '../client';
-import type { Market } from '../types';
 
 interface MarketWire {
   symbol: string;

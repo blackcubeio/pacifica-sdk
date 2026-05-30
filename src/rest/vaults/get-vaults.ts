@@ -1,5 +1,5 @@
+import type { Vault, VaultConfig } from '../../common/native';
 import { httpGet } from '../client';
-import type { Vault, VaultConfig } from '../types';
 
 interface VaultConfigWire {
   deposit_cap?: string | null;

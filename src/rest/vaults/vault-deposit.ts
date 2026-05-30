@@ -1,7 +1,7 @@
+import type { VaultDepositParams } from '../../common/native';
 import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { VaultDepositParams } from '../types';
 
 export function vaultDeposit(params: VaultDepositParams, label: string): Promise<void> {
   const payload: JsonObject = { lake: params.lake, amount: params.amount };

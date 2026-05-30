@@ -1,4 +1,3 @@
-import { httpGet } from '../client';
 import type {
   Paginated,
   TradeCause,
@@ -6,7 +5,8 @@ import type {
   TradeHistoryEntry,
   TradeHistoryQuery,
   TradeSide,
-} from '../types';
+} from '../../common/native';
+import { httpGet } from '../client';
 
 interface TradeHistoryWire {
   history_id: number;

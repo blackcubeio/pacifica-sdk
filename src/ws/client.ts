@@ -1,6 +1,16 @@
 import { type WebSocketFactory, type WebSocketLike, getConfig } from '../common/config';
 import { WS_HEARTBEAT_INTERVAL } from '../common/constants';
+import type {
+  BatchAction,
+  CancelAllOrdersRef,
+  CancelOrderRef,
+  CandleInterval,
+  CreateLimitOrderParams,
+  CreateMarketOrderParams,
+  EditOrderRef,
+} from '../common/native';
 import { type JsonObject, type JsonValue, OperationType } from '../common/types';
+import type { StreamHandler, Unsubscribe, WsClientOptions } from '../common/ws';
 import { resolveReadNetwork } from '../rest/client';
 import { buildSignedBatchActions } from '../rest/orders/batch-order';
 import {
@@ -11,25 +21,6 @@ import {
   buildMarketOrderPayload,
 } from '../rest/orders/payloads';
 import { buildSignedRequest, resolveSigner } from '../rest/signing';
-import type {
-  BatchAction,
-  CancelAllOrdersRef,
-  CancelOrderRef,
-  CandleInterval,
-  CreateLimitOrderParams,
-  CreateMarketOrderParams,
-  EditOrderRef,
-} from '../rest/types';
-
-export type StreamHandler = (data: JsonValue) => void;
-export type Unsubscribe = () => void;
-
-export interface WsClientOptions {
-  url?: string;
-  webSocket?: WebSocketFactory;
-  /** Label du signer : choisit le réseau (défaut mainnet) et signe les actions. */
-  label?: string;
-}
 
 interface PendingAction {
   resolve: (value: JsonValue) => void;

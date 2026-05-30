@@ -1,7 +1,7 @@
+import type { CreateLimitOrderParams, CreateOrderResult } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { CreateLimitOrderParams, CreateOrderResult } from '../types';
 import { buildLimitOrderPayload } from './payloads';
 
 export function createLimitOrder(

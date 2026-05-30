@@ -1,9 +1,9 @@
+import type { Subaccount } from '../../common/native';
 import type { SubAccount } from '../../common/types';
 import { OperationType } from '../../common/types';
-import { httpPost } from '../client';
 import { SubAccountConverter } from '../../converters/subaccount';
+import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { Subaccount } from '../types';
 
 interface SubaccountWire {
   address: string;
@@ -21,8 +21,12 @@ const converter = new SubAccountConverter();
  */
 export function getSubAccounts(label: string): Promise<SubAccount[]> {
   const request = buildSignedRequest(OperationType.ListSubaccounts, {}, label);
-  return httpPost<{ subaccounts: SubaccountWire[] }>('/account/subaccount/list', request, label).then(
-    (envelope) => envelope.data.subaccounts.map((wire) => converter.toCommon(mapSubaccount(wire))),
+  return httpPost<{ subaccounts: SubaccountWire[] }>(
+    '/account/subaccount/list',
+    request,
+    label,
+  ).then((envelope) =>
+    envelope.data.subaccounts.map((wire) => converter.toCommon(mapSubaccount(wire))),
   );
 }
 

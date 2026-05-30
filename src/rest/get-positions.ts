@@ -1,14 +1,7 @@
+import type { GetPositionsParams } from '../common/types';
 import type { Position } from '../common/types';
-import { httpGet } from './client';
 import { PositionConverter, type PositionNative } from '../converters/position';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface GetPositionsParams {
-  /** Adresse du compte (clé publique), **requise** côté Pacifica. */
-  user: string;
-  /** Filtre optionnel sur une paire (appliqué côté client). */
-  name?: string;
-}
+import { httpGet } from './client';
 
 /** Positions ouvertes au **format unifié** `Position` (Pacifica `/positions`). */
 export function getPositions(params: GetPositionsParams, label?: string): Promise<Position[]> {

@@ -3,7 +3,7 @@ import {
   OrderHistoryConverter,
   type OrderHistoryNative,
 } from '../../src/converters/order-history';
-import { OrderCancelReason, OrderSide, OrderStatus, OrderType } from '../../src/rest/types';
+import { OrderCancelReason, OrderSide, OrderStatus, OrderType } from '../../src/common/native';
 
 const ORDER_CORE_KEYS = [
   'clientId',

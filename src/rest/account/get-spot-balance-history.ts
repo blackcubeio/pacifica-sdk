@@ -1,5 +1,9 @@
+import type {
+  Paginated,
+  SpotBalanceHistoryEntry,
+  SpotBalanceHistoryQuery,
+} from '../../common/native';
 import { httpGet } from '../client';
-import type { Paginated, SpotBalanceHistoryEntry, SpotBalanceHistoryQuery } from '../types';
 
 interface SpotBalanceHistoryWire {
   amount: string;

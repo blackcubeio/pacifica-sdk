@@ -1,5 +1,5 @@
+import type { AccountQuery, PendingSpotWithdrawal } from '../../common/native';
 import { httpGet } from '../client';
-import type { AccountQuery, PendingSpotWithdrawal } from '../types';
 
 interface PendingSpotWithdrawalWire {
   symbol: string;

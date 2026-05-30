@@ -1,5 +1,5 @@
+import { type TradeCause, TradeEventType, TradeSide } from '../common/native';
 import type { Side, Trade } from '../common/types';
-import { type TradeCause, TradeEventType, TradeSide } from '../rest/types';
 
 /** Trade public natif Pacifica (`/trades`, par fill). */
 export interface TradeNative {

@@ -1,5 +1,5 @@
+import type { PortfolioPoint, PortfolioQuery } from '../../common/native';
 import { httpGet } from '../client';
-import type { PortfolioPoint, PortfolioQuery } from '../types';
 
 interface PortfolioPointWire {
   account_equity: string;

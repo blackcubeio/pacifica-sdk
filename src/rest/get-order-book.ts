@@ -1,16 +1,7 @@
+import type { GetOrderBookParams } from '../common/types';
 import type { MarketKind, OrderBook } from '../common/types';
-import { httpGet } from './client';
 import { OrderBookConverter, type OrderBookNative } from '../converters/order-book';
-
-/** Paramètres unifiés (mêmes champs sur les 3 SDK). */
-export interface GetOrderBookParams {
-  /** Paire/symbole (= `Pair.name`). */
-  name: string;
-  /** Type de marché (Pacifica : `perp` uniquement). */
-  kind?: MarketKind;
-  /** Ignoré par Pacifica. */
-  limit?: number;
-}
+import { httpGet } from './client';
 
 /** Carnet d'ordres au **format unifié** `OrderBook` (Pacifica `/book`). */
 export function getOrderBook(params: GetOrderBookParams, label?: string): Promise<OrderBook> {

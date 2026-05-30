@@ -1,5 +1,5 @@
+import type { BridgeAsset } from '../../common/native';
 import { httpGet } from '../client';
-import type { BridgeAsset } from '../types';
 
 interface BridgeAssetWire {
   symbol: string;

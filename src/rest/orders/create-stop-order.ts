@@ -1,7 +1,7 @@
+import type { CreateOrderResult, CreateStopOrderParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
-import type { CreateOrderResult, CreateStopOrderParams } from '../types';
 import { buildStopOrderPayload } from './payloads';
 
 export function createStopOrder(

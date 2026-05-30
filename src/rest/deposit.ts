@@ -20,6 +20,7 @@ import {
   signTransactionMessageWithSigners,
 } from '@solana/kit';
 import bs58 from 'bs58';
+import type { DepositParams } from '../common/types';
 import { resolveSigner } from './signing';
 
 const MAINNET_RPC_URL = 'https://api.mainnet-beta.solana.com';
@@ -32,16 +33,6 @@ export const DEVNET_RPC_URL = 'https://api.devnet.solana.com';
 export const DEVNET_DEPOSIT_PROGRAM_ID = 'peRPsYCcB1J9jvrs29jiGdjkytxs8uHLmSPLKKP9ptm';
 export const DEVNET_CENTRAL_STATE = '2zPRq1Qvdq5A4Ld6WsH7usgCge4ApZRYfhhf5VAjfXxv';
 export const DEVNET_COLLATERAL_MINT = 'USDPqRbLidFGufty2s3oizmDEKdqx7ePTqzDMbf5ZKM';
-
-export interface DepositParams {
-  amount: number;
-  rpcUrl?: string;
-  rpcSubscriptionsUrl?: string;
-  programId?: string;
-  centralState?: string;
-  collateralMint?: string;
-  decimals?: number;
-}
 
 export function buildDepositData(amount: number, decimals: number): Uint8Array {
   const discriminator = sha256(new TextEncoder().encode('global:deposit')).slice(0, 8);
