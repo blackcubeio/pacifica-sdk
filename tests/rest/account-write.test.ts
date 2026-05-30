@@ -7,10 +7,10 @@ import { createApiConfigKey } from '../../src/rest/account/create-api-config-key
 import { getAccountSettings } from '../../src/rest/account/get-account-settings';
 import { listApiConfigKeys } from '../../src/rest/account/list-api-config-keys';
 import { revokeApiConfigKey } from '../../src/rest/account/revoke-api-config-key';
-import { updateLeverage } from '../../src/rest/account/update-leverage';
 import { bindAgentWallet } from '../../src/rest/agent/bind-agent-wallet';
 import { listAgentWallets } from '../../src/rest/agent/list-agent-wallets';
 import { revokeAgentWallet } from '../../src/rest/agent/revoke-agent-wallet';
+import { updateLeverage } from '../../src/rest/update-leverage';
 import { poll, readEnv } from '../helpers';
 
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
@@ -36,11 +36,11 @@ describe('account write read-back (testnet, do → état visible → undo)', () 
   it(
     'updateLeverage is reflected in account settings',
     () => {
-      return updateLeverage({ symbol: 'BTC', leverage: 5 }, account)
+      return updateLeverage({ name: 'BTC', leverage: 5 }, account)
         .then(() => poll(btcLeverage, (value) => value === 5))
         .then((value) => {
           expect(value).toBe(5);
-          return updateLeverage({ symbol: 'BTC', leverage: 10 }, account);
+          return updateLeverage({ name: 'BTC', leverage: 10 }, account);
         })
         .then(() => poll(btcLeverage, (value) => value === 10))
         .then((value) => {

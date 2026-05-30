@@ -56,7 +56,7 @@ export * from './rest/orders/twap/get-open-twap-order';
 export * from './rest/orders/twap/get-twap-order-history';
 export * from './rest/orders/twap/get-twap-order-history-by-id';
 
-export * from './rest/account/update-leverage';
+export * from './rest/update-leverage';
 export * from './rest/account/update-margin-mode';
 export * from './rest/account/add-isolated-margin';
 export * from './rest/account/toggle-auto-lending';

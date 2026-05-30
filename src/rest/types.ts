@@ -546,10 +546,6 @@ export interface BatchResult {
   results: BatchActionResult[];
 }
 
-export interface UpdateLeverageParams {
-  symbol: string;
-  leverage: number;
-}
 
 export interface UpdateMarginModeParams {
   symbol: string;
