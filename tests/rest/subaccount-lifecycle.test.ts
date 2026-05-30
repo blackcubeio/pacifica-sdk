@@ -6,7 +6,7 @@ import type { Signer } from '../../src/common/types';
 import { publicKeyFromBase58 } from '../../src/common/utils';
 import { createSubaccount } from '../../src/rest/account/create-subaccount';
 import { getAccountInfo } from '../../src/rest/account/get-account-info';
-import { listSubaccounts } from '../../src/rest/account/list-subaccounts';
+import { getSubAccounts } from '../../src/rest/account/list-subaccounts';
 import { transferSubaccountFund } from '../../src/rest/account/transfer-subaccount-fund';
 import { PacificaApiError } from '../../src/rest/client';
 import { poll, readEnv } from '../helpers';
@@ -40,7 +40,7 @@ describe('subaccount lifecycle (testnet, réel)', () => {
       })
         .then(() =>
           poll(
-            () => listSubaccounts(mainAccount),
+            () => getSubAccounts(mainAccount),
             (subs) => subs.some((entry) => entry.address === freshAddress),
           ),
         )

@@ -1,5 +1,7 @@
+import type { SubAccount } from '../../common/types';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
+import { SubAccountConverter } from '../converters/subaccount';
 import { buildSignedRequest } from '../signing';
 import type { Subaccount } from '../types';
 
@@ -11,13 +13,17 @@ interface SubaccountWire {
   created_at: number;
 }
 
-export function listSubaccounts(label: string): Promise<Subaccount[]> {
+const converter = new SubAccountConverter();
+
+/**
+ * List the master account's sub-accounts, au **format unifié** {@link SubAccount}.
+ * Seule l'`address` est dans le cœur ; balance/feeLevel/feeMode/createdAt → `xtras`.
+ */
+export function getSubAccounts(label: string): Promise<SubAccount[]> {
   const request = buildSignedRequest(OperationType.ListSubaccounts, {}, label);
-  return httpPost<{ subaccounts: SubaccountWire[] }>(
-    '/account/subaccount/list',
-    request,
-    label,
-  ).then((envelope) => envelope.data.subaccounts.map((subaccount) => mapSubaccount(subaccount)));
+  return httpPost<{ subaccounts: SubaccountWire[] }>('/account/subaccount/list', request, label).then(
+    (envelope) => envelope.data.subaccounts.map((wire) => converter.toCommon(mapSubaccount(wire))),
+  );
 }
 
 function mapSubaccount(wire: SubaccountWire): Subaccount {
