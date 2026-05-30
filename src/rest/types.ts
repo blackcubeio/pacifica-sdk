@@ -483,7 +483,7 @@ export interface CancelOrderRef {
   clientOrderId?: string;
 }
 
-export interface CancelAllOrdersParams {
+export interface CancelAllOrdersRef {
   allSymbols: boolean;
   excludeReduceOnly: boolean;
   symbol?: string;
@@ -513,10 +513,6 @@ export interface CancelStopOrderParams {
 
 export interface CreateOrderResult {
   orderId: number;
-}
-
-export interface CancelAllResult {
-  cancelledCount: number;
 }
 
 export enum BatchActionType {

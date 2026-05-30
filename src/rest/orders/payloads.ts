@@ -1,7 +1,7 @@
 import type { JsonObject } from '../../common/types';
 import { newClientOrderId } from '../signing';
 import {
-  type CancelAllOrdersParams,
+  type CancelAllOrdersRef,
   type CancelOrderRef,
   type CancelStopOrderParams,
   type CreateLimitOrderParams,
@@ -99,7 +99,7 @@ export function buildCancelStopOrderPayload(params: CancelStopOrderParams): Json
   return buildOrderRef(params.symbol, params.orderId, params.clientOrderId);
 }
 
-export function buildCancelAllOrdersPayload(params: CancelAllOrdersParams): JsonObject {
+export function buildCancelAllOrdersPayload(params: CancelAllOrdersRef): JsonObject {
   const payload: JsonObject = {
     all_symbols: params.allSymbols,
     exclude_reduce_only: params.excludeReduceOnly,

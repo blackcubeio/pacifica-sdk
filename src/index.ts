@@ -19,6 +19,7 @@ export * from './rest/get-order-history';
 export * from './rest/update-leverage';
 export * from './rest/place-order';
 export * from './rest/cancel-order';
+export * from './rest/cancel-all-orders';
 
 export * from './rest/markets/get-market-info';
 export * from './rest/markets/get-fee-levels';
@@ -48,7 +49,6 @@ export * from './rest/orders/get-order-history-by-id';
 
 export * from './rest/orders/create-limit-order';
 export * from './rest/orders/create-market-order';
-export * from './rest/orders/cancel-all-orders';
 export * from './rest/orders/edit-order';
 export * from './rest/orders/create-stop-order';
 export * from './rest/orders/cancel-stop-order';
