@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  OrderHistoryConverter,
-  type OrderHistoryNative,
-} from '../../src/converters/order-history';
 import { OrderCancelReason, OrderSide, OrderStatus, OrderType } from '../../src/common/native';
+import { OrderHistoryConverter, type OrderHistoryNative } from '../../src/converters/order-history';
 
 const ORDER_CORE_KEYS = [
   'clientId',

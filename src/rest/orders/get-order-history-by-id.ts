@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type {
   OrderHistoryByIdEntry,
   OrderHistoryByIdQuery,
@@ -28,10 +29,12 @@ interface OrderHistoryByIdWire {
 }
 
 export function getOrderHistoryById(
+  client: PacificaClient,
   query: OrderHistoryByIdQuery,
   label?: string,
 ): Promise<OrderHistoryByIdEntry[]> {
   return httpGet<OrderHistoryByIdWire[]>(
+    client,
     '/orders/history_by_id',
     {
       order_id: query.orderId,

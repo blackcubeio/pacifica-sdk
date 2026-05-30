@@ -1,7 +1,7 @@
 import { ed25519 } from '@noble/curves/ed25519';
 import bs58 from 'bs58';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
 import { publicKeyFromBase58 } from '../../src/common/utils';
 import { createApiConfigKey } from '../../src/rest/account/create-api-config-key';
 import { getAccountSettings } from '../../src/rest/account/get-account-settings';
@@ -13,12 +13,14 @@ import { revokeAgentWallet } from '../../src/rest/agent/revoke-agent-wallet';
 import { updateLeverage } from '../../src/rest/update-leverage';
 import { poll, readEnv } from '../helpers';
 
+let client: PacificaClient;
+
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 const NETWORK_TIMEOUT = 40_000;
 
 function btcLeverage(): Promise<number | null> {
-  return getAccountSettings({ account }, account).then((settings) => {
+  return getAccountSettings(client, { account }, account).then((settings) => {
     const margin = settings.marginSettings.find((entry) => entry.symbol === 'BTC');
     return margin === undefined ? null : margin.leverage;
   });
@@ -26,21 +28,19 @@ function btcLeverage(): Promise<number | null> {
 
 describe('account write read-back (testnet, do → état visible → undo)', () => {
   beforeAll(() => {
-    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
-  });
-
-  afterAll(() => {
-    resetConfig();
+    client = init({
+      signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } },
+    });
   });
 
   it(
     'updateLeverage is reflected in account settings',
     () => {
-      return updateLeverage({ name: 'BTC', leverage: 5 }, account)
+      return updateLeverage(client, { name: 'BTC', leverage: 5 }, account)
         .then(() => poll(btcLeverage, (value) => value === 5))
         .then((value) => {
           expect(value).toBe(5);
-          return updateLeverage({ name: 'BTC', leverage: 10 }, account);
+          return updateLeverage(client, { name: 'BTC', leverage: 10 }, account);
         })
         .then(() => poll(btcLeverage, (value) => value === 10))
         .then((value) => {
@@ -53,16 +53,16 @@ describe('account write read-back (testnet, do → état visible → undo)', () 
   it(
     'API config key appears after create and disappears after revoke',
     () => {
-      return createApiConfigKey(account).then((created) => {
+      return createApiConfigKey(client, account).then((created) => {
         expect(typeof created.apiKey).toBe('string');
         return poll(
-          () => listApiConfigKeys(account),
+          () => listApiConfigKeys(client, account),
           (keys) => JSON.stringify(keys).includes(created.apiKey),
         )
-          .then(() => revokeApiConfigKey({ apiKey: created.apiKey }, account))
+          .then(() => revokeApiConfigKey(client, { apiKey: created.apiKey }, account))
           .then(() =>
             poll(
-              () => listApiConfigKeys(account),
+              () => listApiConfigKeys(client, account),
               (keys) => JSON.stringify(keys).includes(created.apiKey) === false,
             ),
           );
@@ -75,17 +75,17 @@ describe('account write read-back (testnet, do → état visible → undo)', () 
     'agent wallet appears after bind and disappears after revoke',
     () => {
       const agentWallet = publicKeyFromBase58(bs58.encode(ed25519.utils.randomPrivateKey()));
-      return bindAgentWallet({ agentWallet }, account)
+      return bindAgentWallet(client, { agentWallet }, account)
         .then(() =>
           poll(
-            () => listAgentWallets(account),
+            () => listAgentWallets(client, account),
             (wallets) => JSON.stringify(wallets).includes(agentWallet),
           ),
         )
-        .then(() => revokeAgentWallet({ agentWallet }, account))
+        .then(() => revokeAgentWallet(client, { agentWallet }, account))
         .then(() =>
           poll(
-            () => listAgentWallets(account),
+            () => listAgentWallets(client, account),
             (wallets) => JSON.stringify(wallets).includes(agentWallet) === false,
           ),
         );

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
 import { OrderSide } from '../../src/common/types';
 import { PacificaApiError } from '../../src/rest/client';
 import { createPositionTpsl } from '../../src/rest/positions/create-position-tpsl';
@@ -9,6 +9,8 @@ import { createVault } from '../../src/rest/vaults/create-vault';
 import { getVaults } from '../../src/rest/vaults/get-vaults';
 import { updateDepositCap } from '../../src/rest/vaults/update-deposit-cap';
 import { vaultDeposit } from '../../src/rest/vaults/vault-deposit';
+
+let client: PacificaClient;
 
 function readEnv(name: string): string {
   const content = readFileSync(new URL('../../.env', import.meta.url), 'utf-8');
@@ -25,17 +27,15 @@ const NETWORK_TIMEOUT = 30_000;
 
 describe('vaults + positions tpsl (testnet, réel)', () => {
   beforeAll(() => {
-    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
-  });
-
-  afterAll(() => {
-    resetConfig();
+    client = init({
+      signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } },
+    });
   });
 
   it(
     'lists vaults',
     () => {
-      return getVaults(account).then((vaults) => {
+      return getVaults(client, account).then((vaults) => {
         expect(vaults.length).toBeGreaterThan(0);
         expect(typeof vaults[0]?.address).toBe('string');
       });
@@ -47,6 +47,7 @@ describe('vaults + positions tpsl (testnet, réel)', () => {
     'creates a vault, deposits, then runs manager ops',
     () => {
       return createVault(
+        client,
         {
           nickname: `sdk-test-${Date.now()}`,
           initialDeposit: '10',
@@ -62,12 +63,12 @@ describe('vaults + positions tpsl (testnet, réel)', () => {
       ).then((created) => {
         expect(typeof created.lakeAddress).toBe('string');
         const lake = created.lakeAddress;
-        return vaultDeposit({ lake, amount: '10' }, account).then(() => {
-          return signatureAccepted(updateDepositCap({ lake, depositCap: '2000000' }, account)).then(
-            () => {
-              return signatureAccepted(addToWhitelist({ lake, symbols: ['BTC'] }, account));
-            },
-          );
+        return vaultDeposit(client, { lake, amount: '10' }, account).then(() => {
+          return signatureAccepted(
+            updateDepositCap(client, { lake, depositCap: '2000000' }, account),
+          ).then(() => {
+            return signatureAccepted(addToWhitelist(client, { lake, symbols: ['BTC'] }, account));
+          });
         });
       });
     },
@@ -79,6 +80,7 @@ describe('vaults + positions tpsl (testnet, réel)', () => {
     () => {
       return signatureAccepted(
         createPositionTpsl(
+          client,
           {
             symbol: 'BTC',
             side: OrderSide.Bid,

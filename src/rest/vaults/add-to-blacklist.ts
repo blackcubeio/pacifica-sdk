@@ -1,10 +1,15 @@
+import type { PacificaClient } from '../../common/config';
 import type { VaultSymbolsParams } from '../../common/native';
 import { OperationType } from '../../common/types';
 import { httpPost } from '../client';
 import { buildSignedRequest } from '../signing';
 
-export function addToBlacklist(params: VaultSymbolsParams, label: string): Promise<void> {
+export function addToBlacklist(
+  client: PacificaClient,
+  params: VaultSymbolsParams,
+  label: string,
+): Promise<void> {
   const payload = { lake: params.lake, symbols: params.symbols };
-  const request = buildSignedRequest(OperationType.AddLakeBlacklist, payload, label);
-  return httpPost<null>('/lake/add_blacklist', request, label).then(() => undefined);
+  const request = buildSignedRequest(client, OperationType.AddLakeBlacklist, payload, label);
+  return httpPost<null>(client, '/lake/add_blacklist', request, label).then(() => undefined);
 }

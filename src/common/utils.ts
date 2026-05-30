@@ -60,6 +60,25 @@ export function signMessage(
   return { message, signature: bs58.encode(signatureBytes) };
 }
 
+/**
+ * Type de clé : `0x…` → EVM. Pacifica est **Solana-only** ; cette fonction fait partie du
+ * contrat commun (`KeyHelper`) et renvoie toujours `solana` pour une clé Pacifica (base58).
+ */
+export function keyTypeOf(privateKey: string): 'evm' | 'solana' {
+  return privateKey.startsWith('0x') ? 'evm' : 'solana';
+}
+
+/** Adresse Solana (clé publique base58) dérivée d'une clé secrète base58. */
+export function solanaAddress(secretKey: string): string {
+  return publicKeyFromBase58(secretKey);
+}
+
+/** Signe un message brut en **ed25519** (signature base58) avec une clé secrète base58. */
+export function signEd25519(message: string, secretKey: string): string {
+  const seed = secretKeyFromBase58(secretKey);
+  return bs58.encode(ed25519.sign(new TextEncoder().encode(message), seed));
+}
+
 export function signWithHardwareWallet(
   header: SignatureHeader,
   payload: JsonObject,

@@ -1,11 +1,13 @@
 import { readFileSync } from 'node:fs';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
 import { getAccountInfo } from '../../src/rest/account/get-account-info';
 import { getOpenOrders } from '../../src/rest/get-open-orders';
 import { getOrderHistory } from '../../src/rest/get-order-history';
 import { getPositions } from '../../src/rest/get-positions';
 import { getOpenTwapOrder } from '../../src/rest/orders/twap/get-open-twap-order';
+
+let client: PacificaClient;
 
 function readEnv(name: string): string {
   const content = readFileSync(new URL('../../.env', import.meta.url), 'utf-8');
@@ -22,17 +24,15 @@ const NETWORK_TIMEOUT = 20_000;
 
 describe('account reading (testnet, réseau réel)', () => {
   beforeAll(() => {
-    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
-  });
-
-  afterAll(() => {
-    resetConfig();
+    client = init({
+      signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } },
+    });
   });
 
   it(
     'getAccountInfo returns the sub-account balance fields',
     () => {
-      return getAccountInfo({ account }, account).then((info) => {
+      return getAccountInfo(client, { account }, account).then((info) => {
         expect(typeof info.balance).toBe('string');
         expect(typeof info.accountEquity).toBe('string');
         expect(Array.isArray(info.spotBalances)).toBe(true);
@@ -44,7 +44,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getPositions returns an array',
     () => {
-      return getPositions({ user: account }, account).then((positions) => {
+      return getPositions(client, { user: account }, account).then((positions) => {
         expect(Array.isArray(positions)).toBe(true);
       });
     },
@@ -54,7 +54,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getOpenOrders returns an array',
     () => {
-      return getOpenOrders({ user: account }, account).then((orders) => {
+      return getOpenOrders(client, { user: account }, account).then((orders) => {
         expect(Array.isArray(orders)).toBe(true);
       });
     },
@@ -64,7 +64,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getOpenTwapOrder returns an array',
     () => {
-      return getOpenTwapOrder({ account }, account).then((twapOrders) => {
+      return getOpenTwapOrder(client, { account }, account).then((twapOrders) => {
         expect(Array.isArray(twapOrders)).toBe(true);
       });
     },
@@ -74,7 +74,7 @@ describe('account reading (testnet, réseau réel)', () => {
   it(
     'getOrderHistory renvoie des ordres unifiés',
     () => {
-      return getOrderHistory({ user: account }, account).then((orders) => {
+      return getOrderHistory(client, { user: account }, account).then((orders) => {
         expect(Array.isArray(orders)).toBe(true);
         for (const o of orders) {
           expect(['buy', 'sell']).toContain(o.side);

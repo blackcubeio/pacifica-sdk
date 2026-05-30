@@ -1,16 +1,16 @@
-import { getConfig } from '../common/config';
-import type { ApiEnvelope, QueryParams, QueryValue } from '../common/types';
+import type { PacificaClient } from '../common/config';
+import type { ApiEnvelope, QueryParams } from '../common/types';
 import type { JsonObject, Network } from '../common/types';
 
 /**
  * Réseau d'une **lecture**. Le label est optionnel : sans label on retombe sur le **mainnet**
  * (les lectures ne touchent pas au wallet), avec un label on tape sur le réseau de son signer.
  */
-export function resolveReadNetwork(label?: string): Network {
+export function resolveReadNetwork(client: PacificaClient, label?: string): Network {
   if (label === undefined) {
     return 'mainnet';
   }
-  const signer = getConfig().signers[label];
+  const signer = client.signers[label];
   if (signer === undefined) {
     throw new Error(`Aucun signer enregistré sous "${label}"; ajoute-le dans init({ signers })`);
   }
@@ -42,35 +42,36 @@ export function buildUrl(baseUrl: string, path: string, query?: QueryParams): st
 
 /** Lecture (non signée). `label` optionnel choisit le réseau (défaut mainnet). */
 export function httpGet<TData>(
+  client: PacificaClient,
   path: string,
   query?: QueryParams,
   label?: string,
 ): Promise<ApiEnvelope<TData>> {
-  const config = getConfig();
-  const url = buildUrl(config.restUrls[resolveReadNetwork(label)], path, query);
-  return config
+  const url = buildUrl(client.restUrls[resolveReadNetwork(client, label)], path, query);
+  return client
     .fetch(url, { method: 'GET', headers: { Accept: 'application/json' } })
     .then((response) => parseEnvelope<TData>(response));
 }
 
 /** POST sur le réseau du signer `label`. Pour les écritures, le label est obligatoire en amont. */
 export function httpPost<TData>(
+  client: PacificaClient,
   path: string,
   body: JsonObject,
   label?: string,
 ): Promise<ApiEnvelope<TData>> {
-  return httpPostTo<TData>(path, body, resolveReadNetwork(label));
+  return httpPostTo<TData>(client, path, body, resolveReadNetwork(client, label));
 }
 
 /** POST sur un réseau explicite (flux à signataires bruts, ex. création de sous-compte). */
 export function httpPostTo<TData>(
+  client: PacificaClient,
   path: string,
   body: JsonObject,
   network: Network,
 ): Promise<ApiEnvelope<TData>> {
-  const config = getConfig();
-  const url = buildUrl(config.restUrls[network], path);
-  return config
+  const url = buildUrl(client.restUrls[network], path);
+  return client
     .fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },

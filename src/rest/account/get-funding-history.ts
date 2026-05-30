@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type {
   AccountFundingEntry,
   FundingHistoryQuery,
@@ -21,10 +22,12 @@ interface AccountFundingWire {
  * À ne pas confondre avec `getFundingHistory` (taux public unifié).
  */
 export function getAccountFunding(
+  client: PacificaClient,
   query: FundingHistoryQuery,
   label?: string,
 ): Promise<Paginated<AccountFundingEntry>> {
   return httpGet<AccountFundingWire[]>(
+    client,
     '/funding/history',
     {
       account: query.account,

@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { PortfolioPoint, PortfolioQuery } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -7,8 +8,13 @@ interface PortfolioPointWire {
   timestamp: number;
 }
 
-export function getPortfolio(query: PortfolioQuery, label?: string): Promise<PortfolioPoint[]> {
+export function getPortfolio(
+  client: PacificaClient,
+  query: PortfolioQuery,
+  label?: string,
+): Promise<PortfolioPoint[]> {
   return httpGet<PortfolioPointWire[]>(
+    client,
     '/portfolio',
     {
       account: query.account,

@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { Paginated, SpotDepositEntry, SpotHistoryQuery } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -9,10 +10,12 @@ interface SpotDepositWire {
 }
 
 export function getSpotDepositHistory(
+  client: PacificaClient,
   query: SpotHistoryQuery,
   label?: string,
 ): Promise<Paginated<SpotDepositEntry>> {
   return httpGet<SpotDepositWire[]>(
+    client,
     '/account/spot_asset/deposit/history',
     {
       account: query.account,

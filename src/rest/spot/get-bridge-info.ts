@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { BridgeAsset } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -10,9 +11,9 @@ interface BridgeAssetWire {
   decimals: number;
 }
 
-export function getBridgeInfo(label?: string): Promise<BridgeAsset[]> {
-  return httpGet<BridgeAssetWire[]>('/spot_assets/bridge/info', undefined, label).then((envelope) =>
-    envelope.data.map((asset) => mapBridgeAsset(asset)),
+export function getBridgeInfo(client: PacificaClient, label?: string): Promise<BridgeAsset[]> {
+  return httpGet<BridgeAssetWire[]>(client, '/spot_assets/bridge/info', undefined, label).then(
+    (envelope) => envelope.data.map((asset) => mapBridgeAsset(asset)),
   );
 }
 

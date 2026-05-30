@@ -1,38 +1,31 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
+import { CandleInterval } from '../../src/common/native';
 import { getOrderBook } from '../../src/rest/get-order-book';
 import { getPairs } from '../../src/rest/get-pairs';
 import { getPrices } from '../../src/rest/get-prices';
 import { getCandleData } from '../../src/rest/markets/get-candle-data';
 import { getMarketInfo } from '../../src/rest/markets/get-market-info';
 import { getSpotAssets } from '../../src/rest/spot/get-spot-assets';
-import { CandleInterval } from '../../src/common/native';
 import { readEnv } from '../helpers';
+
+let client: PacificaClient;
 
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const NETWORK_TIMEOUT = 20_000;
 
-describe('init guard', () => {
-  it('throws when the SDK is not initialized', () => {
-    resetConfig();
-    expect(() => getMarketInfo()).toThrow('not initialized');
-  });
-});
-
 describe('markets (testnet, réseau réel)', () => {
   beforeAll(() => {
-    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
-  });
-
-  afterAll(() => {
-    resetConfig();
+    client = init({
+      signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } },
+    });
   });
 
   it(
     'getMarketInfo returns a non-empty list of markets',
     () => {
-      return getMarketInfo(account).then((markets) => {
+      return getMarketInfo(client, account).then((markets) => {
         expect(markets.length).toBeGreaterThan(0);
         const market = markets[0];
         expect(typeof market?.symbol).toBe('string');
@@ -46,7 +39,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getPairs returns the unified Pair format (perp)',
     () => {
-      return getPairs(account).then((pairs) => {
+      return getPairs(client, account).then((pairs) => {
         expect(pairs.length).toBeGreaterThan(0);
         const btc = pairs.find((p) => p.base === 'BTC' && p.kind === 'perp');
         expect(btc?.name).toBe('BTC');
@@ -63,7 +56,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getPrices renvoie les prix unifiés (mark/oracle/time)',
     () => {
-      return getPrices(account).then((prices) => {
+      return getPrices(client, account).then((prices) => {
         expect(prices.length).toBeGreaterThan(0);
         const price = prices[0];
         expect(price?.kind).toBe('perp');
@@ -79,7 +72,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getOrderBook renvoie le carnet unifié',
     () => {
-      return getOrderBook({ name: 'BTC' }, account).then((book) => {
+      return getOrderBook(client, { name: 'BTC' }, account).then((book) => {
         expect(book.name).toBe('BTC');
         expect(book.kind).toBe('perp');
         expect(Array.isArray(book.bids)).toBe(true);
@@ -94,6 +87,7 @@ describe('markets (testnet, réseau réel)', () => {
     () => {
       const startTime = Date.now() - 60 * 60 * 1000;
       return getCandleData(
+        client,
         { symbol: 'BTC', interval: CandleInterval.OneMinute, startTime },
         account,
       ).then((candles) => {
@@ -111,7 +105,7 @@ describe('markets (testnet, réseau réel)', () => {
   it(
     'getSpotAssets returns spot assets',
     () => {
-      return getSpotAssets({}, account).then((assets) => {
+      return getSpotAssets(client, {}, account).then((assets) => {
         expect(Array.isArray(assets)).toBe(true);
       });
     },

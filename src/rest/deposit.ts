@@ -20,6 +20,7 @@ import {
   signTransactionMessageWithSigners,
 } from '@solana/kit';
 import bs58 from 'bs58';
+import type { PacificaClient } from '../common/config';
 import type { DepositParams } from '../common/types';
 import { resolveSigner } from './signing';
 
@@ -42,8 +43,12 @@ export function buildDepositData(amount: number, decimals: number): Uint8Array {
   return data;
 }
 
-export function deposit(params: DepositParams, label: string): Promise<string> {
-  const resolved = resolveSigner(label);
+export function deposit(
+  client: PacificaClient,
+  params: DepositParams,
+  label: string,
+): Promise<string> {
+  const resolved = resolveSigner(client, label);
   const rpcUrl = params.rpcUrl ?? MAINNET_RPC_URL;
   const rpcSubscriptionsUrl = params.rpcSubscriptionsUrl ?? toSubscriptionsUrl(rpcUrl);
   const rpc = createSolanaRpc(rpcUrl);

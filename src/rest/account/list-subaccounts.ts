@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { Subaccount } from '../../common/native';
 import type { SubAccount } from '../../common/types';
 import { OperationType } from '../../common/types';
@@ -19,9 +20,10 @@ const converter = new SubAccountConverter();
  * List the master account's sub-accounts, au **format unifié** {@link SubAccount}.
  * Seule l'`address` est dans le cœur ; balance/feeLevel/feeMode/createdAt → `xtras`.
  */
-export function getSubAccounts(label: string): Promise<SubAccount[]> {
-  const request = buildSignedRequest(OperationType.ListSubaccounts, {}, label);
+export function getSubAccounts(client: PacificaClient, label: string): Promise<SubAccount[]> {
+  const request = buildSignedRequest(client, OperationType.ListSubaccounts, {}, label);
   return httpPost<{ subaccounts: SubaccountWire[] }>(
+    client,
     '/account/subaccount/list',
     request,
     label,

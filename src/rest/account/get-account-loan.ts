@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { AccountLoan, AccountQuery, LoanSpotBalance } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -19,8 +20,12 @@ interface AccountLoanWire {
   updated_at: number;
 }
 
-export function getAccountLoan(query: AccountQuery, label?: string): Promise<AccountLoan> {
-  return httpGet<AccountLoanWire>('/account/loan', { account: query.account }, label).then(
+export function getAccountLoan(
+  client: PacificaClient,
+  query: AccountQuery,
+  label?: string,
+): Promise<AccountLoan> {
+  return httpGet<AccountLoanWire>(client, '/account/loan', { account: query.account }, label).then(
     (envelope) => mapAccountLoan(envelope.data),
   );
 }

@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type {
   BalanceEventType,
   BalanceHistoryEntry,
@@ -15,10 +16,12 @@ interface BalanceHistoryWire {
 }
 
 export function getBalanceHistory(
+  client: PacificaClient,
   query: BalanceHistoryQuery,
   label?: string,
 ): Promise<Paginated<BalanceHistoryEntry>> {
   return httpGet<BalanceHistoryWire[]>(
+    client,
     '/account/balance/history',
     {
       account: query.account,

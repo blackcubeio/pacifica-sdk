@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { Market } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -16,8 +17,8 @@ interface MarketWire {
   created_at: number;
 }
 
-export function getMarketInfo(label?: string): Promise<Market[]> {
-  return httpGet<MarketWire[]>('/info', undefined, label).then((envelope) =>
+export function getMarketInfo(client: PacificaClient, label?: string): Promise<Market[]> {
+  return httpGet<MarketWire[]>(client, '/info', undefined, label).then((envelope) =>
     envelope.data.map((market) => mapMarket(market)),
   );
 }

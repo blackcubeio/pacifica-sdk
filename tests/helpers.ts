@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import type { PacificaClient } from '../src/common/config';
 import { getPrices } from '../src/rest/get-prices';
 import { getMarketInfo } from '../src/rest/markets/get-market-info';
 
@@ -43,8 +44,10 @@ export function hasClientOrderId(
   return orders.some((order) => order.clientId === clientOrderId);
 }
 
-export function buildFarBtcLimit(): Promise<{ price: string; amount: string }> {
-  return Promise.all([getMarketInfo(), getPrices()]).then(([markets, prices]) => {
+export function buildFarBtcLimit(
+  client: PacificaClient,
+): Promise<{ price: string; amount: string }> {
+  return Promise.all([getMarketInfo(client), getPrices(client)]).then(([markets, prices]) => {
     const market = markets.find((entry) => entry.symbol === 'BTC');
     const price = prices.find((entry) => entry.name === 'BTC');
     if (market === undefined || price === undefined) {

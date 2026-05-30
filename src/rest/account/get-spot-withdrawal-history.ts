@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { Paginated, SpotHistoryQuery, SpotWithdrawalEntry } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -10,10 +11,12 @@ interface SpotWithdrawalWire {
 }
 
 export function getSpotWithdrawalHistory(
+  client: PacificaClient,
   query: SpotHistoryQuery,
   label?: string,
 ): Promise<Paginated<SpotWithdrawalEntry>> {
   return httpGet<SpotWithdrawalWire[]>(
+    client,
     '/account/spot_asset/withdraw/history',
     {
       account: query.account,
