@@ -1,6 +1,7 @@
-import type { Candle, MarketKind, Trade } from '../common/types';
+import type { Candle, MarketKind, OrderBook, Trade } from '../common/types';
 import { type CandleNative, CandleConverter } from '../rest/converters/candle';
 import type { CandleInterval } from '../rest/types';
+import { type BboWsNative, BboWsConverter } from './converters/bbo';
 import { type TradeWsNative, TradeWsConverter } from './converters/trade';
 import { WsClient, type Unsubscribe, type WsClientOptions } from './client';
 
@@ -52,6 +53,17 @@ export class UnifiedWsClient {
       for (const native of raw as unknown as TradeWsNative[]) {
         handler(converter.toCommon(native));
       }
+    });
+  }
+
+  /** Meilleure limite (BBO) temps réel → {@link OrderBook} (1 niveau par côté). */
+  public subscribeBbo(
+    params: { name: string; kind?: MarketKind },
+    handler: (book: OrderBook) => void,
+  ): Unsubscribe {
+    const converter = new BboWsConverter(params.kind ?? 'perp');
+    return this.client.subscribeBbo({ symbol: params.name }, (raw) => {
+      handler(converter.toCommon(raw as unknown as BboWsNative));
     });
   }
 }
