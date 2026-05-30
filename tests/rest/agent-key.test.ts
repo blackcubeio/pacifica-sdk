@@ -3,9 +3,9 @@ import { init, resetConfig } from '../../src/common/config';
 import { OrderSide } from '../../src/common/types';
 import { bindAgentWallet } from '../../src/rest/agent/bind-agent-wallet';
 import { listAgentWallets } from '../../src/rest/agent/list-agent-wallets';
+import { cancelOrder } from '../../src/rest/cancel-order';
 import { PacificaApiError } from '../../src/rest/client';
 import { getOpenOrders } from '../../src/rest/get-open-orders';
-import { cancelOrder } from '../../src/rest/orders/cancel-order';
 import { createLimitOrder } from '../../src/rest/orders/create-limit-order';
 import { buildFarBtcLimit, hasClientOrderId, poll, readEnv } from '../helpers';
 
@@ -77,7 +77,7 @@ describe('API agent key (testnet, réel)', () => {
           .then((orders) => {
             // Order signed by the API key is credited to the account it acts for.
             expect(hasClientOrderId(orders, clientOrderId)).toBe(true);
-            return cancelOrder({ symbol: 'BTC', clientOrderId }, account);
+            return cancelOrder({ name: 'BTC', clientId: clientOrderId }, account);
           })
           .then(() =>
             poll(

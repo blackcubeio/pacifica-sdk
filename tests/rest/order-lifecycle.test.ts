@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
 import { OrderSide } from '../../src/common/types';
+import { cancelOrder } from '../../src/rest/cancel-order';
 import { getOpenOrders } from '../../src/rest/get-open-orders';
-import { cancelOrder } from '../../src/rest/orders/cancel-order';
 import { createLimitOrder } from '../../src/rest/orders/create-limit-order';
 import { buildFarBtcLimit, hasClientOrderId, poll, readEnv } from '../helpers';
 
@@ -35,7 +35,7 @@ describe('order lifecycle REST (testnet, do → visible → undo → gone)', () 
               (orders) => hasClientOrderId(orders, clientOrderId),
             );
           })
-          .then(() => cancelOrder({ symbol: 'BTC', clientOrderId }, account))
+          .then(() => cancelOrder({ name: 'BTC', clientId: clientOrderId }, account))
           .then(() =>
             poll(
               () => getOpenOrders({ user: account }, account),

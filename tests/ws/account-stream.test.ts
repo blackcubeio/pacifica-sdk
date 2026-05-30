@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { init, resetConfig } from '../../src/common/config';
 import type { JsonValue } from '../../src/common/types';
 import { OrderSide } from '../../src/common/types';
-import { cancelOrder } from '../../src/rest/orders/cancel-order';
+import { cancelOrder } from '../../src/rest/cancel-order';
 import { createLimitOrder } from '../../src/rest/orders/create-limit-order';
 import { WsClient } from '../../src/ws/client';
 import { buildFarBtcLimit, poll, readEnv } from '../helpers';
@@ -49,7 +49,7 @@ describe('WS account stream (testnet, voir passer les opérations)', () => {
           expect(received.some((event) => JSON.stringify(event).includes(clientOrderId))).toBe(
             true,
           );
-          return cancelOrder({ symbol: 'BTC', clientOrderId }, account);
+          return cancelOrder({ name: 'BTC', clientId: clientOrderId }, account);
         })
         .then(() => {
           client.disconnect();

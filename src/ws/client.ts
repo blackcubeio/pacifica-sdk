@@ -14,7 +14,7 @@ import { buildSignedRequest, resolveSigner } from '../rest/signing';
 import type {
   BatchAction,
   CancelAllOrdersParams,
-  CancelOrderParams,
+  CancelOrderRef,
   CandleInterval,
   CreateLimitOrderParams,
   CreateMarketOrderParams,
@@ -217,7 +217,7 @@ export class WsClient {
     return this.sendAction({ create_market_order: data });
   }
 
-  public cancelOrder(params: CancelOrderParams): Promise<JsonValue> {
+  public cancelOrder(params: CancelOrderRef): Promise<JsonValue> {
     const data = buildSignedRequest(
       OperationType.CancelOrder,
       buildCancelOrderPayload(params),

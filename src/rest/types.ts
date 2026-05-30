@@ -477,7 +477,7 @@ export interface CreateMarketOrderParams {
   builderCode?: string;
 }
 
-export interface CancelOrderParams {
+export interface CancelOrderRef {
   symbol: string;
   orderId?: number;
   clientOrderId?: string;
@@ -531,7 +531,7 @@ export enum BatchActionType {
 export type BatchAction =
   | { type: BatchActionType.Create; params: CreateLimitOrderParams }
   | { type: BatchActionType.CreateMarket; params: CreateMarketOrderParams }
-  | { type: BatchActionType.Cancel; params: CancelOrderParams }
+  | { type: BatchActionType.Cancel; params: CancelOrderRef }
   | { type: BatchActionType.Edit; params: EditOrderParams }
   | { type: BatchActionType.SetPositionTpsl; params: CreatePositionTpslParams }
   | { type: BatchActionType.CancelStopOrder; params: CancelStopOrderParams };
@@ -545,7 +545,6 @@ export interface BatchActionResult {
 export interface BatchResult {
   results: BatchActionResult[];
 }
-
 
 export interface UpdateMarginModeParams {
   symbol: string;
