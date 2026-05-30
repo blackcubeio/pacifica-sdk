@@ -1,11 +1,22 @@
-import type { Candle, MarketKind, Order, OrderBook, Price, Trade } from '../common/types';
+import type {
+  Candle,
+  MarketKind,
+  Order,
+  OrderBook,
+  Position,
+  Price,
+  Trade,
+  UserTrade,
+} from '../common/types';
 import { type CandleNative, CandleConverter } from '../rest/converters/candle';
 import { type PriceNative, PriceConverter } from '../rest/converters/price';
 import type { CandleInterval } from '../rest/types';
 import { type BboWsNative, BboWsConverter } from './converters/bbo';
 import { type OrderUpdateWsNative, OrderWsConverter } from './converters/order';
 import { type OrderBookWsNative, OrderBookWsConverter } from './converters/order-book';
+import { type PositionWsNative, PositionWsConverter } from './converters/position';
 import { type TradeWsNative, TradeWsConverter } from './converters/trade';
+import { type UserTradeWsNative, UserTradeWsConverter } from './converters/user-trade';
 import { WsClient, type Unsubscribe, type WsClientOptions } from './client';
 
 /**
@@ -106,6 +117,32 @@ export class UnifiedWsClient {
     const converter = new OrderWsConverter();
     return this.client.subscribeAccountOrderUpdates((raw) => {
       for (const native of raw as unknown as OrderUpdateWsNative[]) {
+        handler(converter.toCommon(native));
+      }
+    }, params.user);
+  }
+
+  /** Fills du compte (user-data) : le handler est appelé **une fois par fill**. */
+  public subscribeUserTrades(
+    params: { user?: string },
+    handler: (trade: UserTrade) => void,
+  ): Unsubscribe {
+    const converter = new UserTradeWsConverter();
+    return this.client.subscribeAccountTrades((raw) => {
+      for (const native of raw as unknown as UserTradeWsNative[]) {
+        handler(converter.toCommon(native));
+      }
+    }, params.user);
+  }
+
+  /** Positions du compte (user-data) : le handler est appelé **une fois par position**. */
+  public subscribePositions(
+    params: { user?: string },
+    handler: (position: Position) => void,
+  ): Unsubscribe {
+    const converter = new PositionWsConverter();
+    return this.client.subscribeAccountPositions((raw) => {
+      for (const native of raw as unknown as PositionWsNative[]) {
         handler(converter.toCommon(native));
       }
     }, params.user);
