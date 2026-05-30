@@ -1,8 +1,9 @@
-import type { Candle, MarketKind, OrderBook, Price, Trade } from '../common/types';
+import type { Candle, MarketKind, Order, OrderBook, Price, Trade } from '../common/types';
 import { type CandleNative, CandleConverter } from '../rest/converters/candle';
 import { type PriceNative, PriceConverter } from '../rest/converters/price';
 import type { CandleInterval } from '../rest/types';
 import { type BboWsNative, BboWsConverter } from './converters/bbo';
+import { type OrderUpdateWsNative, OrderWsConverter } from './converters/order';
 import { type OrderBookWsNative, OrderBookWsConverter } from './converters/order-book';
 import { type TradeWsNative, TradeWsConverter } from './converters/trade';
 import { WsClient, type Unsubscribe, type WsClientOptions } from './client';
@@ -92,5 +93,21 @@ export class UnifiedWsClient {
     return this.client.subscribePrices((raw) => {
       handler((raw as unknown as PriceNative[]).map((entry) => converter.toCommon(entry)));
     });
+  }
+
+  /**
+   * Mises à jour d'ordres du compte (user-data) : le handler est appelé **une fois par ordre**.
+   * `user` = compte à observer (défaut : compte du signer `label`).
+   */
+  public subscribeOrders(
+    params: { user?: string },
+    handler: (order: Order) => void,
+  ): Unsubscribe {
+    const converter = new OrderWsConverter();
+    return this.client.subscribeAccountOrderUpdates((raw) => {
+      for (const native of raw as unknown as OrderUpdateWsNative[]) {
+        handler(converter.toCommon(native));
+      }
+    }, params.user);
   }
 }
