@@ -8,7 +8,7 @@ import {
   type CreateMarketOrderParams,
   type CreatePositionTpslParams,
   type CreateStopOrderParams,
-  type EditOrderParams,
+  type EditOrderRef,
   type StopConfig,
   type StopOrderConfig,
   TimeInForce,
@@ -110,7 +110,7 @@ export function buildCancelAllOrdersPayload(params: CancelAllOrdersRef): JsonObj
   return payload;
 }
 
-export function buildEditOrderPayload(params: EditOrderParams): JsonObject {
+export function buildEditOrderPayload(params: EditOrderRef): JsonObject {
   const payload: JsonObject = {
     symbol: params.symbol,
     price: params.price,

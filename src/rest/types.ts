@@ -489,7 +489,7 @@ export interface CancelAllOrdersRef {
   symbol?: string;
 }
 
-export interface EditOrderParams {
+export interface EditOrderRef {
   symbol: string;
   price: string;
   amount: string;
@@ -528,7 +528,7 @@ export type BatchAction =
   | { type: BatchActionType.Create; params: CreateLimitOrderParams }
   | { type: BatchActionType.CreateMarket; params: CreateMarketOrderParams }
   | { type: BatchActionType.Cancel; params: CancelOrderRef }
-  | { type: BatchActionType.Edit; params: EditOrderParams }
+  | { type: BatchActionType.Edit; params: EditOrderRef }
   | { type: BatchActionType.SetPositionTpsl; params: CreatePositionTpslParams }
   | { type: BatchActionType.CancelStopOrder; params: CancelStopOrderParams };
 

@@ -18,7 +18,7 @@ import type {
   CandleInterval,
   CreateLimitOrderParams,
   CreateMarketOrderParams,
-  EditOrderParams,
+  EditOrderRef,
 } from '../rest/types';
 
 export type StreamHandler = (data: JsonValue) => void;
@@ -235,7 +235,7 @@ export class WsClient {
     return this.sendAction({ cancel_all_orders: data });
   }
 
-  public editOrder(params: EditOrderParams): Promise<JsonValue> {
+  public editOrder(params: EditOrderRef): Promise<JsonValue> {
     const data = buildSignedRequest(
       OperationType.EditOrder,
       buildEditOrderPayload(params),
