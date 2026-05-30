@@ -21,6 +21,7 @@ export * from './rest/place-order';
 export * from './rest/cancel-order';
 export * from './rest/cancel-all-orders';
 export * from './rest/edit-order';
+export * from './rest/update-margin-mode';
 
 export * from './rest/markets/get-market-info';
 export * from './rest/markets/get-fee-levels';
@@ -57,7 +58,6 @@ export * from './rest/orders/batch-order';
 export * from './rest/orders/twap/get-open-twap-order';
 export * from './rest/orders/twap/get-twap-order-history';
 export * from './rest/orders/twap/get-twap-order-history-by-id';
-export * from './rest/account/update-margin-mode';
 export * from './rest/account/add-isolated-margin';
 export * from './rest/account/toggle-auto-lending';
 export * from './rest/account/update-spot-settings';

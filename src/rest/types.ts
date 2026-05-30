@@ -542,11 +542,6 @@ export interface BatchResult {
   results: BatchActionResult[];
 }
 
-export interface UpdateMarginModeParams {
-  symbol: string;
-  isIsolated: boolean;
-}
-
 export interface AddIsolatedMarginParams {
   symbol: string;
   amount: string;
