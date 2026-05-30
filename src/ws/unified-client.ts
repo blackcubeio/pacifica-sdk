@@ -1,6 +1,7 @@
-import type { Candle, MarketKind } from '../common/types';
+import type { Candle, MarketKind, Trade } from '../common/types';
 import { type CandleNative, CandleConverter } from '../rest/converters/candle';
 import type { CandleInterval } from '../rest/types';
+import { type TradeWsNative, TradeWsConverter } from './converters/trade';
 import { WsClient, type Unsubscribe, type WsClientOptions } from './client';
 
 /**
@@ -39,5 +40,18 @@ export class UnifiedWsClient {
         handler(converter.toCommon(raw as unknown as CandleNative));
       },
     );
+  }
+
+  /** Trades publics temps réel : le handler est appelé **une fois par trade**. */
+  public subscribeTrades(
+    params: { name: string },
+    handler: (trade: Trade) => void,
+  ): Unsubscribe {
+    const converter = new TradeWsConverter();
+    return this.client.subscribeTrades({ symbol: params.name }, (raw) => {
+      for (const native of raw as unknown as TradeWsNative[]) {
+        handler(converter.toCommon(native));
+      }
+    });
   }
 }
