@@ -28,7 +28,13 @@ export interface InitOptions {
   wsUrls?: Partial<Record<Network, string>>;
 }
 
-export interface PacificaConfig {
+/**
+ * Contexte d'exécution **isolé** d'un SDK Pacifica : tout ce dont les fonctions REST/WS ont
+ * besoin (fetch, urls, signers). Créé par {@link init} et **passé explicitement** à chaque
+ * fonction (`getCandles(client, …)`) — il n'y a **plus de singleton global**, donc plusieurs
+ * clients (comptes/réseaux différents) coexistent sans se piétiner.
+ */
+export interface PacificaClient {
   fetch: FetchLike;
   webSocket: WebSocketFactory;
   signers: Record<string, Signer>;
@@ -36,9 +42,8 @@ export interface PacificaConfig {
   wsUrls: Record<Network, string>;
 }
 
-let config: PacificaConfig | null = null;
-
-export function init(options: InitOptions = {}): void {
+/** Construit un {@link PacificaClient} isolé à partir des options. Aucun état global muté. */
+export function init(options: InitOptions = {}): PacificaClient {
   const fetchImpl =
     options.fetch ??
     (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : undefined);
@@ -49,7 +54,7 @@ export function init(options: InitOptions = {}): void {
   if (webSocket === undefined) {
     throw new Error('No WebSocket implementation available; pass options.webSocket to init()');
   }
-  config = {
+  return {
     fetch: fetchImpl,
     webSocket,
     signers: options.signers ?? {},
@@ -69,15 +74,4 @@ function defaultWebSocketFactory(): WebSocketFactory | undefined {
     return undefined;
   }
   return (url) => new globalThis.WebSocket(url) as unknown as WebSocketLike;
-}
-
-export function getConfig(): PacificaConfig {
-  if (config === null) {
-    throw new Error('Pacifica SDK not initialized; call init() first');
-  }
-  return config;
-}
-
-export function resetConfig(): void {
-  config = null;
 }

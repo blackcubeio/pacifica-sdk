@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { BridgeAsset, BridgeParamsQuery } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -10,8 +11,13 @@ interface BridgeAssetWire {
   decimals: number;
 }
 
-export function getBridgeParams(query: BridgeParamsQuery, label?: string): Promise<BridgeAsset> {
+export function getBridgeParams(
+  client: PacificaClient,
+  query: BridgeParamsQuery,
+  label?: string,
+): Promise<BridgeAsset> {
   return httpGet<BridgeAssetWire>(
+    client,
     `/spot_assets/bridge/parameters/${query.symbol}`,
     undefined,
     label,

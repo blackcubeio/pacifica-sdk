@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import type { Market } from '../../src/common/native';
 import type { Pair } from '../../src/common/types';
 import { PairConverter } from '../../src/converters/pair';
-import type { Market } from '../../src/common/native';
 
 const MARKET: Market = {
   symbol: 'BTC',

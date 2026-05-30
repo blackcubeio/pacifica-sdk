@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import { DEFAULT_EXPIRY_WINDOW } from '../../common/constants';
 import type { CreateSubaccountParams } from '../../common/native';
 import { OperationType } from '../../common/types';
@@ -5,7 +6,10 @@ import { signMessage } from '../../common/utils';
 import { httpPostTo } from '../client';
 import { signerAccount } from '../signing';
 
-export function createSubaccount(params: CreateSubaccountParams): Promise<void> {
+export function createSubaccount(
+  client: PacificaClient,
+  params: CreateSubaccountParams,
+): Promise<void> {
   const timestamp = Date.now();
   const expiryWindow = DEFAULT_EXPIRY_WINDOW;
   const mainAccount = signerAccount(params.main);
@@ -30,7 +34,7 @@ export function createSubaccount(params: CreateSubaccountParams): Promise<void> 
     timestamp,
     expiry_window: expiryWindow,
   };
-  return httpPostTo<null>('/account/subaccount/create', request, params.main.network).then(
+  return httpPostTo<null>(client, '/account/subaccount/create', request, params.main.network).then(
     () => undefined,
   );
 }

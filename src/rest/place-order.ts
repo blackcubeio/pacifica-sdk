@@ -1,6 +1,7 @@
+import type { PacificaClient } from '../common/config';
 import { OrderSide, TimeInForce } from '../common/native';
-import type { PlaceOrderParams, PlaceOrderTif, PlaceOrderType } from '../common/types';
-import type { MarketKind, Order, Side } from '../common/types';
+import type { PlaceOrderParams, PlaceOrderTif } from '../common/types';
+import type { Order, Side } from '../common/types';
 import { createLimitOrder } from './orders/create-limit-order';
 import { createMarketOrder } from './orders/create-market-order';
 
@@ -17,11 +18,16 @@ const TIF: Record<PlaceOrderTif, TimeInForce> = {
  * La réponse native ne contient que l'`order_id` → l'`Order` retourné est construit depuis
  * les paramètres (statut `open`, `filled` `0`).
  */
-export function placeOrder(params: PlaceOrderParams, label: string): Promise<Order> {
+export function placeOrder(
+  client: PacificaClient,
+  params: PlaceOrderParams,
+  label: string,
+): Promise<Order> {
   const side = SIDE[params.side];
   const result =
     params.type === 'market'
       ? createMarketOrder(
+          client,
           {
             symbol: params.name,
             amount: params.size,
@@ -33,6 +39,7 @@ export function placeOrder(params: PlaceOrderParams, label: string): Promise<Ord
           label,
         )
       : createLimitOrder(
+          client,
           {
             symbol: params.name,
             price: params.price ?? '0',

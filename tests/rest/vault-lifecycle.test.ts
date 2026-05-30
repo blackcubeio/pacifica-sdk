@@ -1,9 +1,11 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
 import { createVault } from '../../src/rest/vaults/create-vault';
 import { getVaults } from '../../src/rest/vaults/get-vaults';
 import { vaultDeposit } from '../../src/rest/vaults/vault-deposit';
 import { poll, readEnv } from '../helpers';
+
+let client: PacificaClient;
 
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
@@ -11,7 +13,7 @@ const NETWORK_TIMEOUT = 60_000;
 
 function vaultBalance(lake: string): () => Promise<number | null> {
   return () =>
-    getVaults(account).then((vaults) => {
+    getVaults(client, account).then((vaults) => {
       const vault = vaults.find((entry) => entry.address === lake);
       return vault === undefined ? null : Number(vault.lpBalance);
     });
@@ -19,17 +21,16 @@ function vaultBalance(lake: string): () => Promise<number | null> {
 
 describe('vault lifecycle (testnet, réel)', () => {
   beforeAll(() => {
-    init({ signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } } });
-  });
-
-  afterAll(() => {
-    resetConfig();
+    client = init({
+      signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } },
+    });
   });
 
   it(
     'creates a vault (visible in getVaults) then a deposit increases its balance',
     () => {
       return createVault(
+        client,
         {
           nickname: `sdk-e2e-${Date.now()}`,
           initialDeposit: '10',
@@ -48,7 +49,7 @@ describe('vault lifecycle (testnet, réel)', () => {
         return poll(vaultBalance(lake), (balance) => balance !== null)
           .then((balanceAfterCreate) => {
             const created = Number(balanceAfterCreate);
-            return vaultDeposit({ lake, amount: '10' }, account).then(() =>
+            return vaultDeposit(client, { lake, amount: '10' }, account).then(() =>
               poll(vaultBalance(lake), (balance) => balance !== null && balance > created),
             );
           })

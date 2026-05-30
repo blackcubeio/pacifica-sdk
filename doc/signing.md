@@ -16,9 +16,13 @@ Each function's required credential is annotated on its page with one of:
 | ◎ **Solana wallet** | The account's on-chain Solana keypair (deposit) — never an API key. |
 
 **API keys are per account (incl. per subaccount)** — a key only works for the account it is
-bound to; register one signer per label in `init({ signers })`. Verified on testnet: an API key can
-trade / change leverage / withdraw for its account, but **cannot** bind/revoke agent keys (those
-need the account's own key).
+bound to ; passe un signer par label au constructeur `new Pacifica({ signers }, …)`. Verified on
+testnet: an API key can trade / change leverage / withdraw for its account, but **cannot**
+bind/revoke agent keys (those need the account's own key).
+
+> La classe `Pacifica` signe pour toi : tu ne manipules jamais les primitives ci-dessous. Les
+> fonctions de gestion (agent/API keys/vaults) sont exposées via les scopes `dex.agent()` /
+> `dex.vaults()` / `dex.account()`.
 
 ## Mechanism
 
@@ -30,10 +34,11 @@ need the account's own key).
 6. REST request = `{ account, signature, timestamp, expiry_window, ...payload }`
 7. WS message = `{ id, params: { "<operation_type>": request } }`
 
-## Signer registry, labels & networks
+## Signers, labels & networks
 
-Signers are registered **per label** in `init({ signers })`. A signer is self-contained and
-**carries its own network** — that's what lets mainnet and testnet coexist in one process:
+Tu passes les signers au **constructeur** `new Pacifica(signers, { default })` — un par **label**.
+Chaque signer est autonome et **porte son propre réseau** : c'est ce qui permet à mainnet et
+testnet de coexister dans le même process (plus de singleton global).
 
 ```ts
 interface Signer {
@@ -43,26 +48,26 @@ interface Signer {
   agentWallet?: string;            // agent key pubkey when signing via an agent wallet
 }
 
-init({
-  signers: {
+const dex = new Pacifica(
+  {
     trader: { secretKey: TRADER_SECRET, publicKey: 'FQaG…', network: 'mainnet' },
     tester: { secretKey: TESTER_SECRET, publicKey: 'ENUW…', network: 'testnet' },
   },
-});
+  { default: 'trader' },
+);
 
-createMarketOrder(params, 'tester');   // 2nd arg = the label; network comes from the signer
+await dex.perp('tester').placeOrder(params);  // le label choisit le compte ET le réseau
+await dex.perp().getCandles(query);            // lecture publique, signer par défaut
 ```
 
-Two resolvers back the read/write rules:
+Règles lecture / écriture, internes à la façade :
 
-- `resolveSigner(label)` — for **writes**. The label is **mandatory**: a missing label throws
-  `Un signer (label) est obligatoire pour cette action signée`, an unknown one throws
-  `Aucun signer enregistré sous "…"`. The signed `account` field is the signer's `publicKey`; the
-  network routes the request.
-- `resolveReadNetwork(label?)` — for **reads**. The label is **optional**: no label → `mainnet`,
-  a label → that signer's network; an unknown label still throws.
+- **Écritures** (`placeOrder`, `withdraw`, `updateLeverage`…) — un signer (label, ou défaut) est
+  **obligatoire** ; le champ signé `account` = `publicKey` du signer, et le réseau route la requête.
+- **Lectures** (marché, `getCandles`, subscriptions…) — pas de signer requis ; sans label →
+  **mainnet**, un label → le réseau de ce signer.
 
-## Primitives (`utils`)
+## Primitives internes (`common/utils`)
 
 | Function | Purpose |
 |---|---|
@@ -121,13 +126,11 @@ via an API key → `400 "Verification failed"`). An agent cannot create or revok
    `publicKey` to the subaccount address and `secretKey` to its API key:
 
 ```ts
-init({
-  signers: {
-    sub01: { secretKey: API01_SECRET, publicKey: SUB01, agentWallet: API01_PUBKEY, network: 'testnet' },
-    sub02: { secretKey: API02_SECRET, publicKey: SUB02, agentWallet: API02_PUBKEY, network: 'testnet' },
-  },
+const dex = new Pacifica({
+  sub01: { secretKey: API01_SECRET, publicKey: SUB01, agentWallet: API01_PUBKEY, network: 'testnet' },
+  sub02: { secretKey: API02_SECRET, publicKey: SUB02, agentWallet: API02_PUBKEY, network: 'testnet' },
 });
-createLimitOrder(params, 'sub01');   // signed by SUB01's API key, credited to SUB01
+await dex.perp('sub01').placeOrder(params);   // signé par la clé API de SUB01, crédité à SUB01
 ```
 
 `listAgentIpWhitelist` sends `api_agent_key` (not `agent_wallet`) in the payload.

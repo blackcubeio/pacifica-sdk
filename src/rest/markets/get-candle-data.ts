@@ -1,10 +1,16 @@
+import type { PacificaClient } from '../../common/config';
 import type { Candle, CandleQuery } from '../../common/native';
 import { CandleConverter, type CandleNative } from '../../converters/candle';
 import { httpGet } from '../client';
 
-export function getCandleData(query: CandleQuery, label?: string): Promise<Candle[]> {
+export function getCandleData(
+  client: PacificaClient,
+  query: CandleQuery,
+  label?: string,
+): Promise<Candle[]> {
   const converter = new CandleConverter('perp');
   return httpGet<CandleNative[]>(
+    client,
     '/kline',
     {
       symbol: query.symbol,

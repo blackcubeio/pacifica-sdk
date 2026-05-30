@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { UserTradeConverter, type UserTradeNative } from '../../src/converters/user-trade';
 import { TradeCause, TradeEventType, TradeSide } from '../../src/common/native';
+import { UserTradeConverter, type UserTradeNative } from '../../src/converters/user-trade';
 
 const USER_TRADE_CORE_KEYS = [
   'fee',

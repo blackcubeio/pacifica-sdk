@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { LoanPool } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -16,8 +17,8 @@ interface LoanPoolWire {
   updated_at: number;
 }
 
-export function getLoanPool(label?: string): Promise<LoanPool> {
-  return httpGet<LoanPoolWire>('/loan_pool', undefined, label).then((envelope) =>
+export function getLoanPool(client: PacificaClient, label?: string): Promise<LoanPool> {
+  return httpGet<LoanPoolWire>(client, '/loan_pool', undefined, label).then((envelope) =>
     mapLoanPool(envelope.data),
   );
 }

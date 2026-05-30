@@ -1,126 +1,162 @@
 # @blackcube/pacifica-sdk
 
-[![npm](https://img.shields.io/npm/v/@blackcube/pacifica-sdk.svg)](https://www.npmjs.com/package/@blackcube/pacifica-sdk)
-[![license](https://img.shields.io/npm/l/@blackcube/pacifica-sdk.svg)](./LICENSE)
+TypeScript SDK pour l'exchange [Pacifica](https://pacifica.fi) — DEX **perpetuals** sur Solana.
+Même surface que `@blackcube/aster-sdk` et `@blackcube/hyperliquid-sdk`.
 
-TypeScript SDK for the [Pacifica](https://pacifica.fi) exchange — a perpetuals DEX on Solana.
-Full coverage of the REST API, WebSocket API, request signing (Ed25519) and on-chain deposits.
+> **SDK communautaire / non officiel.** Non affilié à Pacifica. Usage à vos risques.
 
-> **Unofficial / community SDK.** Not affiliated with or endorsed by Pacifica. "Pacifica" is a
-> trademark of its respective owner. Use at your own risk.
-
-## Features
-
-- ✅ **REST** — markets, account, orders, spot, subaccounts, vaults (read + signed writes)
-- ✅ **WebSocket** — subscriptions (prices, orderbook, account streams…) and signed trading actions
-- ✅ **Signing** — Ed25519 (software or Ledger hardware wallet), agent wallets, API config keys
-- ✅ **On-chain deposit** — native Solana transaction via [`@solana/kit`](https://www.solanakit.com/)
-- ✅ Typed end-to-end, ESM + CJS + `.d.ts`, works in Node.js and the browser
-- ✅ **Mainnet & testnet at the same time** — the network is carried per signer, not globally
-
-## Install
+## Installation
 
 ```bash
-npm install @blackcube/pacifica-sdk
-# or
 pnpm add @blackcube/pacifica-sdk
 ```
 
-Requires Node.js ≥ 22 (for the built-in WebSocket used by `WsClient`; or inject one).
-Browsers work as-is.
+Node.js (≥ 22) et navigateur (crypto via `@noble`).
 
-## Quick start
+## Tout passe par la classe `Pacifica`
+
+Tu n'appelles jamais un endpoint REST ni un client WebSocket directement. Une seule classe
+gère la connexion, la signature (Ed25519 / Solana), le réseau (mainnet/testnet) et la
+conversion vers les types unifiés Blackcube.
 
 ```ts
-import { init, getPrices, createLimitOrder, OrderSide, WsClient } from '@blackcube/pacifica-sdk';
+import { Pacifica } from '@blackcube/pacifica-sdk';
 
-// Initialise once. Register one signer per label; each signer carries its own
-// network, so mainnet and testnet live side by side in the same process.
-init({
-  signers: {
-    trader: { secretKey: '…', publicKey: '…', network: 'mainnet' },
-    tester: { secretKey: '…', publicKey: '…', network: 'testnet' },
-  },
-});
-
-// Public read — label is OPTIONAL. No label → mainnet. A label → that signer's network.
-const prices = await getPrices();             // mainnet
-const testPrices = await getPrices('tester'); // testnet
-
-// Signed write — label is MANDATORY (it picks the wallet *and* the network).
-// Omitting it throws, so you can never sign on the wrong network by accident.
-const { orderId } = await createLimitOrder(
-  { symbol: 'BTC', price: '50000', amount: '0.001', side: OrderSide.Bid },
-  'tester',
+const dex = new Pacifica(
+  { deskA: { secretKey: '<base58>', publicKey: '<base58>', network: 'testnet' } },
+  { default: 'deskA' },
 );
 
-// WebSocket: stream + signed actions. Pass the label at construction; reads default to mainnet.
-const ws = new WsClient({ label: 'tester' });
-await ws.connect();
-ws.subscribePrices((data) => console.log(data));
-await ws.createMarketOrder({ symbol: 'BTC', amount: '0.001', side: OrderSide.Bid, slippagePercent: '0.5' });
+// REST : requête → réponse
+const candles = await dex.perp().getCandles({ name: 'BTC', interval: '1m', startTime: Date.now() - 3.6e6 });
+const order = await dex.perp().placeOrder({
+  name: 'BTC', side: 'buy', type: 'limit', size: '0.001', price: '20000',
+});
+
+// WebSocket : abonnement → flux
+const off = dex.ws().subscribeCandles({ name: 'BTC', interval: '1m' }, (candle) => {
+  console.log(candle.c);
+});
+off(); // se désabonne (ferme le socket s'il n'y a plus d'abonné)
 ```
 
-## Configuration
+## REST vs WebSocket — la seule distinction à connaître
 
-`init(options)` sets a single global config; every call inherits it.
+- **REST** (`perp()`, `account()` + scopes spécifiques) : **requête → réponse**. Tu `await` un
+  appel, tu reçois une valeur, terminé.
+- **WebSocket** (`ws()`) : **abonnement → flux**. Tu passes un *handler* rappelé **à chaque**
+  mise à jour, tant que tu n'as pas appelé la fonction de désabonnement renvoyée. Pas de
+  `connect()`/`disconnect()` : le socket s'ouvre au premier `subscribe` et se ferme seul quand
+  le dernier abonnement est retiré.
 
-| Option | Type | Default |
-|---|---|---|
-| `signers` | `Record<label, Signer>` | — (required for signed writes) |
-| `fetch` | `FetchLike` | `globalThis.fetch` |
-| `webSocket` | `WebSocketFactory` | `globalThis.WebSocket` |
-| `restUrls` / `wsUrls` | `Record<Network, string>` | per network |
+Tous les retours (REST comme WS) sont au **format unifié** (`Candle`, `Order`, `OrderBook`,
+`Position`, `Trade`, `UserTrade`, `Price`, `Balance`…), identique entre les SDK Blackcube.
 
-A `Signer` is self-contained and **carries its own network**:
+## Construction
 
 ```ts
-type Signer = {
-  secretKey: string;        // base58 Ed25519 key used to sign
-  publicKey: string;        // the account address (used for reads & as the signed `account`)
-  network: 'mainnet' | 'testnet';
-  agentWallet?: string;     // optional, when signing with an API/agent key
-};
+new Pacifica(signers?, options?)
 ```
 
-Register signers under arbitrary **labels** (`trader`, `tester`, …), then pass the label per call:
+- **`signers`** : `Record<label, Signer>`. Un `Signer` Pacifica =
+  `{ secretKey, publicKey, network, agentWallet? }` — clé **Solana** base58. `secretKey` signe
+  (Ed25519), `publicKey` est l'adresse du compte lue par l'API. Sans signer, seules les lectures
+  publiques fonctionnent.
+- **`options.default`** : label utilisé quand tu n'en précises pas (sinon le premier signer).
+- Autres `options` (rarement utiles) : `fetch`, `webSocket`, `restUrls`, `wsUrls`.
 
-- **Read methods** (don't touch funds): label is **optional**. No label → **mainnet** fallback; a
-  label → that signer's network. An unknown label throws.
-- **Write methods** (orders, transfers, leverage…): label is **mandatory**. Omitting it throws — the
-  label is what selects both the wallet *and* the network, so there is no implicit default.
+Chaque scope accepte un `label` optionnel pour choisir le compte : `dex.perp('deskB')`,
+`dex.account('deskB')`… Sans argument → signer par défaut. **Plusieurs instances `Pacifica`
+(comptes/réseaux différents) coexistent** sans interférence — chacune a sa propre config (pas de
+singleton global).
 
-This makes mainnet and testnet usable simultaneously in one process. See [docs/signing](./doc/signing.md).
+## Un seul produit : perp
 
-## API documentation
+Pacifica est un DEX **perpetuals uniquement** : il n'y a **pas de scope `spot()`**. Le `kind` des
+retours unifiés est toujours `perp`.
 
-Organised like the [Pacifica API docs](https://pacifica.gitbook.io/docs/api-documentation/api):
+### `dex.perp(label?)` — marché + trading + compte
 
-- **REST API** — [Markets](./doc/rest-api/markets.md) · [Account](./doc/rest-api/account.md) · [Orders](./doc/rest-api/orders.md) · [Spot](./doc/rest-api/spot.md) · [Subaccounts](./doc/rest-api/subaccounts.md) · [Vaults](./doc/rest-api/vaults.md)
-- **WebSocket** — [Subscriptions](./doc/websocket/subscriptions.md) · [Trading operations](./doc/websocket/trading-operations.md)
-- **Signing & on-chain** — [Signing](./doc/signing.md) · [Deposit](./doc/deposit.md)
+| Catégorie | Méthodes |
+|---|---|
+| Marché (public) | `getPairs()`, `getCandles(q)`, `getOrderBook(q)`, `getPrices()`, `getFundingHistory(q)`, `getTrades(q)`, `getExchangeInfo()` |
+| Compte (signé) | `getPositions(q?)`, `getOpenOrders(q?)`, `getUserTrades(q?)`, `getOrderHistory(q?)`, `getAccountInfo()` |
+| Trading (signé) | `placeOrder(i)`, `cancelOrder(i)`, `cancelAllOrders(i)`, `editOrder(i)`, `updateLeverage(i)`, `setMarginMode(i)`, `addIsolatedMargin(i)` |
 
-Full index: [`doc/`](./doc/README.md).
+> **Spécificités Pacifica** : pas de **retrait de marge isolée** (`removeIsolatedMargin`) ;
+> `placeOrder` accepte `limit` / `market` (le `market` accepte un `slippagePercent`, défaut `1` %).
 
-## Conventions
+### `dex.account(label?)` — compte transverse
 
-- Public API in **camelCase**; converted to the wire `snake_case` internally.
-- Responses mapped to **camelCase**. Amounts and prices are **decimal strings**.
-- Errors throw `PacificaApiError` (`status`, `code`, `message`).
+`getBalances()` (soldes spot), `getSubAccounts()`, `withdraw(i)`.
 
-## Development
+> Pacifica n'a ni `ping` ni horloge serveur publics : **pas de scope `system()`** (capacité
+> `ISystem` non implémentée).
 
-```bash
-pnpm install
-pnpm typecheck   # tsc --noEmit
-pnpm lint        # biome
-pnpm test        # vitest (real integration tests against testnet)
-pnpm build       # tsup → dist (ESM + CJS + d.ts)
+### `dex.helpers()` — crypto (Solana)
+
+`keyTypeOf(pk)`, `solanaAddress(pk)`, `signEd25519(msg, pk)`. *(Pacifica est Solana-only : pas
+d'helpers EVM.)*
+
+### `dex.ws(label?)` — temps réel (perp)
+
+Chaque `subscribeX` renvoie une fonction de désabonnement (`Unsubscribe`). Les flux user-data
+résolvent le compte depuis le signer.
+
+| Catégorie | Méthodes |
+|---|---|
+| Public | `subscribeCandles(q, cb)`, `subscribeOrderBook(q, cb)`, `subscribeTrades(q, cb)`, `subscribeBbo(q, cb)` (→ `OrderBook` 1 niveau), `subscribePrices(cb)` (→ `Price[]`) |
+| Compte (signé) | `subscribeOrders(cb)`, `subscribeUserTrades(cb)`, `subscribePositions(cb)` |
+
+### Scopes spécifiques Pacifica (interfaces complémentaires, hors contrat commun)
+
+Pacifica offre beaucoup d'opérations qui n'existent pas sur les autres DEX — **toutes exposées**
+via des scopes dédiés implémentant des interfaces complémentaires (`IPacifica*`) :
+
+- `dex.vaults(label?)` (`IPacificaVaults`) : vaults (Lake) — `getVaults`, `createVault`,
+  `vaultDeposit`, `vaultWithdraw`, white/blacklist, max-leverage, deposit-cap, claims.
+- `dex.agent(label?)` (`IPacificaAgent`) : agent wallets + IP whitelist — `bindAgentWallet`,
+  `listAgentWallets`, `revokeAgentWallet`, `revokeAllAgentWallets`, IP whitelist.
+- `dex.apiKeys(label?)` (`IPacificaApiKeys`) : `createApiConfigKey`, `listApiConfigKeys`,
+  `revokeApiConfigKey`.
+- `dex.spot(label?)` (`IPacificaSpot`) : actifs spot, bridge, retraits/transferts spot,
+  historiques spot — `getSpotAssets`, `getBridgeInfo`, `withdrawSpotAsset`, `subaccountSpotTransfer`…
+- `dex.lending(label?)` (`IPacificaLending`) : `toggleAutoLending`, `getAccountLoan`, `getLoanPool`.
+- `dex.portfolio(label?)` (`IPacificaPortfolio`) : `getPortfolio`, `getAccountSettings`,
+  `updateSpotSettings`, `getBalanceHistory`, `getTradeHistory`, `getAccountFunding`.
+- `dex.subaccounts(label?)` (`IPacificaSubAccounts`) : `createSubaccount`, `transferSubaccountFund`.
+- `dex.advancedOrders(label?)` (`IPacificaAdvancedOrders`) : ordres stop, TP/SL de position,
+  batch, TWAP (lectures), `getOrderHistoryById`, `getFeeLevels`, `getMarkPriceCandleData`.
+
+## Exemples
+
+```ts
+// Lecture publique sans signer
+const pub = new Pacifica();
+const book = await pub.perp().getOrderBook({ name: 'BTC' });
+
+// Cycle d'ordre (testnet)
+const created = await dex.perp().placeOrder({
+  name: 'BTC', side: 'buy', type: 'limit', tif: 'gtc', size: '0.001', price: '20000',
+});
+await dex.perp().cancelOrder({ name: 'BTC', clientId: created.clientId ?? undefined });
+
+// Compte transverse
+const balances = await dex.account().getBalances();
+
+// Temps réel : suivre ses propres fills
+const off = dex.ws().subscribeUserTrades((fill) => console.log(fill.price, fill.size));
 ```
 
-> Tests are **real integration tests** (no mocks) hitting the Pacifica testnet / Solana devnet,
-> and require trading credentials in a `.env` file. They run sequentially.
+## Erreurs
+
+Les appels rejettent un `PacificaApiError` (`status`, `code`, `message`).
+
+## Documentation
+
+- Signatures (Ed25519, signers par label) : [`doc/signing.md`](doc/signing.md).
+- Dépôt on-chain (devnet/Solana) : [`doc/deposit.md`](doc/deposit.md).
 
 ## License
 
-[BSD-3-Clause](./LICENSE) © Blackcube
+BSD-3-Clause © Blackcube

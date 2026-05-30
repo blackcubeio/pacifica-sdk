@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { init, resetConfig } from '../../src/common/config';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { type PacificaClient, init } from '../../src/common/config';
 import { getAccountInfo } from '../../src/rest/account/get-account-info';
 import {
   DEVNET_CENTRAL_STATE,
@@ -10,6 +10,8 @@ import {
   buildDepositData,
   deposit,
 } from '../../src/rest/deposit';
+
+let client: PacificaClient;
 
 function readEnv(name: string): string {
   const content = readFileSync(new URL('../../.env', import.meta.url), 'utf-8');
@@ -25,7 +27,7 @@ const account = readEnv('SOLANA_PUBLIC_KEY');
 const NETWORK_TIMEOUT = 90_000;
 
 function waitForBalance(target: number, deadline: number): Promise<number> {
-  return getAccountInfo({ account }, account).then((info) => {
+  return getAccountInfo(client, { account }, account).then((info) => {
     const balance = Number(info.balance);
     if (balance >= target) {
       return balance;
@@ -50,23 +52,20 @@ describe('deposit instruction data', () => {
 
 describe('deposit (devnet, dépôt réel crédité)', () => {
   beforeAll(() => {
-    init({
+    client = init({
       signers: {
         [account]: { secretKey: solanaSecretKey, publicKey: account, network: 'testnet' },
       },
     });
   });
 
-  afterAll(() => {
-    resetConfig();
-  });
-
   it(
     'deposits USDP on devnet and the Pacifica account is credited',
     () => {
-      return getAccountInfo({ account }, account).then((before) => {
+      return getAccountInfo(client, { account }, account).then((before) => {
         const balanceBefore = Number(before.balance);
         return deposit(
+          client,
           {
             amount: 10,
             rpcUrl: DEVNET_RPC_URL,

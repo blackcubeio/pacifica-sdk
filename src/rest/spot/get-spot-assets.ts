@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { SpotAsset, SpotAssetsQuery } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -12,8 +13,13 @@ interface SpotAssetWire {
   updated_at: number;
 }
 
-export function getSpotAssets(query: SpotAssetsQuery = {}, label?: string): Promise<SpotAsset[]> {
+export function getSpotAssets(
+  client: PacificaClient,
+  query: SpotAssetsQuery = {},
+  label?: string,
+): Promise<SpotAsset[]> {
   return httpGet<SpotAssetWire[]>(
+    client,
     '/spot_assets',
     {
       include_inactive: query.includeInactive,

@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type {
   Paginated,
   SpotBalanceHistoryEntry,
@@ -14,10 +15,12 @@ interface SpotBalanceHistoryWire {
 }
 
 export function getSpotBalanceHistory(
+  client: PacificaClient,
   query: SpotBalanceHistoryQuery,
   label?: string,
 ): Promise<Paginated<SpotBalanceHistoryEntry>> {
   return httpGet<SpotBalanceHistoryWire[]>(
+    client,
     '/account/spot_balance/history',
     {
       account: query.account,

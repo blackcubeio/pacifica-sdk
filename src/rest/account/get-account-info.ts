@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { AccountInfo, AccountQuery, AccountSpotBalance } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -33,9 +34,13 @@ interface AccountInfoWire {
   spot_balances: SpotBalanceWire[];
 }
 
-export function getAccountInfo(query: AccountQuery, label?: string): Promise<AccountInfo> {
-  return httpGet<AccountInfoWire>('/account', { account: query.account }, label).then((envelope) =>
-    mapAccountInfo(envelope.data),
+export function getAccountInfo(
+  client: PacificaClient,
+  query: AccountQuery,
+  label?: string,
+): Promise<AccountInfo> {
+  return httpGet<AccountInfoWire>(client, '/account', { account: query.account }, label).then(
+    (envelope) => mapAccountInfo(envelope.data),
   );
 }
 

@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { WithdrawSpotAssetParams, WithdrawSpotResult } from '../../common/native';
 import { type JsonObject, OperationType } from '../../common/types';
 import { httpPost } from '../client';
@@ -11,6 +12,7 @@ interface WithdrawSpotWire {
 }
 
 export function withdrawSpotAsset(
+  client: PacificaClient,
   params: WithdrawSpotAssetParams,
   label: string,
 ): Promise<WithdrawSpotResult> {
@@ -18,8 +20,8 @@ export function withdrawSpotAsset(
   if (params.idempotencyKey !== undefined) {
     payload.idempotency_key = params.idempotencyKey;
   }
-  const request = buildSignedRequest(OperationType.WithdrawSpotAsset, payload, label);
-  return httpPost<WithdrawSpotWire>('/account/spot_asset/withdraw', request, label).then(
+  const request = buildSignedRequest(client, OperationType.WithdrawSpotAsset, payload, label);
+  return httpPost<WithdrawSpotWire>(client, '/account/spot_asset/withdraw', request, label).then(
     (envelope) => ({
       symbol: envelope.data.symbol,
       batchNonce: envelope.data.batch_nonce,

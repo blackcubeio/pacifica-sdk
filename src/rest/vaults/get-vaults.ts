@@ -1,3 +1,4 @@
+import type { PacificaClient } from '../../common/config';
 import type { Vault, VaultConfig } from '../../common/native';
 import { httpGet } from '../client';
 
@@ -29,8 +30,8 @@ interface VaultWire {
   config?: VaultConfigWire | null;
 }
 
-export function getVaults(label?: string): Promise<Vault[]> {
-  return httpGet<{ lakes: VaultWire[] }>('/lake/list', undefined, label).then((envelope) =>
+export function getVaults(client: PacificaClient, label?: string): Promise<Vault[]> {
+  return httpGet<{ lakes: VaultWire[] }>(client, '/lake/list', undefined, label).then((envelope) =>
     envelope.data.lakes.map((vault) => mapVault(vault)),
   );
 }

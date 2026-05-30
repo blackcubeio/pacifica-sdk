@@ -1,7 +1,7 @@
-import { getConfig } from '../common/config';
+import type { PacificaClient } from '../common/config';
 import { DEFAULT_EXPIRY_WINDOW } from '../common/constants';
 import type { ResolvedSigner } from '../common/types';
-import type { JsonObject, Network, OperationType, Signer } from '../common/types';
+import type { JsonObject, OperationType, Signer } from '../common/types';
 import { publicKeyFromBase58, signMessage } from '../common/utils';
 
 /**
@@ -9,11 +9,11 @@ import { publicKeyFromBase58, signMessage } from '../common/utils';
  * si le label est absent ou inconnu. `account` est la clé publique (le compte), `network` est
  * porté par le signer.
  */
-export function resolveSigner(label?: string): ResolvedSigner {
+export function resolveSigner(client: PacificaClient, label?: string): ResolvedSigner {
   if (label === undefined) {
     throw new Error('Un signer (label) est obligatoire pour cette action signée');
   }
-  const signer = getConfig().signers[label];
+  const signer = client.signers[label];
   if (signer === undefined) {
     throw new Error(`Aucun signer enregistré sous "${label}"; ajoute-le dans init({ signers })`);
   }
@@ -32,12 +32,13 @@ export function signerAccount(signer: Signer): string {
 }
 
 export function buildSignedRequest(
+  client: PacificaClient,
   type: OperationType,
   payload: JsonObject,
   label?: string,
   expiryWindow: number = DEFAULT_EXPIRY_WINDOW,
 ): JsonObject {
-  const signer = resolveSigner(label);
+  const signer = resolveSigner(client, label);
   const timestamp = Date.now();
   const signed = signMessage({ type, timestamp, expiryWindow }, payload, signer.secretKey);
   const request: JsonObject = {
