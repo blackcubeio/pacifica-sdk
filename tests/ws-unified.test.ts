@@ -77,9 +77,37 @@ describe('UnifiedWsClient Pacifica (mainnet réel, public)', () => {
         expect(book.kind).toBe('perp');
         const bids = book.bids as Array<{ price: string; n: number | null }>;
         const asks = book.asks as Array<{ price: string }>;
-        expect(typeof bids[0].price).toBe('string');
-        expect(typeof asks[0].price).toBe('string');
-        expect(bids[0].n).toBeNull();
+        expect(typeof bids[0]?.price).toBe('string');
+        expect(typeof asks[0]?.price).toBe('string');
+        expect(bids[0]?.n).toBeNull();
+      } finally {
+        client.disconnect();
+      }
+    },
+    30_000,
+  );
+
+  it(
+    'subscribeOrderBook délivre un OrderBook (L2, aggLevel requis)',
+    async () => {
+      const client = new UnifiedWsClient();
+      await client.connect();
+      try {
+        const book = await new Promise<Record<string, unknown>>((resolve, reject) => {
+          const timer = setTimeout(() => reject(new Error('timeout orderbook')), 25_000);
+          client.subscribeOrderBook({ name: 'BTC' }, (received) => {
+            clearTimeout(timer);
+            resolve(received as unknown as Record<string, unknown>);
+          });
+        });
+        expect(book.name).toBe('BTC');
+        expect(book.kind).toBe('perp');
+        const bids = book.bids as Array<{ price: string; size: string; n: number | null }>;
+        const asks = book.asks as Array<{ price: string }>;
+        expect(bids.length).toBeGreaterThan(0);
+        expect(asks.length).toBeGreaterThan(0);
+        expect(typeof bids[0]?.price).toBe('string');
+        expect(typeof bids[0]?.n).toBe('number');
       } finally {
         client.disconnect();
       }

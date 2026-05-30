@@ -2,6 +2,7 @@ import type { Candle, MarketKind, OrderBook, Trade } from '../common/types';
 import { type CandleNative, CandleConverter } from '../rest/converters/candle';
 import type { CandleInterval } from '../rest/types';
 import { type BboWsNative, BboWsConverter } from './converters/bbo';
+import { type OrderBookWsNative, OrderBookWsConverter } from './converters/order-book';
 import { type TradeWsNative, TradeWsConverter } from './converters/trade';
 import { WsClient, type Unsubscribe, type WsClientOptions } from './client';
 
@@ -65,5 +66,22 @@ export class UnifiedWsClient {
     return this.client.subscribeBbo({ symbol: params.name }, (raw) => {
       handler(converter.toCommon(raw as unknown as BboWsNative));
     });
+  }
+
+  /**
+   * Carnet d'ordres (L2) temps réel → {@link OrderBook}. `aggLevel` (défaut `1`) est
+   * **requis** côté Pacifica : sans lui, le flux `book` ne pousse rien.
+   */
+  public subscribeOrderBook(
+    params: { name: string; kind?: MarketKind; aggLevel?: number },
+    handler: (book: OrderBook) => void,
+  ): Unsubscribe {
+    const converter = new OrderBookWsConverter(params.kind ?? 'perp');
+    return this.client.subscribeOrderbook(
+      { symbol: params.name, aggLevel: params.aggLevel ?? 1 },
+      (raw) => {
+        handler(converter.toCommon(raw as unknown as OrderBookWsNative));
+      },
+    );
   }
 }
