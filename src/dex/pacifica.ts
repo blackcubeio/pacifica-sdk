@@ -95,11 +95,11 @@ import { vaultDeposit } from '../rest/vaults/vault-deposit';
 import { vaultWithdraw } from '../rest/vaults/vault-withdraw';
 import { UnifiedWsClient } from '../ws/unified-client';
 import type {
-  CancelAllInput,
-  CancelOrderInput,
-  CandlesQuery,
-  EditOrderInput,
-  FundingQuery,
+  CancelAllParams,
+  CancelOrderParams,
+  CandlesParams,
+  EditOrderParams,
+  FundingParams,
   IAccount,
   IIsolatedMargin,
   IMarginMode,
@@ -112,16 +112,16 @@ import type {
   IRealtimePositions,
   ISubAccounts,
   ITrading,
-  IsolatedMarginInput,
+  IsolatedMarginParams,
   KeyHelper,
-  LeverageInput,
-  MarginModeInput,
-  OrderBookQuery,
-  PlaceOrderInput,
+  LeverageParams,
+  MarginModeParams,
+  OrderBookParams,
+  PlaceOrderParams,
   SolanaHelper,
-  SymbolQuery,
-  TradesQuery,
-  WithdrawInput,
+  SymbolParams,
+  TradesParams,
+  WithdrawParams,
 } from './contract';
 import type {
   IAdvancedOrders,
@@ -181,7 +181,7 @@ class PacificaMarket
   public getPairs(): Promise<Pair[]> {
     return getPairs(this.client, this.label);
   }
-  public getCandles(query: CandlesQuery): Promise<Candle[]> {
+  public getCandles(query: CandlesParams): Promise<Candle[]> {
     return getCandles(
       this.client,
       {
@@ -194,13 +194,13 @@ class PacificaMarket
       this.label,
     );
   }
-  public getOrderBook(query: OrderBookQuery): Promise<OrderBook> {
+  public getOrderBook(query: OrderBookParams): Promise<OrderBook> {
     return getOrderBook(this.client, { name: query.name, limit: query.limit }, this.label);
   }
   public getPrices(): Promise<Price[]> {
     return getPrices(this.client, this.label);
   }
-  public getFundingHistory(query: FundingQuery): Promise<FundingRate[]> {
+  public getFundingHistory(query: FundingParams): Promise<FundingRate[]> {
     return getFundingHistory(this.client, { name: query.name, limit: query.limit }, this.label);
   }
 
@@ -210,18 +210,18 @@ class PacificaMarket
   }
 
   // ── IPublicTrades ──
-  public getTrades(query: TradesQuery): Promise<Trade[]> {
+  public getTrades(query: TradesParams): Promise<Trade[]> {
     return getTrades(this.client, { name: query.name, limit: query.limit }, this.label);
   }
 
   // ── IProductAccount ──
-  public getPositions(query?: SymbolQuery): Promise<Position[]> {
+  public getPositions(query?: SymbolParams): Promise<Position[]> {
     return getPositions(this.client, { user: this.user(), name: query?.name }, this.label);
   }
-  public getOpenOrders(query?: SymbolQuery): Promise<Order[]> {
+  public getOpenOrders(query?: SymbolParams): Promise<Order[]> {
     return getOpenOrders(this.client, { user: this.user(), name: query?.name }, this.label);
   }
-  public getUserTrades(query?: SymbolQuery): Promise<UserTrade[]> {
+  public getUserTrades(query?: SymbolParams): Promise<UserTrade[]> {
     return getUserTrades(this.client, { user: this.user(), name: query?.name }, this.label);
   }
   public getAccountInfo(): Promise<unknown> {
@@ -229,12 +229,12 @@ class PacificaMarket
   }
 
   // ── IOrderHistory ──
-  public getOrderHistory(query?: SymbolQuery): Promise<Order[]> {
+  public getOrderHistory(query?: SymbolParams): Promise<Order[]> {
     return getOrderHistory(this.client, { user: this.user(), name: query?.name }, this.label);
   }
 
   // ── ITrading ──
-  public placeOrder(input: PlaceOrderInput): Promise<Order> {
+  public placeOrder(input: PlaceOrderParams): Promise<Order> {
     if (input.type !== 'limit' && input.type !== 'market') {
       throw new Error(`placeOrder (Pacifica) : type "${input.type}" non supporté (limit/market).`);
     }
@@ -253,17 +253,17 @@ class PacificaMarket
       this.signed(),
     );
   }
-  public cancelOrder(input: CancelOrderInput): Promise<void> {
+  public cancelOrder(input: CancelOrderParams): Promise<void> {
     return cancelOrder(
       this.client,
       { name: input.name, id: input.id, clientId: input.clientId },
       this.signed(),
     );
   }
-  public cancelAllOrders(input: CancelAllInput): Promise<{ cancelled: number | null }> {
+  public cancelAllOrders(input: CancelAllParams): Promise<{ cancelled: number | null }> {
     return cancelAllOrders(this.client, { name: input.name }, this.signed());
   }
-  public editOrder(input: EditOrderInput): Promise<{ name: string; id: string }> {
+  public editOrder(input: EditOrderParams): Promise<{ name: string; id: string }> {
     if (input.price === undefined) {
       throw new Error('editOrder (Pacifica) : `price` est requis.');
     }
@@ -279,7 +279,7 @@ class PacificaMarket
       this.signed(),
     ).then((result) => ({ name: result.name, id: result.id }));
   }
-  public updateLeverage(input: LeverageInput): Promise<unknown> {
+  public updateLeverage(input: LeverageParams): Promise<unknown> {
     return updateLeverage(
       this.client,
       { name: input.name, leverage: input.leverage },
@@ -288,7 +288,7 @@ class PacificaMarket
   }
 
   // ── IMarginMode ──
-  public setMarginMode(input: MarginModeInput): Promise<void> {
+  public setMarginMode(input: MarginModeParams): Promise<void> {
     return updateMarginMode(
       this.client,
       { name: input.name, isolated: input.isolated },
@@ -297,7 +297,7 @@ class PacificaMarket
   }
 
   // ── IIsolatedMargin (pas de removeIsolatedMargin côté Pacifica) ──
-  public addIsolatedMargin(input: IsolatedMarginInput): Promise<void> {
+  public addIsolatedMargin(input: IsolatedMarginParams): Promise<void> {
     return addIsolatedMargin(
       this.client,
       { symbol: input.name, amount: input.amount },
@@ -334,7 +334,7 @@ class PacificaAccount implements IAccount, ISubAccounts {
   public getSubAccounts(): Promise<SubAccount[]> {
     return getSubAccounts(this.client, this.signed());
   }
-  public withdraw(input: WithdrawInput): Promise<unknown> {
+  public withdraw(input: WithdrawParams): Promise<unknown> {
     return withdraw(this.client, { amount: input.amount }, this.signed());
   }
 }
