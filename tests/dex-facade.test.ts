@@ -20,7 +20,7 @@ describe('Façade Pacifica (réel)', () => {
     const candles = await dex.perp().getCandles({
       name: 'BTC',
       interval: '1m',
-      startTime: Date.now() - 60 * 60 * 1000,
+      startTime: new Date(Date.now() - 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' '),
     });
     expect(candles.length).toBeGreaterThan(0);
     expect(candles[0]?.kind).toBe('perp');

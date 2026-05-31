@@ -14,7 +14,7 @@ import type {
   Trade,
   UserTrade,
 } from '../common/types';
-import { keyTypeOf, signEd25519, solanaAddress } from '../common/utils';
+import { dateToMs, keyTypeOf, signEd25519, solanaAddress } from '../common/utils';
 import type { StreamHandler } from '../common/ws';
 import { addIsolatedMargin } from '../rest/account/add-isolated-margin';
 // ── Fonctions surplus Pacifica (exposées via interfaces complémentaires) ──
@@ -187,8 +187,8 @@ class PacificaMarket
       {
         name: query.name,
         interval: query.interval,
-        startTime: query.startTime ?? 0,
-        endTime: query.endTime,
+        startTime: query.startTime === undefined ? 0 : dateToMs(query.startTime),
+        endTime: query.endTime === undefined ? undefined : dateToMs(query.endTime),
         limit: query.limit,
       },
       this.label,
