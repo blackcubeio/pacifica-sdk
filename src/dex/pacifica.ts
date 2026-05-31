@@ -112,6 +112,7 @@ import type {
   IRealtimePositions,
   ISubAccounts,
   ITrading,
+  ITransfers,
   IsolatedMarginParams,
   KeyHelper,
   LeverageParams,
@@ -121,6 +122,7 @@ import type {
   SolanaHelper,
   SymbolParams,
   TradesParams,
+  TransferParams,
   WithdrawParams,
 } from './contract';
 import type {
@@ -605,6 +607,35 @@ class PacificaSubAccounts extends PacificaScope implements ISubAccountsAdmin {
   }
 }
 
+/**
+ * Scope **transferts** unifié (commun aux 4 SDK). Route le modèle abstrait
+ * `transfer({ from?, to, asset?, amount })` vers les endpoints Pacifica :
+ * - `to: { subAccount }` sans `asset` → `transferSubaccountFund` (USDC perp master↔sous-compte) ;
+ * - `to: { subAccount }` avec `asset` → `subaccountSpotTransfer` (token spot) ;
+ * - `wallet ↔ wallet` / `to: { account }` → non supportés (Pacifica est perp-only, pas d'envoi externe).
+ */
+class PacificaTransfers extends PacificaScope implements ITransfers {
+  public transfer(p: TransferParams) {
+    if ('subAccount' in p.to) {
+      if (p.asset !== undefined) {
+        return subaccountSpotTransfer(
+          this.client,
+          { toAccount: p.to.subAccount, symbol: p.asset, amount: p.amount },
+          this.signed(),
+        );
+      }
+      return transferSubaccountFund(
+        this.client,
+        { toAccount: p.to.subAccount, amount: p.amount },
+        this.signed(),
+      );
+    }
+    throw new Error(
+      'transfer : Pacifica supporte uniquement `to: { subAccount }` (USDC perp, ou token spot via `asset`).',
+    );
+  }
+}
+
 /** Scope **advancedOrders** (stop / TP-SL / batch / TWAP + marché annexe) — {@link IAdvancedOrders}. */
 class PacificaAdvancedOrders extends PacificaScope implements IAdvancedOrders {
   public createStopOrder(params: Parameters<typeof createStopOrder>[1]) {
@@ -670,6 +701,11 @@ export class Pacifica {
   /** Scope **compte** transverse (soldes, sous-comptes, retrait). */
   public account(label?: string): PacificaAccount {
     return new PacificaAccount(this.client, this.resolve(label));
+  }
+
+  /** Scope **transferts** unifié (master↔sous-compte ; USDC perp ou token spot). */
+  public transfers(label?: string): PacificaTransfers {
+    return new PacificaTransfers(this.client, this.resolve(label));
   }
 
   /** Helpers crypto (Solana). */
