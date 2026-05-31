@@ -29,7 +29,7 @@ const dex = new Pacifica(
 
 // REST : requête → réponse
 const candles = await dex.perp().getCandles({ name: 'BTC', interval: '1m', startTime: Date.now() - 3.6e6 });
-const order = await dex.perp().placeOrder({
+const order = await dex.perp().place({
   name: 'BTC', side: 'buy', type: 'limit', size: '0.001', price: '20000',
 });
 
@@ -80,8 +80,8 @@ retours unifiés est toujours `perp`.
 | Catégorie | Méthodes |
 |---|---|
 | Marché (public) | `getPairs()`, `getCandles(q)`, `getOrderBook(q)`, `getPrices()`, `getFundingHistory(q)`, `getTrades(q)`, `getExchangeInfo()` |
-| Compte (signé) | `getPositions(q?)`, `getOpenOrders(q?)`, `getUserTrades(q?)`, `getOrderHistory(q?)`, `getAccountInfo()` |
-| Trading (signé) | `placeOrder(i)`, `cancelOrder(i)`, `cancelAllOrders(i)`, `editOrder(i)`, `updateLeverage(i)`, `setMarginMode(i)`, `addIsolatedMargin(i)` |
+| Compte (signé) | `getPositions(q?)`, `getOpens(q?)`, `getUserTrades(q?)`, `getHistory(q?)`, `getAccountInfo()` |
+| Trading (signé) | `place(i)`, `cancel(i)`, `cancelAll(i)`, `edit(i)`, `updateLeverage(i)`, `setMarginMode(i)`, `addIsolatedMargin(i)` |
 
 > **Spécificités Pacifica** : pas de **retrait de marge isolée** (`removeIsolatedMargin`) ;
 > `placeOrder` accepte `limit` / `market` (le `market` accepte un `slippagePercent`, défaut `1` %).
@@ -136,10 +136,10 @@ const pub = new Pacifica();
 const book = await pub.perp().getOrderBook({ name: 'BTC' });
 
 // Cycle d'ordre (testnet)
-const created = await dex.perp().placeOrder({
+const created = await dex.perp().place({
   name: 'BTC', side: 'buy', type: 'limit', tif: 'gtc', size: '0.001', price: '20000',
 });
-await dex.perp().cancelOrder({ name: 'BTC', clientId: created.clientId ?? undefined });
+await dex.perp().cancel({ name: 'BTC', clientId: created.clientId ?? undefined });
 
 // Compte transverse
 const balances = await dex.account().getBalances();

@@ -56,7 +56,7 @@ const dex = new Pacifica(
   { default: 'trader' },
 );
 
-await dex.perp('tester').placeOrder(params);  // le label choisit le compte ET le réseau
+await dex.perp('tester').place(params);  // le label choisit le compte ET le réseau
 await dex.perp().getCandles(query);            // lecture publique, signer par défaut
 ```
 
@@ -130,7 +130,7 @@ const dex = new Pacifica({
   sub01: { secretKey: API01_SECRET, publicKey: SUB01, agentWallet: API01_PUBKEY, network: 'testnet' },
   sub02: { secretKey: API02_SECRET, publicKey: SUB02, agentWallet: API02_PUBKEY, network: 'testnet' },
 });
-await dex.perp('sub01').placeOrder(params);   // signé par la clé API de SUB01, crédité à SUB01
+await dex.perp('sub01').place(params);   // signé par la clé API de SUB01, crédité à SUB01
 ```
 
 `listAgentIpWhitelist` sends `api_agent_key` (not `agent_wallet`) in the payload.
