@@ -131,7 +131,7 @@ import type {
   ISpot,
   ISubAccountsAdmin,
   IVaults,
-} from './pacifica-contract';
+} from './native-contract';
 
 /** Options de construction d'un {@link Pacifica}. */
 export interface PacificaDexOptions extends Omit<InitOptions, 'signers'> {

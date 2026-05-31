@@ -9,7 +9,7 @@ export { Pacifica, type PacificaDexOptions } from './dex/pacifica';
 export type * from './dex/contract';
 
 /** Interfaces **complémentaires** Pacifica (vaults/agent/apiKeys/spot/lending/portfolio/subaccounts/advancedOrders). */
-export type * from './dex/pacifica-contract';
+export type * from './dex/native-contract';
 
 /** Configuration d'un signer (passé au constructeur) et réseau. */
 export type { Signer, Network } from './common/types';
