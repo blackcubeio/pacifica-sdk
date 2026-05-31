@@ -130,8 +130,7 @@ import type {
   IApiKeys,
   ILending,
   INativeAccount,
-  INativeMarket,
-  INativeOrders,
+  INativePerp,
   INativeRealtime,
   ISubAccountsAdmin,
   IVaults,
@@ -156,8 +155,6 @@ class PacificaMarket
     IProductAccount,
     IOrderHistory,
     ITrading,
-    INativeOrders,
-    INativeMarket,
     IMarginMode,
     IIsolatedMargin
 {
@@ -309,40 +306,6 @@ class PacificaMarket
       this.signed(),
     );
   }
-
-  // ── INativeOrders : surplus ordres Pacifica porté par le scope marché ──
-  public placeBatch(actions: Parameters<typeof batchOrders>[1]) {
-    return batchOrders(this.client, actions, this.signed());
-  }
-  public placeStop(params: Parameters<typeof createStopOrder>[1]) {
-    return createStopOrder(this.client, params, this.signed());
-  }
-  public cancelStop(params: Parameters<typeof cancelStopOrder>[1]) {
-    return cancelStopOrder(this.client, params, this.signed());
-  }
-  public placeTpsl(params: Parameters<typeof createPositionTpsl>[1]) {
-    return createPositionTpsl(this.client, params, this.signed());
-  }
-  public getById(params: Parameters<typeof getOrderHistoryById>[1]) {
-    return getOrderHistoryById(this.client, params, this.label);
-  }
-  public getTwaps(params: Parameters<typeof getOpenTwapOrder>[1]) {
-    return getOpenTwapOrder(this.client, params, this.label);
-  }
-  public getTwapHistory(params: Parameters<typeof getTwapOrderHistory>[1]) {
-    return getTwapOrderHistory(this.client, params, this.label);
-  }
-  public getTwapHistoryById(params: Parameters<typeof getTwapOrderHistoryById>[1]) {
-    return getTwapOrderHistoryById(this.client, params, this.label);
-  }
-
-  // ── INativeMarket : lectures marché supplémentaires Pacifica ──
-  public getFeeLevels() {
-    return getFeeLevels(this.client, this.label);
-  }
-  public getMarkPriceCandles(params: Parameters<typeof getMarkPriceCandleData>[1]) {
-    return getMarkPriceCandleData(this.client, params, this.label);
-  }
 }
 
 /** Scope **compte transverse** : soldes, sous-comptes, retrait. */
@@ -481,6 +444,45 @@ class PacificaScope {
       throw new Error('Action signée : aucun signer (ajoute des signers ou un défaut).');
     }
     return this.label;
+  }
+}
+
+/**
+ * Surplus **perp** Pacifica (miroir natif de `dex.perp()`), accès `dex.native.perp(label?)` :
+ * lectures marché supplémentaires (publiques) + ordres avancés (signés). Hors contrat portable.
+ */
+class PacificaNativePerp extends PacificaScope implements INativePerp {
+  // ── lectures marché supplémentaires (publiques) ──
+  public getFeeLevels() {
+    return getFeeLevels(this.client, this.label);
+  }
+  public getMarkPriceCandles(params: Parameters<typeof getMarkPriceCandleData>[1]) {
+    return getMarkPriceCandleData(this.client, params, this.label);
+  }
+  // ── ordres avancés (signés) ──
+  public placeBatch(actions: Parameters<typeof batchOrders>[1]) {
+    return batchOrders(this.client, actions, this.signed());
+  }
+  public placeStop(params: Parameters<typeof createStopOrder>[1]) {
+    return createStopOrder(this.client, params, this.signed());
+  }
+  public cancelStop(params: Parameters<typeof cancelStopOrder>[1]) {
+    return cancelStopOrder(this.client, params, this.signed());
+  }
+  public placeTpsl(params: Parameters<typeof createPositionTpsl>[1]) {
+    return createPositionTpsl(this.client, params, this.signed());
+  }
+  public getById(params: Parameters<typeof getOrderHistoryById>[1]) {
+    return getOrderHistoryById(this.client, params, this.label);
+  }
+  public getTwaps(params: Parameters<typeof getOpenTwapOrder>[1]) {
+    return getOpenTwapOrder(this.client, params, this.label);
+  }
+  public getTwapHistory(params: Parameters<typeof getTwapOrderHistory>[1]) {
+    return getTwapOrderHistory(this.client, params, this.label);
+  }
+  public getTwapHistoryById(params: Parameters<typeof getTwapOrderHistoryById>[1]) {
+    return getTwapOrderHistoryById(this.client, params, this.label);
   }
 }
 
@@ -639,30 +641,24 @@ class PacificaSubAccounts extends PacificaScope implements ISubAccountsAdmin {
 }
 
 /**
- * Scope **transferts** unifié (commun aux 4 SDK). Route le modèle abstrait
- * `transfer({ from?, to, asset?, amount })` vers les endpoints Pacifica :
- * - `to: { subAccount }` sans `asset` → `transferSubaccountFund` (USDC perp master↔sous-compte) ;
- * - `to: { subAccount }` avec `asset` → `subaccountSpotTransfer` (token spot) ;
- * - `wallet ↔ wallet` / `to: { account }` → non supportés (Pacifica est perp-only, pas d'envoi externe).
+ * Scope **transferts** (commun). `TransferParams` est **narrowé** à `to: { subAccount }` côté type
+ * (cf. contract.ts) : aucune route invalide ne compile, donc **aucun throw** « non supporté » ici.
+ * - sans `asset` → `transferSubaccountFund` (USDC perp master↔sous-compte) ;
+ * - avec `asset` → `subaccountSpotTransfer` (token spot).
  */
 class PacificaTransfers extends PacificaScope implements ITransfers {
   public transfer(p: TransferParams) {
-    if ('subAccount' in p.to) {
-      if (p.asset !== undefined) {
-        return subaccountSpotTransfer(
-          this.client,
-          { toAccount: p.to.subAccount, symbol: p.asset, amount: p.amount },
-          this.signed(),
-        );
-      }
-      return transferSubaccountFund(
+    if (p.asset !== undefined) {
+      return subaccountSpotTransfer(
         this.client,
-        { toAccount: p.to.subAccount, amount: p.amount },
+        { toAccount: p.to.subAccount, symbol: p.asset, amount: p.amount },
         this.signed(),
       );
     }
-    throw new Error(
-      'transfer : Pacifica supporte uniquement `to: { subAccount }` (USDC perp, ou token spot via `asset`).',
+    return transferSubaccountFund(
+      this.client,
+      { toAccount: p.to.subAccount, amount: p.amount },
+      this.signed(),
     );
   }
 }
@@ -718,14 +714,17 @@ export class Pacifica {
   // ── Surplus spécifique Pacifica (namespace `native`, convention partagée par les 4 SDK) ──
 
   /**
-   * Capacités **spécifiques à Pacifica**, hors contrat unifié. Accès uniforme à tous les SDK :
-   * `dex.native.<capacité>(label?)`. Noms d'interfaces (`IVaults`, `IAgents`…) et de méthodes
-   * **identiques** entre SDK ; seuls les types de params diffèrent.
+   * Capacités **spécifiques à Pacifica**. Le namespace `native` **miroite** le commun :
+   * `dex.native.perp()` (reads marché + ordres avancés, miroir de `perp()`), `dex.native.account()`
+   * (réglages/historiques, ex-portfolio) ; + capacités propres `vaults`, `agents`, `apiKeys`,
+   * `wallet`, `lending`, `subAccounts`, `ws`.
    */
   public get native() {
     const c = this.client;
     const r = (label?: string) => this.resolve(label);
     return {
+      /** Surplus **perp** (miroir natif de perp()) : reads marché + ordres avancés (stop/tpsl/twap/batch). */
+      perp: (label?: string) => new PacificaNativePerp(c, r(label)),
       /** Vaults (Lake) — `IVaults`. */
       vaults: (label?: string) => new PacificaVaults(c, r(label)),
       /** Agent wallets + IP whitelist — `IAgents`. */

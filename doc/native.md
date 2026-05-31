@@ -1,13 +1,20 @@
 # Surface `native` — spécifique à `@blackcube/pacifica-sdk`
 
 Capacités **propres à Pacifica**, hors contrat unifié (voir [`common.md`](common.md) pour le portable).
-Accès uniforme à tous les SDK : **`dex.native.<capacité>(label?)`**. Les noms d'interfaces (`IVaults`,
-`IAgents`, `IApiKeys`…) et de méthodes sont **identiques entre SDK** ; seuls les types de params
-diffèrent (dérivés des fonctions REST, zéro divergence).
+Accès **`dex.native.<capacité>(label?)`**. Le namespace `native` **miroite** le commun :
+
+| commun (portable) | natif (spécifique) |
+|---|---|
+| `dex.perp()` | `dex.native.perp()` — reads marché + ordres avancés (stop/tpsl/twap/batch) |
+| `dex.account()` | `dex.native.account()` — réglages + historiques (ex-`portfolio`) |
+| `dex.transfers()` | — (narrowé `to:{subAccount}`) |
+
+Capacités **sans équivalent commun** : `native.vaults()`, `native.agents()`, `native.apiKeys()`,
+`native.wallet()` (spot/bridge), `native.lending()`, `native.subAccounts()`, `native.ws()`.
 
 ```ts
 const dex = new Pacifica({ desk: signer }, { default: 'desk' });
-dex.native.vaults().getVaults();
+dex.native.perp().getFeeLevels();
 ```
 
 `label?` choisit le signer (défaut : signer par défaut). Lectures privées comprises (compte signé).
@@ -132,29 +139,27 @@ await dex.native.subAccounts().create({ /* CreateSubAccountParams */ });
 // Transfert master↔sous-compte : dex.transfers().transfer({ to: { subAccount: '…' }, amount: '100' })
 ```
 
-## Surplus ordres + marché — portés par `perp()`
-
-> Pas de scope `native` dédié : le surplus **ordres** (`INativeOrders`) et les **lectures marché**
-> supplémentaires (`INativeMarket`) sont exposés sur le scope marché `dex.perp()` (Pacifica est
-> perp-only), aux côtés des verbes communs (`place`/`cancel`/`edit`…).
+## `native.perp()` — `INativePerp` (miroir natif de `perp()`)
+Surplus **perp** (Pacifica est perp-only) : lectures marché supplémentaires (publiques) **+** ordres
+avancés (stop / TP-SL / batch / TWAP). Hors contrat portable, contrairement à `dex.perp().place()`.
 
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `placeStop(p)` | `CreateStopOrder` | `Promise<CodeMsg>` |
-| `cancelStop(p)` | `CancelStopOrder` | `Promise<CodeMsg>` |
-| `placeTpsl(p)` | `CreatePositionTpsl` | `Promise<CodeMsg>` |
-| `placeBatch(actions)` | `BatchAction[]` | `Promise<CodeMsg>` (aligné HL/Aster) |
+| `getFeeLevels()` | — | `Promise<FeeLevel[]>` |
+| `getMarkPriceCandles(q)` | `CandleQuery` | `Promise<Candle[]>` |
+| `placeStop(p)` | `PlaceStopParams` | `Promise<CodeMsg>` |
+| `cancelStop(p)` | `CancelStopParams` | `Promise<CodeMsg>` |
+| `placeTpsl(p)` | `PlaceTpslParams` | `Promise<CodeMsg>` |
+| `placeBatch(actions)` | `PlaceBatchParams` | `Promise<CodeMsg>` |
 | `getById(q)` | `OrderHistoryByIdQuery` | `Promise<Order>` |
 | `getTwaps(q)` / `getTwapHistory(q)` / `getTwapHistoryById(q)` | `…Query` | `Promise<…>` |
-| `getFeeLevels()` | — | `Promise<FeeLevel[]>` (marché) |
-| `getMarkPriceCandles(q)` | `CandleQuery` | `Promise<Candle[]>` (marché) |
 
 ```ts
-await dex.perp().placeStop({ symbol: 'BTC', side: 'sell', stopPrice: '50000', size: '0.01' });
-await dex.perp().placeTpsl({ symbol: 'BTC', takeProfit: '70000', stopLoss: '50000' });
-await dex.perp().placeBatch([{ /* BatchAction */ }]);
-await dex.perp().getFeeLevels();
-await dex.perp().getMarkPriceCandles({ symbol: 'BTC', interval: '1h' });
+await dex.native.perp().getFeeLevels();
+await dex.native.perp().getMarkPriceCandles({ symbol: 'BTC', interval: '1h' });
+await dex.native.perp().placeStop({ symbol: 'BTC', side: 'sell', stopPrice: '50000', size: '0.01' });
+await dex.native.perp().placeTpsl({ symbol: 'BTC', takeProfit: '70000', stopLoss: '50000' });
+await dex.native.perp().placeBatch([{ /* BatchAction */ }]);
 ```
 
 ## `native.ws()` — `INativeRealtime` (temps réel natif : flux compte bruts + trading via WS)

@@ -169,17 +169,14 @@ export interface ISubAccounts {
   getSubAccounts(): Promise<SubAccount[]>;
 }
 
-/** Endpoint d'un transfert : le couple `from`/`to` dit OÙ vont les fonds (C7/unifié). */
-export type TransferEndpoint =
-  | { wallet: 'perp' | 'spot' } // mon wallet perp / spot (transfert interne)
-  | { account: string } // un autre compte (adresse ; Lighter = index de compte en string)
-  | { subAccount: string }; // un de mes sous-comptes
-
-/** Paramètres unifiés d'un transfert de fonds. */
+/**
+ * Paramètres d'un transfert — **narrowé pour Pacifica** : la seule route supportée est vers un
+ * **sous-compte** (`to: { subAccount }`, USDC perp ou token spot via `asset`). Le compilateur refuse
+ * les routes inexistantes (`wallet`/`account`) → pas de throw « non supporté » au runtime (#3).
+ */
 export interface TransferParams {
-  from?: TransferEndpoint; // source ; défaut = compte/wallet courant
-  to: TransferEndpoint; // destination
-  asset?: string; // défaut 'USDC'
+  to: { subAccount: string };
+  asset?: string; // token spot ; défaut USDC perp
   amount: string; // chaîne décimale
 }
 

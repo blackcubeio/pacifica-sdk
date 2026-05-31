@@ -21,8 +21,8 @@ testnet: an API key can trade / change leverage / withdraw for its account, but 
 bind/revoke agent keys (those need the account's own key).
 
 > La classe `Pacifica` signe pour toi : tu ne manipules jamais les primitives ci-dessous. Les
-> fonctions de gestion (agent/API keys/vaults) sont exposées via les scopes `dex.agent()` /
-> `dex.vaults()` / `dex.account()`.
+> fonctions de gestion (agents/API keys/vaults) sont exposées via les scopes natifs
+> `dex.native.agents()` / `dex.native.apiKeys()` / `dex.native.vaults()`.
 
 ## Mechanism
 

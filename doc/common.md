@@ -124,16 +124,16 @@ await dex.account().disarm();
 ---
 
 ## `transfers(label?)` — transferts de fonds (commun)
-Modèle **unifié** : `transfer({ from?, to, asset?, amount })`. Chaque extrémité est un `TransferEndpoint` :
-`{ wallet: 'perp' | 'spot' }` · `{ account: string }` · `{ subAccount: string }`. La façade route vers
-l'endpoint natif selon `(from, to)` ; une route non supportée lève une erreur explicite.
+`TransferParams` est **narrowé pour Pacifica** : la seule route est vers un **sous-compte**. Le
+**type** l'impose (`to: { subAccount: string }`) → le compilateur refuse toute autre route, **aucun
+throw** « non supporté » au runtime.
 
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `transfer(p)` | `TransferParams` `{ from?: TransferEndpoint; to: TransferEndpoint; asset?: string; amount: string }` | `Promise<unknown>` |
+| `transfer(p)` | `TransferParams` `{ to: { subAccount: string }; asset?: string; amount: string }` | `Promise<unknown>` |
 
-Routes **Pacifica** (perp-only) : `to: { subAccount }` uniquement — USDC perp (`transferSubaccountFund`),
-ou token **spot** si `asset` fourni (`subaccountSpotTransfer`).
+Routage : sans `asset` → USDC perp (`transferSubaccountFund`) ; avec `asset` → token **spot**
+(`subaccountSpotTransfer`).
 
 ```ts
 await dex.transfers().transfer({ to: { subAccount: '…' }, amount: '10' });            // USDC perp

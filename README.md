@@ -108,25 +108,29 @@ résolvent le compte depuis le signer.
 | Public | `subscribeCandles(q, cb)`, `subscribeOrderBook(q, cb)`, `subscribeTrades(q, cb)`, `subscribeBbo(q, cb)` (→ `OrderBook` 1 niveau), `subscribePrices(cb)` (→ `Price[]`) |
 | Compte (signé) | `subscribeOrders(cb)`, `subscribeUserTrades(cb)`, `subscribePositions(cb)` |
 
-### Scopes spécifiques Pacifica (interfaces complémentaires, hors contrat commun)
+### `dex.transfers(label?)` — transferts de fonds (commun)
 
-Pacifica offre beaucoup d'opérations qui n'existent pas sur les autres DEX — **toutes exposées**
-via des scopes dédiés implémentant des interfaces complémentaires (`IPacifica*`) :
+`transfer({ to, asset?, amount })` — **narrowé** : `to` = `{ subAccount: string }` uniquement
+(le compilateur refuse toute autre route). Sans `asset` → USDC perp (`transferSubaccountFund`) ;
+avec `asset` → token spot (`subaccountSpotTransfer`).
 
-- `dex.vaults(label?)` (`IPacificaVaults`) : vaults (Lake) — `getVaults`, `createVault`,
-  `vaultDeposit`, `vaultWithdraw`, white/blacklist, max-leverage, deposit-cap, claims.
-- `dex.agent(label?)` (`IPacificaAgent`) : agent wallets + IP whitelist — `bindAgentWallet`,
-  `listAgentWallets`, `revokeAgentWallet`, `revokeAllAgentWallets`, IP whitelist.
-- `dex.apiKeys(label?)` (`IPacificaApiKeys`) : `createApiConfigKey`, `listApiConfigKeys`,
-  `revokeApiConfigKey`.
-- `dex.spot(label?)` (`IPacificaSpot`) : actifs spot, bridge, retraits/transferts spot,
-  historiques spot — `getSpotAssets`, `getBridgeInfo`, `withdrawSpotAsset`, `subaccountSpotTransfer`…
-- `dex.lending(label?)` (`IPacificaLending`) : `toggleAutoLending`, `getAccountLoan`, `getLoanPool`.
-- `dex.portfolio(label?)` (`IPacificaPortfolio`) : `getPortfolio`, `getAccountSettings`,
-  `updateSpotSettings`, `getBalanceHistory`, `getTradeHistory`, `getAccountFunding`.
-- `dex.subaccounts(label?)` (`IPacificaSubAccounts`) : `createSubaccount`, `transferSubaccountFund`.
-- `dex.advancedOrders(label?)` (`IPacificaAdvancedOrders`) : ordres stop, TP/SL de position,
-  batch, TWAP (lectures), `getOrderHistoryById`, `getFeeLevels`, `getMarkPriceCandleData`.
+### Surface `native` — spécifique Pacifica (`dex.native.<cap>()`)
+
+Le namespace `native` **miroite** le commun ; détail dans [`doc/native.md`](doc/native.md).
+
+| Scope | Contenu |
+|---|---|
+| `dex.native.perp()` | miroir natif de `perp()` : reads marché (`getFeeLevels`, `getMarkPriceCandles`) **+** ordres avancés (`placeStop`, `cancelStop`, `placeTpsl`, `placeBatch`, `getById`, `getTwaps`, `getTwapHistory`, `getTwapHistoryById`) |
+| `dex.native.account()` | miroir natif de `account()` (ex-`portfolio`) : `getPortfolio`, `getSettings`, `updateSettings`, `getBalanceHistory`, `getTradeHistory`, `getFunding` |
+| `dex.native.vaults()` | vaults Lake : `getVaults`, `create`, `deposit`, `withdraw`, white/blacklist, max-leverage, deposit-cap, claims |
+| `dex.native.agents()` | `getAgents`, `approve`, `revoke`, `revokeAll`, IP whitelist (`addIp`/`removeIp`/`getIpWhitelist`/`setIpEnabled`) |
+| `dex.native.apiKeys()` | `create`, `getApiKeys`, `revoke` |
+| `dex.native.wallet()` | actifs spot, bridge, retraits, historiques : `getAssets`, `getBridge`, `getBridgeParams`, `withdraw`, `getDepositHistory`/`getWithdrawalHistory`/`getBalanceHistory`, `getPendingWithdrawals` |
+| `dex.native.lending()` | `toggleAutoLending`, `getAccountLoan`, `getLoanPool` |
+| `dex.native.subAccounts()` | `create` (transferts via `transfers()`) |
+| `dex.native.ws()` | temps réel natif : flux compte bruts + trading via WS |
+
+> Pacifica **n'a pas** de dead-man's switch serveur : pas de `armCancelAll`/`disarm`.
 
 ## Exemples
 

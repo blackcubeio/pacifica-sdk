@@ -1,10 +1,10 @@
 // ── Interfaces COMPLÉMENTAIRES Pacifica (hors contrat commun aux DEX) ────────────
 // Pacifica expose beaucoup plus que le tronc commun. Ces interfaces décrivent ces capacités
 // **spécifiques**, accessibles via le namespace uniforme `dex.native.<capacité>(label?)`
-// (convention partagée par les 4 SDK) : `native.vaults()`, `native.agents()`, `native.apiKeys()`,
-// `native.wallet()` (ex-spot), `native.lending()`, `native.account()` (ex-portfolio),
-// `native.subAccounts()`. Lectures **get-préfixées**, écritures = verbes nus, entrées en `…Params`.
-// (Le surplus **ordres** + lectures marché sont portés par `perp()` — cf. INativeOrders/INativeMarket.)
+// (convention partagée par les 4 SDK). Le namespace native **miroite** le commun : `native.perp()`
+// (reads marché + ordres avancés, miroir de `perp()`) et `native.account()` (ex-portfolio, miroir de
+// `account()`) ; + capacités propres `vaults`/`agents`/`apiKeys`/`wallet`/`lending`/`subAccounts`/`ws`.
+// Lectures **get-préfixées**, écritures = verbes nus, entrées en `…Params`.
 
 import type {
   BatchAction,
@@ -217,10 +217,17 @@ export interface ISubAccountsAdmin {
 }
 
 /**
- * Surplus **ordres** Pacifica, porté par le scope marché (`perp()`) : stop, TP/SL de position,
- * batch, lecture par id, TWAP. Verbes alignés inter-SDK (`placeStop`/`placeTpsl`/`getById`/`getTwaps`…).
+ * Surplus **perp** Pacifica spécifique, accès `dex.native.perp(label?)` (miroir natif de `dex.perp()`,
+ * Pacifica est perp-only) : lectures marché supplémentaires (publiques) **+** ordres avancés (stop,
+ * TP/SL de position, batch, lecture par id, TWAP). Hors contrat portable.
  */
-export interface INativeOrders {
+export interface INativePerp {
+  // ── lectures marché supplémentaires (publiques) ──
+  getFeeLevels(): ReturnType<typeof getFeeLevels>;
+  getMarkPriceCandles(
+    params: Args<typeof getMarkPriceCandleData>,
+  ): ReturnType<typeof getMarkPriceCandleData>;
+  // ── ordres avancés (signés) ──
   placeBatch(actions: PlaceBatchParams): ReturnType<typeof batchOrders>;
   placeStop(params: PlaceStopParams): ReturnType<typeof createStopOrder>;
   cancelStop(params: CancelStopParams): ReturnType<typeof cancelStopOrder>;
@@ -231,12 +238,4 @@ export interface INativeOrders {
   getTwapHistoryById(
     params: Args<typeof getTwapOrderHistoryById>,
   ): ReturnType<typeof getTwapOrderHistoryById>;
-}
-
-/** Lectures **marché** supplémentaires Pacifica (publiques), portées par le scope marché. */
-export interface INativeMarket {
-  getFeeLevels(): ReturnType<typeof getFeeLevels>;
-  getMarkPriceCandles(
-    params: Args<typeof getMarkPriceCandleData>,
-  ): ReturnType<typeof getMarkPriceCandleData>;
 }
