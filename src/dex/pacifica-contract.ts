@@ -64,48 +64,84 @@ import type { vaultWithdraw } from '../rest/vaults/vault-withdraw';
 /** `params` (2ᵉ arg) d'une fonction REST `fn(client, params, label)`. */
 type Args<F extends (...a: never[]) => unknown> = Parameters<F>[1];
 
+// ── Types d'ENTRÉE des ÉCRITURES (noms de concept propres, alignés inter-SDK) ──────────────
+// Découplés des noms REST internes : si l'endpoint change, seul le côté droit bouge, le nom public
+// reste stable. Les noms partagés (`ApproveAgent`, `RevokeAgent`, `CreateSubAccount`,
+// `TransferSubAccount`, `RevokeApiKey`, `PlaceBatch`) sont **identiques** sur les autres SDK qui
+// portent le même geste ; les noms spécifiques restent descriptifs (« similaires »). Les lectures
+// gardent `Args<typeof fn>` en ligne (un type nommé pour un filtre de lecture n'apporte rien).
+
+// vaults
+export type CreateVault = Args<typeof createVault>;
+export type VaultDeposit = Args<typeof vaultDeposit>;
+export type VaultWithdraw = Args<typeof vaultWithdraw>;
+export type AddVaultWhitelist = Args<typeof addToWhitelist>;
+export type RemoveVaultWhitelist = Args<typeof removeFromWhitelist>;
+export type AddVaultBlacklist = Args<typeof addToBlacklist>;
+export type RemoveVaultBlacklist = Args<typeof removeFromBlacklist>;
+export type AddVaultMaxLeverage = Args<typeof addMaxLeverage>;
+export type RemoveVaultMaxLeverage = Args<typeof removeMaxLeverage>;
+export type UpdateVaultDepositCap = Args<typeof updateDepositCap>;
+export type ClaimVaultManager = Args<typeof claimManager>;
+export type ClaimReferralCode = Args<typeof claimReferralCode>;
+// agents (`ApproveAgent`/`RevokeAgent` partagés inter-SDK)
+export type ApproveAgent = Args<typeof bindAgentWallet>;
+export type RevokeAgent = Args<typeof revokeAgentWallet>;
+export type AddAgentIp = Args<typeof addAgentWhitelistedIp>;
+export type RemoveAgentIp = Args<typeof removeAgentWhitelistedIp>;
+export type SetAgentIpEnabled = Args<typeof setAgentIpWhitelistEnabled>;
+// apiKeys (`RevokeApiKey` partagé inter-SDK)
+export type RevokeApiKey = Args<typeof revokeApiConfigKey>;
+// spot
+export type WithdrawSpot = Args<typeof withdrawSpotAsset>;
+export type SubAccountSpotTransfer = Args<typeof subaccountSpotTransfer>;
+// lending
+export type ToggleAutoLending = Args<typeof toggleAutoLending>;
+// portfolio
+export type UpdateSpotSettings = Args<typeof updateSpotSettings>;
+// subAccounts (`CreateSubAccount`/`TransferSubAccount` partagés inter-SDK)
+export type CreateSubAccount = Args<typeof createSubaccount>;
+export type TransferSubAccount = Args<typeof transferSubaccountFund>;
+// advancedOrders (`PlaceBatch` partagé HL/Aster)
+export type CreateStopOrder = Args<typeof createStopOrder>;
+export type CancelStopOrder = Args<typeof cancelStopOrder>;
+export type CreatePositionTpsl = Args<typeof createPositionTpsl>;
+export type PlaceBatch = Args<typeof batchOrders>;
+
 /** Gestion des **vaults** (Lake). */
 export interface IVaults {
   getVaults(): ReturnType<typeof getVaults>;
-  createVault(params: Args<typeof createVault>): ReturnType<typeof createVault>;
-  vaultDeposit(params: Args<typeof vaultDeposit>): ReturnType<typeof vaultDeposit>;
-  vaultWithdraw(params: Args<typeof vaultWithdraw>): ReturnType<typeof vaultWithdraw>;
-  addToWhitelist(params: Args<typeof addToWhitelist>): ReturnType<typeof addToWhitelist>;
-  removeFromWhitelist(
-    params: Args<typeof removeFromWhitelist>,
-  ): ReturnType<typeof removeFromWhitelist>;
-  addToBlacklist(params: Args<typeof addToBlacklist>): ReturnType<typeof addToBlacklist>;
-  removeFromBlacklist(
-    params: Args<typeof removeFromBlacklist>,
-  ): ReturnType<typeof removeFromBlacklist>;
-  addMaxLeverage(params: Args<typeof addMaxLeverage>): ReturnType<typeof addMaxLeverage>;
-  removeMaxLeverage(params: Args<typeof removeMaxLeverage>): ReturnType<typeof removeMaxLeverage>;
-  updateDepositCap(params: Args<typeof updateDepositCap>): ReturnType<typeof updateDepositCap>;
-  claimManager(params: Args<typeof claimManager>): ReturnType<typeof claimManager>;
-  claimReferralCode(params: Args<typeof claimReferralCode>): ReturnType<typeof claimReferralCode>;
+  createVault(params: CreateVault): ReturnType<typeof createVault>;
+  vaultDeposit(params: VaultDeposit): ReturnType<typeof vaultDeposit>;
+  vaultWithdraw(params: VaultWithdraw): ReturnType<typeof vaultWithdraw>;
+  addToWhitelist(params: AddVaultWhitelist): ReturnType<typeof addToWhitelist>;
+  removeFromWhitelist(params: RemoveVaultWhitelist): ReturnType<typeof removeFromWhitelist>;
+  addToBlacklist(params: AddVaultBlacklist): ReturnType<typeof addToBlacklist>;
+  removeFromBlacklist(params: RemoveVaultBlacklist): ReturnType<typeof removeFromBlacklist>;
+  addMaxLeverage(params: AddVaultMaxLeverage): ReturnType<typeof addMaxLeverage>;
+  removeMaxLeverage(params: RemoveVaultMaxLeverage): ReturnType<typeof removeMaxLeverage>;
+  updateDepositCap(params: UpdateVaultDepositCap): ReturnType<typeof updateDepositCap>;
+  claimManager(params: ClaimVaultManager): ReturnType<typeof claimManager>;
+  claimReferralCode(params: ClaimReferralCode): ReturnType<typeof claimReferralCode>;
 }
 
 /** Agent wallets et IP whitelist. Verbes alignés sur les autres SDK (`list`/`approve`/`revoke`). */
 export interface IAgents {
-  approve(params: Args<typeof bindAgentWallet>): ReturnType<typeof bindAgentWallet>;
+  approve(params: ApproveAgent): ReturnType<typeof bindAgentWallet>;
   list(): ReturnType<typeof listAgentWallets>;
-  revoke(params: Args<typeof revokeAgentWallet>): ReturnType<typeof revokeAgentWallet>;
+  revoke(params: RevokeAgent): ReturnType<typeof revokeAgentWallet>;
   revokeAll(): ReturnType<typeof revokeAllAgentWallets>;
-  addIp(params: Args<typeof addAgentWhitelistedIp>): ReturnType<typeof addAgentWhitelistedIp>;
-  removeIp(
-    params: Args<typeof removeAgentWhitelistedIp>,
-  ): ReturnType<typeof removeAgentWhitelistedIp>;
+  addIp(params: AddAgentIp): ReturnType<typeof addAgentWhitelistedIp>;
+  removeIp(params: RemoveAgentIp): ReturnType<typeof removeAgentWhitelistedIp>;
   listIps(params: Args<typeof listAgentIpWhitelist>): ReturnType<typeof listAgentIpWhitelist>;
-  setIpEnabled(
-    params: Args<typeof setAgentIpWhitelistEnabled>,
-  ): ReturnType<typeof setAgentIpWhitelistEnabled>;
+  setIpEnabled(params: SetAgentIpEnabled): ReturnType<typeof setAgentIpWhitelistEnabled>;
 }
 
 /** Clés de configuration API (rate-limit). Verbes alignés (`create`/`list`/`revoke`). */
 export interface IApiKeys {
   create(): ReturnType<typeof createApiConfigKey>;
   list(): ReturnType<typeof listApiConfigKeys>;
-  revoke(params: Args<typeof revokeApiConfigKey>): ReturnType<typeof revokeApiConfigKey>;
+  revoke(params: RevokeApiKey): ReturnType<typeof revokeApiConfigKey>;
 }
 
 /** Actifs spot, bridge, retraits/transferts spot, historiques spot. */
@@ -113,7 +149,7 @@ export interface ISpot {
   getSpotAssets(query?: Args<typeof getSpotAssets>): ReturnType<typeof getSpotAssets>;
   getBridgeInfo(): ReturnType<typeof getBridgeInfo>;
   getBridgeParams(params: Args<typeof getBridgeParams>): ReturnType<typeof getBridgeParams>;
-  withdrawSpotAsset(params: Args<typeof withdrawSpotAsset>): ReturnType<typeof withdrawSpotAsset>;
+  withdrawSpotAsset(params: WithdrawSpot): ReturnType<typeof withdrawSpotAsset>;
   getSpotDepositHistory(
     params: Args<typeof getSpotDepositHistory>,
   ): ReturnType<typeof getSpotDepositHistory>;
@@ -126,14 +162,12 @@ export interface ISpot {
   getPendingSpotWithdrawals(
     params: Args<typeof getPendingSpotWithdrawals>,
   ): ReturnType<typeof getPendingSpotWithdrawals>;
-  subaccountSpotTransfer(
-    params: Args<typeof subaccountSpotTransfer>,
-  ): ReturnType<typeof subaccountSpotTransfer>;
+  subaccountSpotTransfer(params: SubAccountSpotTransfer): ReturnType<typeof subaccountSpotTransfer>;
 }
 
 /** Prêt / auto-lending (Lake collatéral). */
 export interface ILending {
-  toggleAutoLending(params: Args<typeof toggleAutoLending>): ReturnType<typeof toggleAutoLending>;
+  toggleAutoLending(params: ToggleAutoLending): ReturnType<typeof toggleAutoLending>;
   getAccountLoan(params: Args<typeof getAccountLoan>): ReturnType<typeof getAccountLoan>;
   getLoanPool(): ReturnType<typeof getLoanPool>;
 }
@@ -144,9 +178,7 @@ export interface IPortfolio {
   getAccountSettings(
     params: Args<typeof getAccountSettings>,
   ): ReturnType<typeof getAccountSettings>;
-  updateSpotSettings(
-    params: Args<typeof updateSpotSettings>,
-  ): ReturnType<typeof updateSpotSettings>;
+  updateSpotSettings(params: UpdateSpotSettings): ReturnType<typeof updateSpotSettings>;
   getBalanceHistory(params: Args<typeof getBalanceHistory>): ReturnType<typeof getBalanceHistory>;
   getTradeHistory(params: Args<typeof getTradeHistory>): ReturnType<typeof getTradeHistory>;
   getAccountFunding(params: Args<typeof getAccountFunding>): ReturnType<typeof getAccountFunding>;
@@ -155,18 +187,16 @@ export interface IPortfolio {
 /** Création / transferts de sous-comptes (la liste est dans `account().getSubAccounts`).
  *  Verbes alignés (`create`/`transfer`). */
 export interface ISubAccountsAdmin {
-  create(params: Args<typeof createSubaccount>): ReturnType<typeof createSubaccount>;
-  transfer(params: Args<typeof transferSubaccountFund>): ReturnType<typeof transferSubaccountFund>;
+  create(params: CreateSubAccount): ReturnType<typeof createSubaccount>;
+  transfer(params: TransferSubAccount): ReturnType<typeof transferSubaccountFund>;
 }
 
 /** Ordres avancés : stop, TP/SL de position, batch, TWAP, et données marché annexes. */
 export interface IAdvancedOrders {
-  createStopOrder(params: Args<typeof createStopOrder>): ReturnType<typeof createStopOrder>;
-  cancelStopOrder(params: Args<typeof cancelStopOrder>): ReturnType<typeof cancelStopOrder>;
-  createPositionTpsl(
-    params: Args<typeof createPositionTpsl>,
-  ): ReturnType<typeof createPositionTpsl>;
-  placeBatch(actions: Args<typeof batchOrders>): ReturnType<typeof batchOrders>;
+  createStopOrder(params: CreateStopOrder): ReturnType<typeof createStopOrder>;
+  cancelStopOrder(params: CancelStopOrder): ReturnType<typeof cancelStopOrder>;
+  createPositionTpsl(params: CreatePositionTpsl): ReturnType<typeof createPositionTpsl>;
+  placeBatch(actions: PlaceBatch): ReturnType<typeof batchOrders>;
   getOrderHistoryById(
     params: Args<typeof getOrderHistoryById>,
   ): ReturnType<typeof getOrderHistoryById>;

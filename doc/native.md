@@ -18,14 +18,14 @@ dex.native.vaults().getVaults();
 | Méthode | Entrée | Sortie |
 |---|---|---|
 | `getVaults()` | — | `Promise<Vault[]>` |
-| `createVault(p)` | `CreateVaultParams` | `Promise<CodeMsg>` |
-| `vaultDeposit(p)` | `VaultDepositParams` | `Promise<CodeMsg>` |
-| `vaultWithdraw(p)` | `VaultWithdrawParams` | `Promise<CodeMsg>` |
-| `addToWhitelist(p)` / `removeFromWhitelist(p)` | `…WhitelistParams` | `Promise<CodeMsg>` |
-| `addToBlacklist(p)` / `removeFromBlacklist(p)` | `…BlacklistParams` | `Promise<CodeMsg>` |
-| `addMaxLeverage(p)` / `removeMaxLeverage(p)` | `…MaxLeverageParams` | `Promise<CodeMsg>` |
-| `updateDepositCap(p)` | `UpdateDepositCapParams` | `Promise<CodeMsg>` |
-| `claimManager(p)` / `claimReferralCode(p)` | `Claim…Params` | `Promise<CodeMsg>` |
+| `createVault(p)` | `CreateVault` | `Promise<CodeMsg>` |
+| `vaultDeposit(p)` | `VaultDeposit` | `Promise<CodeMsg>` |
+| `vaultWithdraw(p)` | `VaultWithdraw` | `Promise<CodeMsg>` |
+| `addToWhitelist(p)` / `removeFromWhitelist(p)` | `AddVaultWhitelist` / `RemoveVaultWhitelist` | `Promise<CodeMsg>` |
+| `addToBlacklist(p)` / `removeFromBlacklist(p)` | `AddVaultBlacklist` / `RemoveVaultBlacklist` | `Promise<CodeMsg>` |
+| `addMaxLeverage(p)` / `removeMaxLeverage(p)` | `AddVaultMaxLeverage` / `RemoveVaultMaxLeverage` | `Promise<CodeMsg>` |
+| `updateDepositCap(p)` | `UpdateVaultDepositCap` | `Promise<CodeMsg>` |
+| `claimManager(p)` / `claimReferralCode(p)` | `ClaimVaultManager` / `ClaimReferralCode` | `Promise<CodeMsg>` |
 
 ```ts
 await dex.native.vaults().getVaults();
@@ -41,13 +41,13 @@ await dex.native.vaults().claimManager({ vault: '…' });
 *(verbes alignés sur les autres SDK : `list`/`approve`/`revoke`.)*
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `approve(p)` | `BindAgentWalletParams` | `Promise<CodeMsg>` |
+| `approve(p)` | `ApproveAgent` | `Promise<CodeMsg>` |
 | `list()` | — | `Promise<AgentWallet[]>` |
-| `revoke(p)` | `RevokeAgentWalletParams` | `Promise<CodeMsg>` |
+| `revoke(p)` | `RevokeAgent` | `Promise<CodeMsg>` |
 | `revokeAll()` | — | `Promise<CodeMsg>` |
 | `addIp(p)` / `removeIp(p)` | `…WhitelistedIpParams` | `Promise<CodeMsg>` |
 | `listIps(p)` | `ListAgentIpWhitelistParams` | `Promise<string[]>` |
-| `setIpEnabled(p)` | `SetAgentIpWhitelistEnabledParams` | `Promise<CodeMsg>` |
+| `setIpEnabled(p)` | `SetAgentIpEnabled` | `Promise<CodeMsg>` |
 
 ```ts
 await dex.native.agents().approve({ agentWallet: '…' });
@@ -64,7 +64,7 @@ await dex.native.agents().setIpEnabled({ enabled: true });
 |---|---|---|
 | `create()` | — | `Promise<ApiConfigKey>` |
 | `list()` | — | `Promise<ApiConfigKey[]>` |
-| `revoke(p)` | `RevokeApiConfigKeyParams` | `Promise<CodeMsg>` |
+| `revoke(p)` | `RevokeApiKey` | `Promise<CodeMsg>` |
 
 ```ts
 await dex.native.apiKeys().create();
@@ -78,10 +78,10 @@ await dex.native.apiKeys().revoke({ apiKey: '…' });
 | `getSpotAssets(q?)` | `SpotAssetsQuery?` | `Promise<SpotAsset[]>` |
 | `getBridgeInfo()` | — | `Promise<BridgeInfo>` |
 | `getBridgeParams(q)` | `BridgeParamsQuery` | `Promise<BridgeParams>` |
-| `withdrawSpotAsset(p)` | `WithdrawSpotAssetParams` | `Promise<CodeMsg>` |
+| `withdrawSpotAsset(p)` | `WithdrawSpot` | `Promise<CodeMsg>` |
 | `getSpotDepositHistory(p)` / `getSpotWithdrawalHistory(p)` / `getSpotBalanceHistory(p)` | `…HistoryQuery` | `Promise<…[]>` |
 | `getPendingSpotWithdrawals(p)` | `PendingSpotWithdrawalsQuery` | `Promise<…[]>` |
-| `subaccountSpotTransfer(p)` | `SubaccountSpotTransferParams` | `Promise<CodeMsg>` |
+| `subaccountSpotTransfer(p)` | `SubAccountSpotTransfer` | `Promise<CodeMsg>` |
 
 ```ts
 await dex.native.spot().getSpotAssets();
@@ -95,7 +95,7 @@ await dex.native.spot().subaccountSpotTransfer({ subaccount: '…', asset: 'USDC
 ## `native.lending()` — `ILending` (prêt / auto-lending Lake)
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `toggleAutoLending(p)` | `ToggleAutoLendingParams` | `Promise<CodeMsg>` |
+| `toggleAutoLending(p)` | `ToggleAutoLending` | `Promise<CodeMsg>` |
 | `getAccountLoan(q)` | `AccountQuery` | `Promise<AccountLoan>` |
 | `getLoanPool()` | — | `Promise<LoanPool>` |
 
@@ -110,7 +110,7 @@ await dex.native.lending().getLoanPool();
 |---|---|---|
 | `getPortfolio(q)` | `PortfolioQuery` | `Promise<Portfolio>` |
 | `getAccountSettings(q)` | `AccountQuery` | `Promise<AccountSettings>` |
-| `updateSpotSettings(p)` | `UpdateSpotSettingsParams` | `Promise<CodeMsg>` |
+| `updateSpotSettings(p)` | `UpdateSpotSettings` | `Promise<CodeMsg>` |
 | `getBalanceHistory(q)` / `getTradeHistory(q)` / `getAccountFunding(q)` | `…Query` | `Promise<…[]>` |
 
 ```ts
@@ -125,8 +125,8 @@ await dex.native.portfolio().getAccountFunding({ limit: 50 });
 *(la **liste** des sous-comptes est dans le scope unifié `account().getSubAccounts()` ; verbes alignés `create`/`transfer`.)*
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `create(p)` | `CreateSubaccountParams` | `Promise<CodeMsg>` |
-| `transfer(p)` | `TransferSubaccountFundParams` | `Promise<CodeMsg>` |
+| `create(p)` | `CreateSubAccount` | `Promise<CodeMsg>` |
+| `transfer(p)` | `TransferSubAccount` | `Promise<CodeMsg>` |
 
 ```ts
 await dex.native.subAccounts().create({ /* CreateSubaccountParams */ });
@@ -136,9 +136,9 @@ await dex.native.subAccounts().transfer({ subaccount: '…', amount: '100', dire
 ## `native.advancedOrders()` — `IAdvancedOrders` (stop, TP/SL, batch, TWAP, marché annexe)
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `createStopOrder(p)` | `CreateStopOrderParams` | `Promise<CodeMsg>` |
-| `cancelStopOrder(p)` | `CancelStopOrderParams` | `Promise<CodeMsg>` |
-| `createPositionTpsl(p)` | `CreatePositionTpslParams` | `Promise<CodeMsg>` |
+| `createStopOrder(p)` | `CreateStopOrder` | `Promise<CodeMsg>` |
+| `cancelStopOrder(p)` | `CancelStopOrder` | `Promise<CodeMsg>` |
+| `createPositionTpsl(p)` | `CreatePositionTpsl` | `Promise<CodeMsg>` |
 | `placeBatch(actions)` | `BatchAction[]` | `Promise<CodeMsg>` (aligné HL/Aster) |
 | `getOrderHistoryById(q)` | `OrderHistoryByIdQuery` | `Promise<Order>` |
 | `getOpenTwapOrder(q)` / `getTwapOrderHistory(q)` / `getTwapOrderHistoryById(q)` | `…Query` | `Promise<…>` |
