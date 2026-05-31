@@ -1,6 +1,14 @@
 import type { PacificaClient } from '../common/config';
 import type { CandleInterval } from '../common/native';
 import type {
+  BatchAction,
+  CancelAllOrdersRef,
+  CancelOrderRef,
+  CreateLimitOrderParams,
+  CreateMarketOrderParams,
+  EditOrderRef,
+} from '../common/native';
+import type {
   Candle,
   MarketKind,
   Order,
@@ -10,7 +18,9 @@ import type {
   Trade,
   UserTrade,
 } from '../common/types';
+import type { JsonValue } from '../common/types';
 import type { Unsubscribe } from '../common/ws';
+import type { StreamHandler } from '../common/ws';
 import { BboWsConverter, type BboWsNative } from '../converters/bbo';
 import { CandleConverter, type CandleNative } from '../converters/candle';
 import { type OrderUpdateWsNative, OrderWsConverter } from '../converters/order';
@@ -185,5 +195,51 @@ export class UnifiedWsClient {
         }
       }, params.user),
     );
+  }
+
+  // ── Surplus NATIF (exposé via `dex.native.ws()`) : flux compte bruts + trading via WS ──
+  // Ces flux livrent la charge **native brute** (pas de converter unifié). Ref-counting identique.
+  public subscribeAccountInfo(handler: StreamHandler, account?: string): Unsubscribe {
+    return this.subscribe((ws) => ws.subscribeAccountInfo(handler, account));
+  }
+  public subscribeAccountMargin(handler: StreamHandler, account?: string): Unsubscribe {
+    return this.subscribe((ws) => ws.subscribeAccountMargin(handler, account));
+  }
+  public subscribeAccountLeverage(handler: StreamHandler, account?: string): Unsubscribe {
+    return this.subscribe((ws) => ws.subscribeAccountLeverage(handler, account));
+  }
+  public subscribeAccountTransfers(handler: StreamHandler, account?: string): Unsubscribe {
+    return this.subscribe((ws) => ws.subscribeAccountTransfers(handler, account));
+  }
+  public subscribeAccountTwapOrders(handler: StreamHandler, account?: string): Unsubscribe {
+    return this.subscribe((ws) => ws.subscribeAccountTwapOrders(handler, account));
+  }
+
+  /** Action de trading **one-shot** via WS : ouvre le socket (lazy), envoie, libère après réponse. */
+  private async action<T>(run: (ws: WsClient) => Promise<T>): Promise<T> {
+    const ws = this.wsClient();
+    try {
+      return await run(ws);
+    } finally {
+      this.release();
+    }
+  }
+  public createLimitOrder(params: CreateLimitOrderParams): Promise<JsonValue> {
+    return this.action((ws) => ws.createLimitOrder(params));
+  }
+  public createMarketOrder(params: CreateMarketOrderParams): Promise<JsonValue> {
+    return this.action((ws) => ws.createMarketOrder(params));
+  }
+  public cancelOrder(params: CancelOrderRef): Promise<JsonValue> {
+    return this.action((ws) => ws.cancelOrder(params));
+  }
+  public cancelAllOrders(params: CancelAllOrdersRef): Promise<JsonValue> {
+    return this.action((ws) => ws.cancelAllOrders(params));
+  }
+  public editOrder(params: EditOrderRef): Promise<JsonValue> {
+    return this.action((ws) => ws.editOrder(params));
+  }
+  public batchOrders(actions: BatchAction[]): Promise<JsonValue> {
+    return this.action((ws) => ws.batchOrders(actions));
   }
 }

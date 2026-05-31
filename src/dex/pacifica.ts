@@ -15,6 +15,7 @@ import type {
   UserTrade,
 } from '../common/types';
 import { keyTypeOf, signEd25519, solanaAddress } from '../common/utils';
+import type { StreamHandler } from '../common/ws';
 import { addIsolatedMargin } from '../rest/account/add-isolated-margin';
 // ── Fonctions surplus Pacifica (exposées via interfaces complémentaires) ──
 import { createApiConfigKey } from '../rest/account/create-api-config-key';
@@ -127,6 +128,7 @@ import type {
   IAgents,
   IApiKeys,
   ILending,
+  INativeRealtime,
   IPortfolio,
   ISpot,
   ISubAccountsAdmin,
@@ -386,6 +388,45 @@ class PacificaRealtime implements IRealtime, IRealtimePositions {
   }
   public subscribePositions(cb: (p: Position) => void) {
     return this.ws.subscribePositions({}, cb);
+  }
+}
+
+/** Scope **temps réel natif** : flux compte bruts + trading via WS — {@link INativeRealtime}. */
+class PacificaNativeWs implements INativeRealtime {
+  constructor(private readonly ws: UnifiedWsClient) {}
+
+  public subscribeAccountInfo(handler: StreamHandler, account?: string) {
+    return this.ws.subscribeAccountInfo(handler, account);
+  }
+  public subscribeAccountMargin(handler: StreamHandler, account?: string) {
+    return this.ws.subscribeAccountMargin(handler, account);
+  }
+  public subscribeAccountLeverage(handler: StreamHandler, account?: string) {
+    return this.ws.subscribeAccountLeverage(handler, account);
+  }
+  public subscribeAccountTransfers(handler: StreamHandler, account?: string) {
+    return this.ws.subscribeAccountTransfers(handler, account);
+  }
+  public subscribeAccountTwapOrders(handler: StreamHandler, account?: string) {
+    return this.ws.subscribeAccountTwapOrders(handler, account);
+  }
+  public placeLimit(params: Parameters<UnifiedWsClient['createLimitOrder']>[0]) {
+    return this.ws.createLimitOrder(params);
+  }
+  public placeMarket(params: Parameters<UnifiedWsClient['createMarketOrder']>[0]) {
+    return this.ws.createMarketOrder(params);
+  }
+  public cancel(params: Parameters<UnifiedWsClient['cancelOrder']>[0]) {
+    return this.ws.cancelOrder(params);
+  }
+  public cancelAll(params: Parameters<UnifiedWsClient['cancelAllOrders']>[0]) {
+    return this.ws.cancelAllOrders(params);
+  }
+  public edit(params: Parameters<UnifiedWsClient['editOrder']>[0]) {
+    return this.ws.editOrder(params);
+  }
+  public batch(actions: Parameters<UnifiedWsClient['batchOrders']>[0]) {
+    return this.ws.batchOrders(actions);
   }
 }
 
@@ -668,6 +709,8 @@ export class Pacifica {
       subAccounts: (label?: string) => new PacificaSubAccounts(c, r(label)),
       /** Ordres avancés (stop, TP/SL, batch, TWAP, marché annexe) — `IAdvancedOrders`. */
       advancedOrders: (label?: string) => new PacificaAdvancedOrders(c, r(label)),
+      /** Temps réel natif : flux compte bruts + trading via WS — `INativeRealtime`. */
+      ws: (label?: string) => new PacificaNativeWs(this.unifiedWs(r(label))),
     };
   }
 

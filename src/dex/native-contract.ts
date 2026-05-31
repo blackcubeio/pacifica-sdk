@@ -6,6 +6,16 @@
 // `native.advancedOrders()`. Noms d'interfaces (`IVaults`, `IAgents`…) **identiques** aux autres
 // SDK ; seuls les types de params diffèrent. Les types d'I/O sont dérivés des fonctions REST.
 
+import type {
+  BatchAction,
+  CancelAllOrdersRef,
+  CancelOrderRef,
+  CreateLimitOrderParams,
+  CreateMarketOrderParams,
+  EditOrderRef,
+} from '../common/native';
+import type { JsonValue } from '../common/types';
+import type { StreamHandler, Unsubscribe } from '../common/ws';
 import type { createApiConfigKey } from '../rest/account/create-api-config-key';
 import type { createSubaccount } from '../rest/account/create-subaccount';
 import type { getAccountLoan } from '../rest/account/get-account-loan';
@@ -107,6 +117,21 @@ export type CreateStopOrder = Args<typeof createStopOrder>;
 export type CancelStopOrder = Args<typeof cancelStopOrder>;
 export type CreatePositionTpsl = Args<typeof createPositionTpsl>;
 export type PlaceBatch = Args<typeof batchOrders>;
+
+/** Temps réel **natif** : flux compte bruts non couverts par `ws()` + trading via WebSocket. */
+export interface INativeRealtime {
+  subscribeAccountInfo(handler: StreamHandler, account?: string): Unsubscribe;
+  subscribeAccountMargin(handler: StreamHandler, account?: string): Unsubscribe;
+  subscribeAccountLeverage(handler: StreamHandler, account?: string): Unsubscribe;
+  subscribeAccountTransfers(handler: StreamHandler, account?: string): Unsubscribe;
+  subscribeAccountTwapOrders(handler: StreamHandler, account?: string): Unsubscribe;
+  placeLimit(params: CreateLimitOrderParams): Promise<JsonValue>;
+  placeMarket(params: CreateMarketOrderParams): Promise<JsonValue>;
+  cancel(params: CancelOrderRef): Promise<JsonValue>;
+  cancelAll(params: CancelAllOrdersRef): Promise<JsonValue>;
+  edit(params: EditOrderRef): Promise<JsonValue>;
+  batch(actions: BatchAction[]): Promise<JsonValue>;
+}
 
 /** Gestion des **vaults** (Lake). */
 export interface IVaults {

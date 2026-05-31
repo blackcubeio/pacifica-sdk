@@ -152,3 +152,23 @@ await dex.native.advancedOrders().placeBatch([{ /* BatchAction */ }]);
 await dex.native.advancedOrders().getFeeLevels();
 await dex.native.advancedOrders().getMarkPriceCandleData({ symbol: 'BTC', interval: '1h' });
 ```
+
+## `native.ws()` — `INativeRealtime` (temps réel natif : flux compte bruts + trading via WS)
+*(charge **native brute** non couverte par le scope unifié `ws()` ; un seul socket ref-compté.)*
+| Méthode | Entrée | Sortie |
+|---|---|---|
+| `subscribeAccountInfo(cb, account?)` | handler brut | `Unsubscribe` |
+| `subscribeAccountMargin(cb, account?)` | handler brut | `Unsubscribe` |
+| `subscribeAccountLeverage(cb, account?)` | handler brut | `Unsubscribe` |
+| `subscribeAccountTransfers(cb, account?)` | handler brut | `Unsubscribe` |
+| `subscribeAccountTwapOrders(cb, account?)` | handler brut | `Unsubscribe` |
+| `placeLimit(p)` / `placeMarket(p)` | `Create…OrderParams` | `Promise<JsonValue>` |
+| `cancel(p)` / `cancelAll(p)` / `edit(p)` | `…Ref` | `Promise<JsonValue>` |
+| `batch(actions)` | `BatchAction[]` | `Promise<JsonValue>` |
+
+```ts
+const off = dex.native.ws().subscribeAccountTransfers((msg) => console.log('transfer', msg));
+await dex.native.ws().placeLimit({ symbol: 'BTC', side: 'bid', price: '30000', amount: '0.001', tif: 'ALO' });
+await dex.native.ws().cancelAll({ symbol: 'BTC' });
+off();
+```
