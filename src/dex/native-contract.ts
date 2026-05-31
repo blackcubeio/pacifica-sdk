@@ -11,16 +11,11 @@ import type {
   AccountSettings,
   BalanceHistoryEntry,
   BatchAction,
-  CancelAllOrdersRef,
-  CancelOrderRef,
-  CreateLimitOrderParams,
-  CreateMarketOrderParams,
-  EditOrderRef,
   FeeLevel,
   PortfolioPoint,
   TriggerPriceType,
 } from '../common/native';
-import type { Candle, JsonValue, Order, Side, UserTrade } from '../common/types';
+import type { Candle, Order, Side, UserTrade } from '../common/types';
 import type { StreamHandler, Unsubscribe } from '../common/ws';
 import type { Twap } from '../converters/twap';
 import type { createApiConfigKey } from '../rest/account/create-api-config-key';
@@ -224,6 +219,55 @@ export interface PortfolioParams {
   limit?: number;
 }
 
+/** Accusé d'une action de trading WS (sortie typée ; la réponse brute du WS est dans `xtras`). */
+export interface WsAck {
+  ok: boolean;
+  xtras: Record<string, unknown>;
+}
+/** Entrée — placement limite via WS (vocabulaire commun). */
+export interface WsPlaceLimitParams {
+  name: string;
+  side: Side;
+  size: string;
+  price: string;
+  tif?: 'gtc' | 'ioc' | 'fok' | 'alo';
+  reduceOnly?: boolean;
+  clientId?: string;
+}
+/** Entrée — placement marché via WS (vocabulaire commun). */
+export interface WsPlaceMarketParams {
+  name: string;
+  side: Side;
+  size: string;
+  slippagePercent: string;
+  reduceOnly?: boolean;
+  clientId?: string;
+}
+/** Entrée — annulation via WS. */
+export interface WsCancelParams {
+  name: string;
+  id?: string;
+  clientId?: string;
+}
+/** Entrée — édition via WS. */
+export interface WsEditParams {
+  name: string;
+  id?: string;
+  clientId?: string;
+  size: string;
+  price: string;
+}
+/** Entrée — annulation globale via WS (tous symboles). */
+export interface WsCancelAllParams {
+  excludeReduceOnly?: boolean;
+}
+/** Une action d'un lot WS (vocabulaire commun). */
+export type WsBatchAction =
+  | { kind: 'placeLimit'; order: WsPlaceLimitParams }
+  | { kind: 'placeMarket'; order: WsPlaceMarketParams }
+  | { kind: 'cancel'; ref: WsCancelParams }
+  | { kind: 'edit'; edit: WsEditParams };
+
 /** Temps réel **natif** : flux compte bruts non couverts par `ws()` + trading via WebSocket. */
 export interface INativeRealtime {
   subscribeAccountInfo(handler: StreamHandler, account?: string): Unsubscribe;
@@ -231,12 +275,13 @@ export interface INativeRealtime {
   subscribeAccountLeverage(handler: StreamHandler, account?: string): Unsubscribe;
   subscribeAccountTransfers(handler: StreamHandler, account?: string): Unsubscribe;
   subscribeAccountTwapOrders(handler: StreamHandler, account?: string): Unsubscribe;
-  placeLimit(params: CreateLimitOrderParams): Promise<JsonValue>;
-  placeMarket(params: CreateMarketOrderParams): Promise<JsonValue>;
-  cancel(params: CancelOrderRef): Promise<JsonValue>;
-  cancelAll(params: CancelAllOrdersRef): Promise<JsonValue>;
-  edit(params: EditOrderRef): Promise<JsonValue>;
-  batch(actions: BatchAction[]): Promise<JsonValue>;
+  // trading via WS — entrées vocabulaire commun, sortie WsAck typée
+  placeLimit(params: WsPlaceLimitParams): Promise<WsAck>;
+  placeMarket(params: WsPlaceMarketParams): Promise<WsAck>;
+  cancel(params: WsCancelParams): Promise<WsAck>;
+  cancelAll(params?: WsCancelAllParams): Promise<WsAck>;
+  edit(params: WsEditParams): Promise<WsAck>;
+  batch(actions: WsBatchAction[]): Promise<WsAck>;
 }
 
 /** Gestion des **vaults** (Lake). Verbes nus (`create`/`deposit`/`withdraw`) ; lecture get-préfixée. */

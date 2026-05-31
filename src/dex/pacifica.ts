@@ -3,23 +3,32 @@ import {
   type AccountFundingEntry,
   type AccountSettings,
   type BalanceHistoryEntry,
+  type BatchAction,
+  BatchActionType,
+  type CancelOrderRef,
   type CandleInterval,
+  type CreateLimitOrderParams,
+  type CreateMarketOrderParams,
+  type EditOrderRef,
   type FeeLevel,
   OrderSide,
   type PortfolioPoint,
   type PortfolioTimeRange,
   type StopConfig,
 } from '../common/native';
+import { TimeInForce } from '../common/types';
 import type {
   Balance,
   Candle,
   FundingRate,
+  JsonValue,
   MarketKind,
   Order,
   OrderBook,
   Pair,
   Position,
   Price,
+  Side,
   Signer,
   SubAccount,
   Trade,
@@ -164,6 +173,13 @@ import type {
   TriggerConfig,
   TwapByIdParams,
   UpdateSettingsParams,
+  WsAck,
+  WsBatchAction,
+  WsCancelAllParams,
+  WsCancelParams,
+  WsEditParams,
+  WsPlaceLimitParams,
+  WsPlaceMarketParams,
 } from './native-contract';
 
 /** Options de construction d'un {@link Pacifica}. */
@@ -423,6 +439,62 @@ class PacificaRealtime implements IRealtime, IRealtimePositions {
 }
 
 /** Scope **temps réel natif** : flux compte bruts + trading via WS — {@link INativeRealtime}. */
+const WS_TIF: Record<'gtc' | 'ioc' | 'fok' | 'alo', TimeInForce> = {
+  gtc: TimeInForce.Gtc,
+  ioc: TimeInForce.Ioc,
+  fok: TimeInForce.Fok,
+  alo: TimeInForce.Alo,
+};
+const wsSide = (side: Side): OrderSide => (side === 'buy' ? OrderSide.Bid : OrderSide.Ask);
+
+/** Réponse WS brute → accusé typé `WsAck` (`ok` dérivé, réponse complète en `xtras`). */
+function toAck(res: JsonValue): WsAck {
+  const obj = res !== null && typeof res === 'object' ? (res as Record<string, unknown>) : {};
+  const ok = !('error' in obj) && obj.success !== false;
+  return { ok, xtras: { response: res } };
+}
+const toLimitNative = (p: WsPlaceLimitParams): CreateLimitOrderParams => ({
+  symbol: p.name,
+  side: wsSide(p.side),
+  amount: p.size,
+  price: p.price,
+  ...(p.tif !== undefined ? { tif: WS_TIF[p.tif] } : {}),
+  ...(p.reduceOnly !== undefined ? { reduceOnly: p.reduceOnly } : {}),
+  ...(p.clientId !== undefined ? { clientOrderId: p.clientId } : {}),
+});
+const toMarketNative = (p: WsPlaceMarketParams): CreateMarketOrderParams => ({
+  symbol: p.name,
+  side: wsSide(p.side),
+  amount: p.size,
+  slippagePercent: p.slippagePercent,
+  ...(p.reduceOnly !== undefined ? { reduceOnly: p.reduceOnly } : {}),
+  ...(p.clientId !== undefined ? { clientOrderId: p.clientId } : {}),
+});
+const toCancelNative = (p: WsCancelParams): CancelOrderRef => ({
+  symbol: p.name,
+  ...(p.id !== undefined ? { orderId: Number(p.id) } : {}),
+  ...(p.clientId !== undefined ? { clientOrderId: p.clientId } : {}),
+});
+const toEditNative = (p: WsEditParams): EditOrderRef => ({
+  symbol: p.name,
+  amount: p.size,
+  price: p.price,
+  ...(p.id !== undefined ? { orderId: Number(p.id) } : {}),
+  ...(p.clientId !== undefined ? { clientOrderId: p.clientId } : {}),
+});
+function toBatchNative(a: WsBatchAction): BatchAction {
+  switch (a.kind) {
+    case 'placeLimit':
+      return { type: BatchActionType.Create, params: toLimitNative(a.order) };
+    case 'placeMarket':
+      return { type: BatchActionType.CreateMarket, params: toMarketNative(a.order) };
+    case 'cancel':
+      return { type: BatchActionType.Cancel, params: toCancelNative(a.ref) };
+    case 'edit':
+      return { type: BatchActionType.Edit, params: toEditNative(a.edit) };
+  }
+}
+
 class PacificaNativeWs implements INativeRealtime {
   constructor(private readonly ws: UnifiedWsClient) {}
 
@@ -441,23 +513,25 @@ class PacificaNativeWs implements INativeRealtime {
   public subscribeAccountTwapOrders(handler: StreamHandler, account?: string) {
     return this.ws.subscribeAccountTwapOrders(handler, account);
   }
-  public placeLimit(params: Parameters<UnifiedWsClient['createLimitOrder']>[0]) {
-    return this.ws.createLimitOrder(params);
+  public placeLimit(params: WsPlaceLimitParams): Promise<WsAck> {
+    return this.ws.createLimitOrder(toLimitNative(params)).then(toAck);
   }
-  public placeMarket(params: Parameters<UnifiedWsClient['createMarketOrder']>[0]) {
-    return this.ws.createMarketOrder(params);
+  public placeMarket(params: WsPlaceMarketParams): Promise<WsAck> {
+    return this.ws.createMarketOrder(toMarketNative(params)).then(toAck);
   }
-  public cancel(params: Parameters<UnifiedWsClient['cancelOrder']>[0]) {
-    return this.ws.cancelOrder(params);
+  public cancel(params: WsCancelParams): Promise<WsAck> {
+    return this.ws.cancelOrder(toCancelNative(params)).then(toAck);
   }
-  public cancelAll(params: Parameters<UnifiedWsClient['cancelAllOrders']>[0]) {
-    return this.ws.cancelAllOrders(params);
+  public cancelAll(params?: WsCancelAllParams): Promise<WsAck> {
+    return this.ws
+      .cancelAllOrders({ allSymbols: true, excludeReduceOnly: params?.excludeReduceOnly ?? false })
+      .then(toAck);
   }
-  public edit(params: Parameters<UnifiedWsClient['editOrder']>[0]) {
-    return this.ws.editOrder(params);
+  public edit(params: WsEditParams): Promise<WsAck> {
+    return this.ws.editOrder(toEditNative(params)).then(toAck);
   }
-  public batch(actions: Parameters<UnifiedWsClient['batchOrders']>[0]) {
-    return this.ws.batchOrders(actions);
+  public batch(actions: WsBatchAction[]): Promise<WsAck> {
+    return this.ws.batchOrders(actions.map(toBatchNative)).then(toAck);
   }
 }
 

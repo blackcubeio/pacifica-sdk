@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { OrderSide, TimeInForce } from '../src/common/types';
 import { Pacifica } from '../src/dex/pacifica';
 import { readEnv } from './helpers';
 
@@ -50,15 +49,16 @@ describe.skipIf(!ready)('Pacifica native — capacités signées (testnet réel)
   it('native.ws() : trading WS réel (placeLimit ALO loin → cancelAll)', async () => {
     const ref = Number((await dex.perp().getPrices()).find((p) => p.name === 'BTC')?.mid ?? 0);
     expect(ref).toBeGreaterThan(0);
-    const res = await dex.native.ws().placeLimit({
-      symbol: 'BTC',
-      side: OrderSide.Bid,
+    // Entrées vocabulaire commun (name/side:'buy'/size/price) ; sortie WsAck typée.
+    const ack = await dex.native.ws().placeLimit({
+      name: 'BTC',
+      side: 'buy',
       price: (ref * 0.5).toFixed(0),
-      amount: '0.0001',
-      tif: TimeInForce.Alo,
+      size: '0.0001',
+      tif: 'alo',
     });
-    console.log('ws placeLimit:', JSON.stringify(res).slice(0, 120));
-    expect(res).toBeDefined();
-    await dex.native.ws().cancelAll({ allSymbols: true, excludeReduceOnly: false });
+    console.log('ws placeLimit ack:', JSON.stringify(ack).slice(0, 120));
+    expect(typeof ack.ok).toBe('boolean');
+    await dex.native.ws().cancelAll();
   }, 30_000);
 });

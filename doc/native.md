@@ -195,13 +195,20 @@ interface Twap { name: string; id: string; clientId: string | null; side: 'buy' 
 | `subscribeAccountLeverage(cb, account?)` | handler brut | `Unsubscribe` |
 | `subscribeAccountTransfers(cb, account?)` | handler brut | `Unsubscribe` |
 | `subscribeAccountTwapOrders(cb, account?)` | handler brut | `Unsubscribe` |
-| `placeLimit(p)` / `placeMarket(p)` | `Create…OrderParams` | `Promise<JsonValue>` |
-| `cancel(p)` / `cancelAll(p)` / `edit(p)` | `…Ref` | `Promise<JsonValue>` |
-| `batch(actions)` | `BatchAction[]` | `Promise<JsonValue>` |
+| `placeLimit(p)` | `WsPlaceLimitParams` `{ name; side:'buy'|'sell'; size; price; tif?; reduceOnly?; clientId? }` | **`Promise<WsAck>`** |
+| `placeMarket(p)` | `WsPlaceMarketParams` `{ name; side; size; slippagePercent; reduceOnly?; clientId? }` | **`Promise<WsAck>`** |
+| `cancel(p)` | `WsCancelParams` `{ name; id?; clientId? }` | **`Promise<WsAck>`** |
+| `cancelAll(p?)` | `WsCancelAllParams` `{ excludeReduceOnly? }` (tous symboles) | **`Promise<WsAck>`** |
+| `edit(p)` | `WsEditParams` `{ name; id?; clientId?; size; price }` | **`Promise<WsAck>`** |
+| `batch(actions)` | `WsBatchAction[]` (`{ kind:'placeLimit'|'placeMarket'|'cancel'|'edit'; … }`) | **`Promise<WsAck>`** |
+
+> Entrées en **vocabulaire commun** (`name`/`side:'buy'|'sell'`/`size`/`clientId`), sortie typée
+> `WsAck { ok; xtras }` (réponse WS brute dans `xtras`) — plus de `JsonValue` exposé.
 
 ```ts
 const off = dex.native.ws().subscribeAccountTransfers((msg) => console.log('transfer', msg));
-await dex.native.ws().placeLimit({ symbol: 'BTC', side: 'bid', price: '30000', amount: '0.001', tif: 'ALO' });
-await dex.native.ws().cancelAll({ symbol: 'BTC' });
+const ack = await dex.native.ws().placeLimit({ name: 'BTC', side: 'buy', price: '30000', size: '0.001', tif: 'alo' });
+if (ack.ok) console.log('placé');
+await dex.native.ws().cancelAll();
 off();
 ```
