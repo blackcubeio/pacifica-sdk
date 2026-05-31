@@ -126,10 +126,11 @@ import type {
   WithdrawParams,
 } from './contract';
 import type {
-  IAdvancedOrders,
   IAgents,
   IApiKeys,
   ILending,
+  INativeMarket,
+  INativeOrders,
   INativeRealtime,
   IPortfolio,
   ISpot,
@@ -155,6 +156,8 @@ class PacificaMarket
     IProductAccount,
     IOrderHistory,
     ITrading,
+    INativeOrders,
+    INativeMarket,
     IMarginMode,
     IIsolatedMargin
 {
@@ -220,7 +223,7 @@ class PacificaMarket
   public getPositions(query?: SymbolParams): Promise<Position[]> {
     return getPositions(this.client, { user: this.user(), name: query?.name }, this.label);
   }
-  public getOpenOrders(query?: SymbolParams): Promise<Order[]> {
+  public getOpens(query?: SymbolParams): Promise<Order[]> {
     return getOpenOrders(this.client, { user: this.user(), name: query?.name }, this.label);
   }
   public getUserTrades(query?: SymbolParams): Promise<UserTrade[]> {
@@ -231,14 +234,14 @@ class PacificaMarket
   }
 
   // ── IOrderHistory ──
-  public getOrderHistory(query?: SymbolParams): Promise<Order[]> {
+  public getHistory(query?: SymbolParams): Promise<Order[]> {
     return getOrderHistory(this.client, { user: this.user(), name: query?.name }, this.label);
   }
 
   // ── ITrading ──
-  public placeOrder(input: PlaceOrderParams): Promise<Order> {
+  public place(input: PlaceOrderParams): Promise<Order> {
     if (input.type !== 'limit' && input.type !== 'market') {
-      throw new Error(`placeOrder (Pacifica) : type "${input.type}" non supporté (limit/market).`);
+      throw new Error(`place (Pacifica) : type "${input.type}" non supporté (limit/market).`);
     }
     return placeOrder(
       this.client,
@@ -255,19 +258,19 @@ class PacificaMarket
       this.signed(),
     );
   }
-  public cancelOrder(input: CancelOrderParams): Promise<void> {
+  public cancel(input: CancelOrderParams): Promise<void> {
     return cancelOrder(
       this.client,
       { name: input.name, id: input.id, clientId: input.clientId },
       this.signed(),
     );
   }
-  public cancelAllOrders(input: CancelAllParams): Promise<{ cancelled: number | null }> {
+  public cancelAll(input: CancelAllParams): Promise<{ cancelled: number | null }> {
     return cancelAllOrders(this.client, { name: input.name }, this.signed());
   }
-  public editOrder(input: EditOrderParams): Promise<{ name: string; id: string }> {
+  public edit(input: EditOrderParams): Promise<{ name: string; id: string }> {
     if (input.price === undefined) {
-      throw new Error('editOrder (Pacifica) : `price` est requis.');
+      throw new Error('edit (Pacifica) : `price` est requis.');
     }
     return editOrder(
       this.client,
@@ -305,6 +308,40 @@ class PacificaMarket
       { symbol: input.name, amount: input.amount },
       this.signed(),
     );
+  }
+
+  // ── INativeOrders : surplus ordres Pacifica porté par le scope marché ──
+  public placeBatch(actions: Parameters<typeof batchOrders>[1]) {
+    return batchOrders(this.client, actions, this.signed());
+  }
+  public placeStop(params: Parameters<typeof createStopOrder>[1]) {
+    return createStopOrder(this.client, params, this.signed());
+  }
+  public cancelStop(params: Parameters<typeof cancelStopOrder>[1]) {
+    return cancelStopOrder(this.client, params, this.signed());
+  }
+  public placeTpsl(params: Parameters<typeof createPositionTpsl>[1]) {
+    return createPositionTpsl(this.client, params, this.signed());
+  }
+  public getById(params: Parameters<typeof getOrderHistoryById>[1]) {
+    return getOrderHistoryById(this.client, params, this.label);
+  }
+  public getTwaps(params: Parameters<typeof getOpenTwapOrder>[1]) {
+    return getOpenTwapOrder(this.client, params, this.label);
+  }
+  public getTwapHistory(params: Parameters<typeof getTwapOrderHistory>[1]) {
+    return getTwapOrderHistory(this.client, params, this.label);
+  }
+  public getTwapHistoryById(params: Parameters<typeof getTwapOrderHistoryById>[1]) {
+    return getTwapOrderHistoryById(this.client, params, this.label);
+  }
+
+  // ── INativeMarket : lectures marché supplémentaires Pacifica ──
+  public getFeeLevels() {
+    return getFeeLevels(this.client, this.label);
+  }
+  public getMarkPriceCandles(params: Parameters<typeof getMarkPriceCandleData>[1]) {
+    return getMarkPriceCandleData(this.client, params, this.label);
   }
 }
 
@@ -636,40 +673,6 @@ class PacificaTransfers extends PacificaScope implements ITransfers {
   }
 }
 
-/** Scope **advancedOrders** (stop / TP-SL / batch / TWAP + marché annexe) — {@link IAdvancedOrders}. */
-class PacificaAdvancedOrders extends PacificaScope implements IAdvancedOrders {
-  public createStopOrder(params: Parameters<typeof createStopOrder>[1]) {
-    return createStopOrder(this.client, params, this.signed());
-  }
-  public cancelStopOrder(params: Parameters<typeof cancelStopOrder>[1]) {
-    return cancelStopOrder(this.client, params, this.signed());
-  }
-  public createPositionTpsl(params: Parameters<typeof createPositionTpsl>[1]) {
-    return createPositionTpsl(this.client, params, this.signed());
-  }
-  public placeBatch(actions: Parameters<typeof batchOrders>[1]) {
-    return batchOrders(this.client, actions, this.signed());
-  }
-  public getOrderHistoryById(params: Parameters<typeof getOrderHistoryById>[1]) {
-    return getOrderHistoryById(this.client, params, this.label);
-  }
-  public getOpenTwapOrder(params: Parameters<typeof getOpenTwapOrder>[1]) {
-    return getOpenTwapOrder(this.client, params, this.label);
-  }
-  public getTwapOrderHistory(params: Parameters<typeof getTwapOrderHistory>[1]) {
-    return getTwapOrderHistory(this.client, params, this.label);
-  }
-  public getTwapOrderHistoryById(params: Parameters<typeof getTwapOrderHistoryById>[1]) {
-    return getTwapOrderHistoryById(this.client, params, this.label);
-  }
-  public getFeeLevels() {
-    return getFeeLevels(this.client, this.label);
-  }
-  public getMarkPriceCandleData(params: Parameters<typeof getMarkPriceCandleData>[1]) {
-    return getMarkPriceCandleData(this.client, params, this.label);
-  }
-}
-
 /**
  * Façade **Pacifica** : `const dex = new Pacifica({ deskA: signer }, { default: 'deskA' })`, puis
  * `dex.perp(label?)` (marché — Pacifica est perp-only), `dex.account(label?)` (compte),
@@ -743,8 +746,6 @@ export class Pacifica {
       portfolio: (label?: string) => new PacificaPortfolio(c, r(label)),
       /** Création / transferts de sous-comptes — `ISubAccountsAdmin`. */
       subAccounts: (label?: string) => new PacificaSubAccounts(c, r(label)),
-      /** Ordres avancés (stop, TP/SL, batch, TWAP, marché annexe) — `IAdvancedOrders`. */
-      advancedOrders: (label?: string) => new PacificaAdvancedOrders(c, r(label)),
       /** Temps réel natif : flux compte bruts + trading via WS — `INativeRealtime`. */
       ws: (label?: string) => new PacificaNativeWs(this.unifiedWs(r(label))),
     };

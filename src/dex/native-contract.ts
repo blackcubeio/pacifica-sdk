@@ -216,24 +216,27 @@ export interface ISubAccountsAdmin {
   transfer(params: TransferSubAccount): ReturnType<typeof transferSubaccountFund>;
 }
 
-/** Ordres avancés : stop, TP/SL de position, batch, TWAP, et données marché annexes. */
-export interface IAdvancedOrders {
-  createStopOrder(params: CreateStopOrder): ReturnType<typeof createStopOrder>;
-  cancelStopOrder(params: CancelStopOrder): ReturnType<typeof cancelStopOrder>;
-  createPositionTpsl(params: CreatePositionTpsl): ReturnType<typeof createPositionTpsl>;
+/**
+ * Surplus **ordres** Pacifica, porté par le scope marché (`perp()`) : stop, TP/SL de position,
+ * batch, lecture par id, TWAP. Verbes alignés inter-SDK (`placeStop`/`placeTpsl`/`getById`/`getTwaps`…).
+ */
+export interface INativeOrders {
   placeBatch(actions: PlaceBatch): ReturnType<typeof batchOrders>;
-  getOrderHistoryById(
-    params: Args<typeof getOrderHistoryById>,
-  ): ReturnType<typeof getOrderHistoryById>;
-  getOpenTwapOrder(params: Args<typeof getOpenTwapOrder>): ReturnType<typeof getOpenTwapOrder>;
-  getTwapOrderHistory(
-    params: Args<typeof getTwapOrderHistory>,
-  ): ReturnType<typeof getTwapOrderHistory>;
-  getTwapOrderHistoryById(
+  placeStop(params: CreateStopOrder): ReturnType<typeof createStopOrder>;
+  cancelStop(params: CancelStopOrder): ReturnType<typeof cancelStopOrder>;
+  placeTpsl(params: CreatePositionTpsl): ReturnType<typeof createPositionTpsl>;
+  getById(params: Args<typeof getOrderHistoryById>): ReturnType<typeof getOrderHistoryById>;
+  getTwaps(params: Args<typeof getOpenTwapOrder>): ReturnType<typeof getOpenTwapOrder>;
+  getTwapHistory(params: Args<typeof getTwapOrderHistory>): ReturnType<typeof getTwapOrderHistory>;
+  getTwapHistoryById(
     params: Args<typeof getTwapOrderHistoryById>,
   ): ReturnType<typeof getTwapOrderHistoryById>;
+}
+
+/** Lectures **marché** supplémentaires Pacifica (publiques), portées par le scope marché. */
+export interface INativeMarket {
   getFeeLevels(): ReturnType<typeof getFeeLevels>;
-  getMarkPriceCandleData(
+  getMarkPriceCandles(
     params: Args<typeof getMarkPriceCandleData>,
   ): ReturnType<typeof getMarkPriceCandleData>;
 }

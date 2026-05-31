@@ -57,7 +57,7 @@ describe('Pacifica.ws() user-data (testnet réel)', () => {
     try {
       await new Promise((r) => setTimeout(r, 1500));
       const { price, amount } = await buildFarBtcLimit(ctx);
-      await hl.perp().placeOrder({
+      await hl.perp().place({
         name: 'BTC',
         side: 'buy',
         type: 'limit',
@@ -81,7 +81,7 @@ describe('Pacifica.ws() user-data (testnet réel)', () => {
     } finally {
       await hl
         .perp()
-        .cancelOrder({ name: 'BTC', clientId: clientOrderId })
+        .cancel({ name: 'BTC', clientId: clientOrderId })
         .catch(() => {});
       off();
     }
@@ -96,7 +96,7 @@ describe('Pacifica.ws() user-data (testnet réel)', () => {
     const amount = await smallBtcAmount();
     try {
       await new Promise((r) => setTimeout(r, 1500));
-      await hl.perp().placeOrder({
+      await hl.perp().place({
         name: 'BTC',
         side: 'buy',
         type: 'market',
@@ -119,7 +119,7 @@ describe('Pacifica.ws() user-data (testnet réel)', () => {
     } finally {
       await hl
         .perp()
-        .placeOrder({
+        .place({
           name: 'BTC',
           side: 'sell',
           type: 'market',

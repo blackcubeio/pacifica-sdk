@@ -133,24 +133,29 @@ await dex.native.subAccounts().create({ /* CreateSubaccountParams */ });
 await dex.native.subAccounts().transfer({ subaccount: '…', amount: '100', direction: 'in' });
 ```
 
-## `native.advancedOrders()` — `IAdvancedOrders` (stop, TP/SL, batch, TWAP, marché annexe)
+## Surplus ordres + marché — portés par `perp()`
+
+> Pas de scope `native` dédié : le surplus **ordres** (`INativeOrders`) et les **lectures marché**
+> supplémentaires (`INativeMarket`) sont exposés sur le scope marché `dex.perp()` (Pacifica est
+> perp-only), aux côtés des verbes communs (`place`/`cancel`/`edit`…).
+
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `createStopOrder(p)` | `CreateStopOrder` | `Promise<CodeMsg>` |
-| `cancelStopOrder(p)` | `CancelStopOrder` | `Promise<CodeMsg>` |
-| `createPositionTpsl(p)` | `CreatePositionTpsl` | `Promise<CodeMsg>` |
+| `placeStop(p)` | `CreateStopOrder` | `Promise<CodeMsg>` |
+| `cancelStop(p)` | `CancelStopOrder` | `Promise<CodeMsg>` |
+| `placeTpsl(p)` | `CreatePositionTpsl` | `Promise<CodeMsg>` |
 | `placeBatch(actions)` | `BatchAction[]` | `Promise<CodeMsg>` (aligné HL/Aster) |
-| `getOrderHistoryById(q)` | `OrderHistoryByIdQuery` | `Promise<Order>` |
-| `getOpenTwapOrder(q)` / `getTwapOrderHistory(q)` / `getTwapOrderHistoryById(q)` | `…Query` | `Promise<…>` |
-| `getFeeLevels()` | — | `Promise<FeeLevel[]>` |
-| `getMarkPriceCandleData(q)` | `CandleQuery` | `Promise<Candle[]>` |
+| `getById(q)` | `OrderHistoryByIdQuery` | `Promise<Order>` |
+| `getTwaps(q)` / `getTwapHistory(q)` / `getTwapHistoryById(q)` | `…Query` | `Promise<…>` |
+| `getFeeLevels()` | — | `Promise<FeeLevel[]>` (marché) |
+| `getMarkPriceCandles(q)` | `CandleQuery` | `Promise<Candle[]>` (marché) |
 
 ```ts
-await dex.native.advancedOrders().createStopOrder({ symbol: 'BTC', side: 'sell', stopPrice: '50000', size: '0.01' });
-await dex.native.advancedOrders().createPositionTpsl({ symbol: 'BTC', takeProfit: '70000', stopLoss: '50000' });
-await dex.native.advancedOrders().placeBatch([{ /* BatchAction */ }]);
-await dex.native.advancedOrders().getFeeLevels();
-await dex.native.advancedOrders().getMarkPriceCandleData({ symbol: 'BTC', interval: '1h' });
+await dex.perp().placeStop({ symbol: 'BTC', side: 'sell', stopPrice: '50000', size: '0.01' });
+await dex.perp().placeTpsl({ symbol: 'BTC', takeProfit: '70000', stopLoss: '50000' });
+await dex.perp().placeBatch([{ /* BatchAction */ }]);
+await dex.perp().getFeeLevels();
+await dex.perp().getMarkPriceCandles({ symbol: 'BTC', interval: '1h' });
 ```
 
 ## `native.ws()` — `INativeRealtime` (temps réel natif : flux compte bruts + trading via WS)
