@@ -5,8 +5,8 @@ import { readEnv } from './helpers';
 
 // Validation des capacités **signées** du namespace `native` sur **testnet réel** (politique : on
 // valide toujours les capacités signées). On exerce des **lectures signées** non destructrices
-// (`agents().list()`, `apiKeys().list()`) : elles prouvent le chemin d'authentification/signature
-// des scopes natifs après l'alignement de nommage (verbes `list`/`approve`/`revoke`…).
+// (`agents().getAgents()`, `apiKeys().getApiKeys()`) : elles prouvent le chemin d'authentification/
+// signature des scopes natifs après l'alignement de nommage (get-préfixe + verbes nus).
 const secretKey = readEnv('PACIFICA_SUB_ACCOUNT1_PRIVATE_KEY');
 const account = readEnv('PACIFICA_SUB_ACCOUNT1_PUBLIC_KEY');
 const ready = secretKey !== undefined && account !== undefined;
@@ -17,14 +17,14 @@ describe.skipIf(!ready)('Pacifica native — capacités signées (testnet réel)
     { default: account },
   );
 
-  it('native.agents().list() (lecture signée)', async () => {
-    const agents = await dex.native.agents().list();
+  it('native.agents().getAgents() (lecture signée)', async () => {
+    const agents = await dex.native.agents().getAgents();
     console.log('agents:', JSON.stringify(agents));
     expect(agents).toBeDefined();
   });
 
-  it('native.apiKeys().list() (lecture signée)', async () => {
-    const keys = await dex.native.apiKeys().list();
+  it('native.apiKeys().getApiKeys() (lecture signée)', async () => {
+    const keys = await dex.native.apiKeys().getApiKeys();
     console.log('apiKeys:', JSON.stringify(keys));
     expect(keys).toBeDefined();
   });

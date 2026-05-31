@@ -129,13 +129,13 @@ import type {
   IAgents,
   IApiKeys,
   ILending,
+  INativeAccount,
   INativeMarket,
   INativeOrders,
   INativeRealtime,
-  IPortfolio,
-  ISpot,
   ISubAccountsAdmin,
   IVaults,
+  IWallet,
 } from './native-contract';
 
 /** Options de construction d'un {@link Pacifica}. */
@@ -489,13 +489,13 @@ class PacificaVaults extends PacificaScope implements IVaults {
   public getVaults() {
     return getVaults(this.client, this.label);
   }
-  public createVault(params: Parameters<typeof createVault>[1]) {
+  public create(params: Parameters<typeof createVault>[1]) {
     return createVault(this.client, params, this.signed());
   }
-  public vaultDeposit(params: Parameters<typeof vaultDeposit>[1]) {
+  public deposit(params: Parameters<typeof vaultDeposit>[1]) {
     return vaultDeposit(this.client, params, this.signed());
   }
-  public vaultWithdraw(params: Parameters<typeof vaultWithdraw>[1]) {
+  public withdraw(params: Parameters<typeof vaultWithdraw>[1]) {
     return vaultWithdraw(this.client, params, this.signed());
   }
   public addToWhitelist(params: Parameters<typeof addToWhitelist>[1]) {
@@ -532,7 +532,7 @@ class PacificaAgent extends PacificaScope implements IAgents {
   public approve(params: Parameters<typeof bindAgentWallet>[1]) {
     return bindAgentWallet(this.client, params, this.signed());
   }
-  public list() {
+  public getAgents() {
     return listAgentWallets(this.client, this.signed());
   }
   public revoke(params: Parameters<typeof revokeAgentWallet>[1]) {
@@ -547,7 +547,7 @@ class PacificaAgent extends PacificaScope implements IAgents {
   public removeIp(params: Parameters<typeof removeAgentWhitelistedIp>[1]) {
     return removeAgentWhitelistedIp(this.client, params, this.signed());
   }
-  public listIps(params: Parameters<typeof listAgentIpWhitelist>[1]) {
+  public getIpWhitelist(params: Parameters<typeof listAgentIpWhitelist>[1]) {
     return listAgentIpWhitelist(this.client, params, this.signed());
   }
   public setIpEnabled(params: Parameters<typeof setAgentIpWhitelistEnabled>[1]) {
@@ -560,7 +560,7 @@ class PacificaApiKeys extends PacificaScope implements IApiKeys {
   public create() {
     return createApiConfigKey(this.client, this.signed());
   }
-  public list() {
+  public getApiKeys() {
     return listApiConfigKeys(this.client, this.signed());
   }
   public revoke(params: Parameters<typeof revokeApiConfigKey>[1]) {
@@ -568,34 +568,31 @@ class PacificaApiKeys extends PacificaScope implements IApiKeys {
   }
 }
 
-/** Scope **spot** (actifs spot, bridge, retraits/transferts) — {@link ISpot}. */
-class PacificaSpot extends PacificaScope implements ISpot {
-  public getSpotAssets(query?: Parameters<typeof getSpotAssets>[1]) {
+/** Scope **wallet** (ex-spot : actifs spot, bridge, retraits, historiques) — {@link IWallet}. */
+class PacificaWallet extends PacificaScope implements IWallet {
+  public getAssets(query?: Parameters<typeof getSpotAssets>[1]) {
     return getSpotAssets(this.client, query ?? {}, this.label);
   }
-  public getBridgeInfo() {
+  public getBridge() {
     return getBridgeInfo(this.client, this.label);
   }
   public getBridgeParams(params: Parameters<typeof getBridgeParams>[1]) {
     return getBridgeParams(this.client, params, this.label);
   }
-  public withdrawSpotAsset(params: Parameters<typeof withdrawSpotAsset>[1]) {
+  public withdraw(params: Parameters<typeof withdrawSpotAsset>[1]) {
     return withdrawSpotAsset(this.client, params, this.signed());
   }
-  public getSpotDepositHistory(params: Parameters<typeof getSpotDepositHistory>[1]) {
+  public getDepositHistory(params: Parameters<typeof getSpotDepositHistory>[1]) {
     return getSpotDepositHistory(this.client, params, this.label);
   }
-  public getSpotWithdrawalHistory(params: Parameters<typeof getSpotWithdrawalHistory>[1]) {
+  public getWithdrawalHistory(params: Parameters<typeof getSpotWithdrawalHistory>[1]) {
     return getSpotWithdrawalHistory(this.client, params, this.label);
   }
-  public getSpotBalanceHistory(params: Parameters<typeof getSpotBalanceHistory>[1]) {
+  public getBalanceHistory(params: Parameters<typeof getSpotBalanceHistory>[1]) {
     return getSpotBalanceHistory(this.client, params, this.label);
   }
-  public getPendingSpotWithdrawals(params: Parameters<typeof getPendingSpotWithdrawals>[1]) {
+  public getPendingWithdrawals(params: Parameters<typeof getPendingSpotWithdrawals>[1]) {
     return getPendingSpotWithdrawals(this.client, params, this.label);
-  }
-  public subaccountSpotTransfer(params: Parameters<typeof subaccountSpotTransfer>[1]) {
-    return subaccountSpotTransfer(this.client, params, this.signed());
   }
 }
 
@@ -612,15 +609,15 @@ class PacificaLending extends PacificaScope implements ILending {
   }
 }
 
-/** Scope **portfolio** (réglages + historiques de compte) — {@link IPortfolio}. */
-class PacificaPortfolio extends PacificaScope implements IPortfolio {
+/** Scope **account** (ex-portfolio : réglages + historiques de compte) — {@link INativeAccount}. */
+class PacificaAccountExtra extends PacificaScope implements INativeAccount {
   public getPortfolio(params: Parameters<typeof getPortfolio>[1]) {
     return getPortfolio(this.client, params, this.label);
   }
-  public getAccountSettings(params: Parameters<typeof getAccountSettings>[1]) {
+  public getSettings(params: Parameters<typeof getAccountSettings>[1]) {
     return getAccountSettings(this.client, params, this.label);
   }
-  public updateSpotSettings(params: Parameters<typeof updateSpotSettings>[1]) {
+  public updateSettings(params: Parameters<typeof updateSpotSettings>[1]) {
     return updateSpotSettings(this.client, params, this.signed());
   }
   public getBalanceHistory(params: Parameters<typeof getBalanceHistory>[1]) {
@@ -629,18 +626,15 @@ class PacificaPortfolio extends PacificaScope implements IPortfolio {
   public getTradeHistory(params: Parameters<typeof getTradeHistory>[1]) {
     return getTradeHistory(this.client, params, this.label);
   }
-  public getAccountFunding(params: Parameters<typeof getAccountFunding>[1]) {
+  public getFunding(params: Parameters<typeof getAccountFunding>[1]) {
     return getAccountFunding(this.client, params, this.label);
   }
 }
 
-/** Scope **subaccounts** (création / transferts) — interface complémentaire {@link ISubAccountsAdmin}. */
+/** Scope **subaccounts** (création ; les transferts sont sur `transfers()`) — {@link ISubAccountsAdmin}. */
 class PacificaSubAccounts extends PacificaScope implements ISubAccountsAdmin {
   public create(params: Parameters<typeof createSubaccount>[1]) {
     return createSubaccount(this.client, params);
-  }
-  public transfer(params: Parameters<typeof transferSubaccountFund>[1]) {
-    return transferSubaccountFund(this.client, params, this.signed());
   }
 }
 
@@ -738,13 +732,13 @@ export class Pacifica {
       agents: (label?: string) => new PacificaAgent(c, r(label)),
       /** Clés de config API — `IApiKeys`. */
       apiKeys: (label?: string) => new PacificaApiKeys(c, r(label)),
-      /** Actifs spot, bridge, retraits/transferts spot — `ISpot`. */
-      spot: (label?: string) => new PacificaSpot(c, r(label)),
+      /** Portefeuille spot (actifs, bridge, retraits, historiques) — `IWallet`. */
+      wallet: (label?: string) => new PacificaWallet(c, r(label)),
       /** Prêt / auto-lending (Lake) — `ILending`. */
       lending: (label?: string) => new PacificaLending(c, r(label)),
-      /** Portefeuille, réglages, historiques de compte — `IPortfolio`. */
-      portfolio: (label?: string) => new PacificaPortfolio(c, r(label)),
-      /** Création / transferts de sous-comptes — `ISubAccountsAdmin`. */
+      /** Réglages + historiques de compte (ex-portfolio) — `INativeAccount`. */
+      account: (label?: string) => new PacificaAccountExtra(c, r(label)),
+      /** Création de sous-comptes — `ISubAccountsAdmin`. */
       subAccounts: (label?: string) => new PacificaSubAccounts(c, r(label)),
       /** Temps réel natif : flux compte bruts + trading via WS — `INativeRealtime`. */
       ws: (label?: string) => new PacificaNativeWs(this.unifiedWs(r(label))),

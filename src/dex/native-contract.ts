@@ -2,9 +2,9 @@
 // Pacifica expose beaucoup plus que le tronc commun. Ces interfaces décrivent ces capacités
 // **spécifiques**, accessibles via le namespace uniforme `dex.native.<capacité>(label?)`
 // (convention partagée par les 4 SDK) : `native.vaults()`, `native.agents()`, `native.apiKeys()`,
-// `native.spot()`, `native.lending()`, `native.portfolio()`, `native.subAccounts()`,
-// `native.advancedOrders()`. Noms d'interfaces (`IVaults`, `IAgents`…) **identiques** aux autres
-// SDK ; seuls les types de params diffèrent. Les types d'I/O sont dérivés des fonctions REST.
+// `native.wallet()` (ex-spot), `native.lending()`, `native.account()` (ex-portfolio),
+// `native.subAccounts()`. Lectures **get-préfixées**, écritures = verbes nus, entrées en `…Params`.
+// (Le surplus **ordres** + lectures marché sont portés par `perp()` — cf. INativeOrders/INativeMarket.)
 
 import type {
   BatchAction,
@@ -30,9 +30,7 @@ import type { getSpotWithdrawalHistory } from '../rest/account/get-spot-withdraw
 import type { getTradeHistory } from '../rest/account/get-trade-history';
 import type { listApiConfigKeys } from '../rest/account/list-api-config-keys';
 import type { revokeApiConfigKey } from '../rest/account/revoke-api-config-key';
-import type { subaccountSpotTransfer } from '../rest/account/subaccount-spot-transfer';
 import type { toggleAutoLending } from '../rest/account/toggle-auto-lending';
-import type { transferSubaccountFund } from '../rest/account/transfer-subaccount-fund';
 import type { updateSpotSettings } from '../rest/account/update-spot-settings';
 import type { withdrawSpotAsset } from '../rest/account/withdraw-spot-asset';
 import type { addAgentWhitelistedIp } from '../rest/agent/add-agent-whitelisted-ip';
@@ -74,49 +72,45 @@ import type { vaultWithdraw } from '../rest/vaults/vault-withdraw';
 /** `params` (2ᵉ arg) d'une fonction REST `fn(client, params, label)`. */
 type Args<F extends (...a: never[]) => unknown> = Parameters<F>[1];
 
-// ── Types d'ENTRÉE des ÉCRITURES (noms de concept propres, alignés inter-SDK) ──────────────
-// Découplés des noms REST internes : si l'endpoint change, seul le côté droit bouge, le nom public
-// reste stable. Les noms partagés (`ApproveAgent`, `RevokeAgent`, `CreateSubAccount`,
-// `TransferSubAccount`, `RevokeApiKey`, `PlaceBatch`) sont **identiques** sur les autres SDK qui
-// portent le même geste ; les noms spécifiques restent descriptifs (« similaires »). Les lectures
-// gardent `Args<typeof fn>` en ligne (un type nommé pour un filtre de lecture n'apporte rien).
+// ── Types d'ENTRÉE des ÉCRITURES (suffixe `…Params`, noms alignés inter-SDK) ──────────────
+// Découplés des noms REST internes. Les noms partagés (`ApproveAgentParams`, `RevokeAgentParams`,
+// `CreateSubAccountParams`, `RevokeApiKeyParams`, `PlaceBatchParams`) sont **identiques** sur les
+// autres SDK portant le même geste. Les lectures gardent `Args<typeof fn>` en ligne.
 
 // vaults
-export type CreateVault = Args<typeof createVault>;
-export type VaultDeposit = Args<typeof vaultDeposit>;
-export type VaultWithdraw = Args<typeof vaultWithdraw>;
-export type AddVaultWhitelist = Args<typeof addToWhitelist>;
-export type RemoveVaultWhitelist = Args<typeof removeFromWhitelist>;
-export type AddVaultBlacklist = Args<typeof addToBlacklist>;
-export type RemoveVaultBlacklist = Args<typeof removeFromBlacklist>;
-export type AddVaultMaxLeverage = Args<typeof addMaxLeverage>;
-export type RemoveVaultMaxLeverage = Args<typeof removeMaxLeverage>;
-export type UpdateVaultDepositCap = Args<typeof updateDepositCap>;
-export type ClaimVaultManager = Args<typeof claimManager>;
-export type ClaimReferralCode = Args<typeof claimReferralCode>;
-// agents (`ApproveAgent`/`RevokeAgent` partagés inter-SDK)
-export type ApproveAgent = Args<typeof bindAgentWallet>;
-export type RevokeAgent = Args<typeof revokeAgentWallet>;
-export type AddAgentIp = Args<typeof addAgentWhitelistedIp>;
-export type RemoveAgentIp = Args<typeof removeAgentWhitelistedIp>;
-export type SetAgentIpEnabled = Args<typeof setAgentIpWhitelistEnabled>;
-// apiKeys (`RevokeApiKey` partagé inter-SDK)
-export type RevokeApiKey = Args<typeof revokeApiConfigKey>;
-// spot
-export type WithdrawSpot = Args<typeof withdrawSpotAsset>;
-export type SubAccountSpotTransfer = Args<typeof subaccountSpotTransfer>;
+export type CreateVaultParams = Args<typeof createVault>;
+export type VaultDepositParams = Args<typeof vaultDeposit>;
+export type VaultWithdrawParams = Args<typeof vaultWithdraw>;
+export type AddVaultWhitelistParams = Args<typeof addToWhitelist>;
+export type RemoveVaultWhitelistParams = Args<typeof removeFromWhitelist>;
+export type AddVaultBlacklistParams = Args<typeof addToBlacklist>;
+export type RemoveVaultBlacklistParams = Args<typeof removeFromBlacklist>;
+export type AddVaultMaxLeverageParams = Args<typeof addMaxLeverage>;
+export type RemoveVaultMaxLeverageParams = Args<typeof removeMaxLeverage>;
+export type UpdateVaultDepositCapParams = Args<typeof updateDepositCap>;
+export type ClaimVaultManagerParams = Args<typeof claimManager>;
+export type ClaimReferralCodeParams = Args<typeof claimReferralCode>;
+// agents (`ApproveAgentParams`/`RevokeAgentParams` partagés inter-SDK)
+export type ApproveAgentParams = Args<typeof bindAgentWallet>;
+export type RevokeAgentParams = Args<typeof revokeAgentWallet>;
+export type AddAgentIpParams = Args<typeof addAgentWhitelistedIp>;
+export type RemoveAgentIpParams = Args<typeof removeAgentWhitelistedIp>;
+export type SetAgentIpEnabledParams = Args<typeof setAgentIpWhitelistEnabled>;
+// apiKeys (`RevokeApiKeyParams` partagé inter-SDK)
+export type RevokeApiKeyParams = Args<typeof revokeApiConfigKey>;
+// wallet (ex-spot)
+export type WithdrawSpotParams = Args<typeof withdrawSpotAsset>;
 // lending
-export type ToggleAutoLending = Args<typeof toggleAutoLending>;
-// portfolio
-export type UpdateSpotSettings = Args<typeof updateSpotSettings>;
-// subAccounts (`CreateSubAccount`/`TransferSubAccount` partagés inter-SDK)
-export type CreateSubAccount = Args<typeof createSubaccount>;
-export type TransferSubAccount = Args<typeof transferSubaccountFund>;
-// advancedOrders (`PlaceBatch` partagé HL/Aster)
-export type CreateStopOrder = Args<typeof createStopOrder>;
-export type CancelStopOrder = Args<typeof cancelStopOrder>;
-export type CreatePositionTpsl = Args<typeof createPositionTpsl>;
-export type PlaceBatch = Args<typeof batchOrders>;
+export type ToggleAutoLendingParams = Args<typeof toggleAutoLending>;
+// account (ex-portfolio)
+export type UpdateSettingsParams = Args<typeof updateSpotSettings>;
+// subAccounts (`CreateSubAccountParams` partagé inter-SDK)
+export type CreateSubAccountParams = Args<typeof createSubaccount>;
+// orders (`PlaceBatchParams` partagé HL/Aster)
+export type PlaceStopParams = Args<typeof createStopOrder>;
+export type CancelStopParams = Args<typeof cancelStopOrder>;
+export type PlaceTpslParams = Args<typeof createPositionTpsl>;
+export type PlaceBatchParams = Args<typeof batchOrders>;
 
 /** Temps réel **natif** : flux compte bruts non couverts par `ws()` + trading via WebSocket. */
 export interface INativeRealtime {
@@ -133,87 +127,93 @@ export interface INativeRealtime {
   batch(actions: BatchAction[]): Promise<JsonValue>;
 }
 
-/** Gestion des **vaults** (Lake). */
+/** Gestion des **vaults** (Lake). Verbes nus (`create`/`deposit`/`withdraw`) ; lecture get-préfixée. */
 export interface IVaults {
   getVaults(): ReturnType<typeof getVaults>;
-  createVault(params: CreateVault): ReturnType<typeof createVault>;
-  vaultDeposit(params: VaultDeposit): ReturnType<typeof vaultDeposit>;
-  vaultWithdraw(params: VaultWithdraw): ReturnType<typeof vaultWithdraw>;
-  addToWhitelist(params: AddVaultWhitelist): ReturnType<typeof addToWhitelist>;
-  removeFromWhitelist(params: RemoveVaultWhitelist): ReturnType<typeof removeFromWhitelist>;
-  addToBlacklist(params: AddVaultBlacklist): ReturnType<typeof addToBlacklist>;
-  removeFromBlacklist(params: RemoveVaultBlacklist): ReturnType<typeof removeFromBlacklist>;
-  addMaxLeverage(params: AddVaultMaxLeverage): ReturnType<typeof addMaxLeverage>;
-  removeMaxLeverage(params: RemoveVaultMaxLeverage): ReturnType<typeof removeMaxLeverage>;
-  updateDepositCap(params: UpdateVaultDepositCap): ReturnType<typeof updateDepositCap>;
-  claimManager(params: ClaimVaultManager): ReturnType<typeof claimManager>;
-  claimReferralCode(params: ClaimReferralCode): ReturnType<typeof claimReferralCode>;
+  create(params: CreateVaultParams): ReturnType<typeof createVault>;
+  deposit(params: VaultDepositParams): ReturnType<typeof vaultDeposit>;
+  withdraw(params: VaultWithdrawParams): ReturnType<typeof vaultWithdraw>;
+  addToWhitelist(params: AddVaultWhitelistParams): ReturnType<typeof addToWhitelist>;
+  removeFromWhitelist(params: RemoveVaultWhitelistParams): ReturnType<typeof removeFromWhitelist>;
+  addToBlacklist(params: AddVaultBlacklistParams): ReturnType<typeof addToBlacklist>;
+  removeFromBlacklist(params: RemoveVaultBlacklistParams): ReturnType<typeof removeFromBlacklist>;
+  addMaxLeverage(params: AddVaultMaxLeverageParams): ReturnType<typeof addMaxLeverage>;
+  removeMaxLeverage(params: RemoveVaultMaxLeverageParams): ReturnType<typeof removeMaxLeverage>;
+  updateDepositCap(params: UpdateVaultDepositCapParams): ReturnType<typeof updateDepositCap>;
+  claimManager(params: ClaimVaultManagerParams): ReturnType<typeof claimManager>;
+  claimReferralCode(params: ClaimReferralCodeParams): ReturnType<typeof claimReferralCode>;
 }
 
-/** Agent wallets et IP whitelist. Verbes alignés sur les autres SDK (`list`/`approve`/`revoke`). */
+/** Agent wallets et IP whitelist. Verbes nus (`approve`/`revoke`) ; lectures get-préfixées. */
 export interface IAgents {
-  approve(params: ApproveAgent): ReturnType<typeof bindAgentWallet>;
-  list(): ReturnType<typeof listAgentWallets>;
-  revoke(params: RevokeAgent): ReturnType<typeof revokeAgentWallet>;
+  approve(params: ApproveAgentParams): ReturnType<typeof bindAgentWallet>;
+  getAgents(): ReturnType<typeof listAgentWallets>;
+  revoke(params: RevokeAgentParams): ReturnType<typeof revokeAgentWallet>;
   revokeAll(): ReturnType<typeof revokeAllAgentWallets>;
-  addIp(params: AddAgentIp): ReturnType<typeof addAgentWhitelistedIp>;
-  removeIp(params: RemoveAgentIp): ReturnType<typeof removeAgentWhitelistedIp>;
-  listIps(params: Args<typeof listAgentIpWhitelist>): ReturnType<typeof listAgentIpWhitelist>;
-  setIpEnabled(params: SetAgentIpEnabled): ReturnType<typeof setAgentIpWhitelistEnabled>;
+  addIp(params: AddAgentIpParams): ReturnType<typeof addAgentWhitelistedIp>;
+  removeIp(params: RemoveAgentIpParams): ReturnType<typeof removeAgentWhitelistedIp>;
+  getIpWhitelist(
+    params: Args<typeof listAgentIpWhitelist>,
+  ): ReturnType<typeof listAgentIpWhitelist>;
+  setIpEnabled(params: SetAgentIpEnabledParams): ReturnType<typeof setAgentIpWhitelistEnabled>;
 }
 
-/** Clés de configuration API (rate-limit). Verbes alignés (`create`/`list`/`revoke`). */
+/** Clés de configuration API (rate-limit). Verbes nus (`create`/`revoke`) ; lecture get-préfixée. */
 export interface IApiKeys {
   create(): ReturnType<typeof createApiConfigKey>;
-  list(): ReturnType<typeof listApiConfigKeys>;
-  revoke(params: RevokeApiKey): ReturnType<typeof revokeApiConfigKey>;
+  getApiKeys(): ReturnType<typeof listApiConfigKeys>;
+  revoke(params: RevokeApiKeyParams): ReturnType<typeof revokeApiConfigKey>;
 }
 
-/** Actifs spot, bridge, retraits/transferts spot, historiques spot. */
-export interface ISpot {
-  getSpotAssets(query?: Args<typeof getSpotAssets>): ReturnType<typeof getSpotAssets>;
-  getBridgeInfo(): ReturnType<typeof getBridgeInfo>;
+/**
+ * Portefeuille **spot** (ex-`spot`) : actifs, bridge, retraits, historiques. Lectures get-préfixées,
+ * retrait `withdraw` nu. (Les **transferts** vers sous-compte sont sur le scope commun `transfers()`.)
+ */
+export interface IWallet {
+  getAssets(query?: Args<typeof getSpotAssets>): ReturnType<typeof getSpotAssets>;
+  getBridge(): ReturnType<typeof getBridgeInfo>;
   getBridgeParams(params: Args<typeof getBridgeParams>): ReturnType<typeof getBridgeParams>;
-  withdrawSpotAsset(params: WithdrawSpot): ReturnType<typeof withdrawSpotAsset>;
-  getSpotDepositHistory(
+  withdraw(params: WithdrawSpotParams): ReturnType<typeof withdrawSpotAsset>;
+  getDepositHistory(
     params: Args<typeof getSpotDepositHistory>,
   ): ReturnType<typeof getSpotDepositHistory>;
-  getSpotWithdrawalHistory(
+  getWithdrawalHistory(
     params: Args<typeof getSpotWithdrawalHistory>,
   ): ReturnType<typeof getSpotWithdrawalHistory>;
-  getSpotBalanceHistory(
+  getBalanceHistory(
     params: Args<typeof getSpotBalanceHistory>,
   ): ReturnType<typeof getSpotBalanceHistory>;
-  getPendingSpotWithdrawals(
+  getPendingWithdrawals(
     params: Args<typeof getPendingSpotWithdrawals>,
   ): ReturnType<typeof getPendingSpotWithdrawals>;
-  subaccountSpotTransfer(params: SubAccountSpotTransfer): ReturnType<typeof subaccountSpotTransfer>;
 }
 
-/** Prêt / auto-lending (Lake collatéral). */
+/** Prêt / auto-lending (Lake collatéral). Lectures get-préfixées. */
 export interface ILending {
-  toggleAutoLending(params: ToggleAutoLending): ReturnType<typeof toggleAutoLending>;
+  toggleAutoLending(params: ToggleAutoLendingParams): ReturnType<typeof toggleAutoLending>;
   getAccountLoan(params: Args<typeof getAccountLoan>): ReturnType<typeof getAccountLoan>;
   getLoanPool(): ReturnType<typeof getLoanPool>;
 }
 
-/** Portefeuille, réglages, historiques de compte. */
-export interface IPortfolio {
+/**
+ * Lectures **et** réglages de compte étendus (ex-`portfolio`), portés par `native.account()`.
+ * Lectures get-préfixées ; `updateSettings` nu.
+ */
+export interface INativeAccount {
   getPortfolio(params: Args<typeof getPortfolio>): ReturnType<typeof getPortfolio>;
-  getAccountSettings(
-    params: Args<typeof getAccountSettings>,
-  ): ReturnType<typeof getAccountSettings>;
-  updateSpotSettings(params: UpdateSpotSettings): ReturnType<typeof updateSpotSettings>;
+  getSettings(params: Args<typeof getAccountSettings>): ReturnType<typeof getAccountSettings>;
+  updateSettings(params: UpdateSettingsParams): ReturnType<typeof updateSpotSettings>;
   getBalanceHistory(params: Args<typeof getBalanceHistory>): ReturnType<typeof getBalanceHistory>;
   getTradeHistory(params: Args<typeof getTradeHistory>): ReturnType<typeof getTradeHistory>;
-  getAccountFunding(params: Args<typeof getAccountFunding>): ReturnType<typeof getAccountFunding>;
+  getFunding(params: Args<typeof getAccountFunding>): ReturnType<typeof getAccountFunding>;
 }
 
-/** Création / transferts de sous-comptes (la liste est dans `account().getSubAccounts`).
- *  Verbes alignés (`create`/`transfer`). */
+/**
+ * Création de sous-comptes (la liste est dans `account().getSubAccounts`). Les **transferts**
+ * master↔sous-compte sont sur le scope commun `transfers()`.
+ */
 export interface ISubAccountsAdmin {
-  create(params: CreateSubAccount): ReturnType<typeof createSubaccount>;
-  transfer(params: TransferSubAccount): ReturnType<typeof transferSubaccountFund>;
+  create(params: CreateSubAccountParams): ReturnType<typeof createSubaccount>;
 }
 
 /**
@@ -221,10 +221,10 @@ export interface ISubAccountsAdmin {
  * batch, lecture par id, TWAP. Verbes alignés inter-SDK (`placeStop`/`placeTpsl`/`getById`/`getTwaps`…).
  */
 export interface INativeOrders {
-  placeBatch(actions: PlaceBatch): ReturnType<typeof batchOrders>;
-  placeStop(params: CreateStopOrder): ReturnType<typeof createStopOrder>;
-  cancelStop(params: CancelStopOrder): ReturnType<typeof cancelStopOrder>;
-  placeTpsl(params: CreatePositionTpsl): ReturnType<typeof createPositionTpsl>;
+  placeBatch(actions: PlaceBatchParams): ReturnType<typeof batchOrders>;
+  placeStop(params: PlaceStopParams): ReturnType<typeof createStopOrder>;
+  cancelStop(params: CancelStopParams): ReturnType<typeof cancelStopOrder>;
+  placeTpsl(params: PlaceTpslParams): ReturnType<typeof createPositionTpsl>;
   getById(params: Args<typeof getOrderHistoryById>): ReturnType<typeof getOrderHistoryById>;
   getTwaps(params: Args<typeof getOpenTwapOrder>): ReturnType<typeof getOpenTwapOrder>;
   getTwapHistory(params: Args<typeof getTwapOrderHistory>): ReturnType<typeof getTwapOrderHistory>;
