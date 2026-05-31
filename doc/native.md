@@ -113,18 +113,25 @@ await dex.native.lending().getLoanPool();
 ```
 
 ## `native.account()` — `INativeAccount` (ex-`portfolio` : portefeuille, réglages, historiques)
+**I/O normalisés** : l'adresse du compte (`user`) est **injectée par le scope** (signer) — **aucune
+entrée `account`**. Entrées en vocabulaire commun (`name`, dates `YYYY-MM-DD HH:MM:SS` UTC). Sorties
+typées : `getTradeHistory` **réutilise le commun `UserTrade`** ; les autres ont une interface dédiée
+nommée (`PortfolioPoint`/`AccountSettings`/`BalanceHistoryEntry`/`AccountFundingEntry`).
+
 | Méthode | Entrée | Sortie |
 |---|---|---|
-| `getPortfolio(q)` | `PortfolioQuery` | `Promise<Portfolio>` |
-| `getSettings(q)` | `AccountQuery` | `Promise<AccountSettings>` |
-| `updateSettings(p)` | `UpdateSettingsParams` | `Promise<CodeMsg>` |
-| `getBalanceHistory(q)` / `getTradeHistory(q)` / `getFunding(q)` | `…Query` | `Promise<…[]>` |
+| `getPortfolio(p)` | `PortfolioParams` `{ timeRange; startTime?; endTime?; limit? }` | `Promise<PortfolioPoint[]>` |
+| `getSettings()` | — | `Promise<AccountSettings>` |
+| `updateSettings(p)` | `UpdateSettingsParams` `{ name; unifiedMarginExcluded }` | `Promise<void>` |
+| `getBalanceHistory(p?)` | `AccountHistoryParams?` | `Promise<BalanceHistoryEntry[]>` |
+| `getTradeHistory(p?)` | `AccountHistoryParams?` `{ name?; startTime?; endTime?; limit?; cursor? }` | `Promise<UserTrade[]>` |
+| `getFunding(p?)` | `AccountHistoryParams?` | `Promise<AccountFundingEntry[]>` |
 
 ```ts
-await dex.native.account().getPortfolio({ account: '…' });
-await dex.native.account().getSettings({ account: '…' });
-await dex.native.account().updateSettings({ /* UpdateSettingsParams */ });
-await dex.native.account().getTradeHistory({ limit: 100 });
+await dex.native.account().getPortfolio({ timeRange: '7d' });
+await dex.native.account().getSettings();
+await dex.native.account().updateSettings({ name: 'BTC', unifiedMarginExcluded: true });
+await dex.native.account().getTradeHistory({ name: 'BTC', limit: 100 }); // → UserTrade[]
 await dex.native.account().getFunding({ limit: 50 });
 ```
 
@@ -143,23 +150,40 @@ await dex.native.subAccounts().create({ /* CreateSubAccountParams */ });
 Surplus **perp** (Pacifica est perp-only) : lectures marché supplémentaires (publiques) **+** ordres
 avancés (stop / TP-SL / batch / TWAP). Hors contrat portable, contrairement à `dex.perp().place()`.
 
+**I/O normalisés** comme le commun : entrées en **vocabulaire commun** (`name`, `side:'buy'|'sell'`,
+prix/tailles = chaînes décimales, dates `YYYY-MM-DD HH:MM:SS` UTC) ; sorties **typées** via
+convertisseurs (réutilise `Candle`/`Order` communs ; `FeeLevel`/`Twap` = interfaces dédiées nommées
+aux noms communs). L'adresse du compte (TWAP) est **injectée par le scope** (signer).
+
 | Méthode | Entrée | Sortie |
 |---|---|---|
 | `getFeeLevels()` | — | `Promise<FeeLevel[]>` |
-| `getMarkPriceCandles(q)` | `CandleQuery` | `Promise<Candle[]>` |
-| `placeStop(p)` | `PlaceStopParams` | `Promise<CodeMsg>` |
-| `cancelStop(p)` | `CancelStopParams` | `Promise<CodeMsg>` |
-| `placeTpsl(p)` | `PlaceTpslParams` | `Promise<CodeMsg>` |
-| `placeBatch(actions)` | `PlaceBatchParams` | `Promise<CodeMsg>` |
-| `getById(q)` | `OrderHistoryByIdQuery` | `Promise<Order>` |
-| `getTwaps(q)` / `getTwapHistory(q)` / `getTwapHistoryById(q)` | `…Query` | `Promise<…>` |
+| `getMarkPriceCandles(p)` | `MarkPriceCandlesParams` `{ name; interval; startTime?; endTime? }` | `Promise<Candle[]>` |
+| `placeStop(p)` | `PlaceStopParams` `{ name; side; reduceOnly; stopPrice; limitPrice?; size?; clientId? }` | `Promise<Order>` |
+| `cancelStop(p)` | `CancelStopParams` `{ name; id?; clientId? }` | `Promise<void>` |
+| `placeTpsl(p)` | `PlaceTpslParams` `{ name; side; takeProfit?; stopLoss? }` (`TriggerConfig`) | `Promise<void>` |
+| `placeBatch(actions)` | `PlaceBatchParams` (= `BatchAction[]`) | `Promise<Order[]>` (1 par leg créateur) |
+| `getById(p)` | `OrderByIdParams` `{ id }` | `Promise<Order>` |
+| `getTwaps()` | — | `Promise<Twap[]>` |
+| `getTwapHistory(p?)` | `AccountHistoryParams?` `{ limit?; cursor? }` | `Promise<Twap[]>` |
+| `getTwapHistoryById(p)` | `TwapByIdParams` `{ id }` | `Promise<Twap[]>` |
 
 ```ts
 await dex.native.perp().getFeeLevels();
-await dex.native.perp().getMarkPriceCandles({ symbol: 'BTC', interval: '1h' });
-await dex.native.perp().placeStop({ symbol: 'BTC', side: 'sell', stopPrice: '50000', size: '0.01' });
-await dex.native.perp().placeTpsl({ symbol: 'BTC', takeProfit: '70000', stopLoss: '50000' });
-await dex.native.perp().placeBatch([{ /* BatchAction */ }]);
+await dex.native.perp().getMarkPriceCandles({ name: 'BTC', interval: '1h', startTime: '2026-05-01 00:00:00' });
+const stop = await dex.native.perp().placeStop({ name: 'BTC', side: 'sell', reduceOnly: true, stopPrice: '50000', size: '0.01' });
+await dex.native.perp().placeTpsl({ name: 'BTC', side: 'buy', takeProfit: { stopPrice: '70000' }, stopLoss: { stopPrice: '50000' } });
+const orders = await dex.native.perp().placeBatch([{ type: 'Create', params: { /* CreateLimitOrderParams */ } }]);
+const order = await dex.native.perp().getById({ id: '12345' });
+await dex.native.perp().getTwaps();
+```
+
+### Types — sorties dédiées du `native.perp()`
+```ts
+// pas d'équivalent commun → interfaces dédiées nommées, mêmes noms que le commun
+interface FeeLevel { level: number; makerFeeRate: string; takerFeeRate: string }
+interface Twap { name: string; id: string; clientId: string | null; side: 'buy' | 'sell';
+  size: string; filled: string; reduceOnly: boolean | null; time: number; xtras?: Record<string, unknown> }
 ```
 
 ## `native.ws()` — `INativeRealtime` (temps réel natif : flux compte bruts + trading via WS)

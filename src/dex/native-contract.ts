@@ -7,27 +7,29 @@
 // Lectures **get-préfixées**, écritures = verbes nus, entrées en `…Params`.
 
 import type {
+  AccountFundingEntry,
+  AccountSettings,
+  BalanceHistoryEntry,
   BatchAction,
   CancelAllOrdersRef,
   CancelOrderRef,
   CreateLimitOrderParams,
   CreateMarketOrderParams,
   EditOrderRef,
+  FeeLevel,
+  PortfolioPoint,
+  TriggerPriceType,
 } from '../common/native';
-import type { JsonValue } from '../common/types';
+import type { Candle, JsonValue, Order, Side, UserTrade } from '../common/types';
 import type { StreamHandler, Unsubscribe } from '../common/ws';
+import type { Twap } from '../converters/twap';
 import type { createApiConfigKey } from '../rest/account/create-api-config-key';
 import type { createSubaccount } from '../rest/account/create-subaccount';
 import type { getAccountLoan } from '../rest/account/get-account-loan';
-import type { getAccountSettings } from '../rest/account/get-account-settings';
-import type { getBalanceHistory } from '../rest/account/get-balance-history';
-import type { getAccountFunding } from '../rest/account/get-funding-history';
 import type { getPendingSpotWithdrawals } from '../rest/account/get-pending-spot-withdrawals';
-import type { getPortfolio } from '../rest/account/get-portfolio';
 import type { getSpotBalanceHistory } from '../rest/account/get-spot-balance-history';
 import type { getSpotDepositHistory } from '../rest/account/get-spot-deposit-history';
 import type { getSpotWithdrawalHistory } from '../rest/account/get-spot-withdrawal-history';
-import type { getTradeHistory } from '../rest/account/get-trade-history';
 import type { listApiConfigKeys } from '../rest/account/list-api-config-keys';
 import type { revokeApiConfigKey } from '../rest/account/revoke-api-config-key';
 import type { toggleAutoLending } from '../rest/account/toggle-auto-lending';
@@ -41,16 +43,8 @@ import type { removeAgentWhitelistedIp } from '../rest/agent/remove-agent-whitel
 import type { revokeAgentWallet } from '../rest/agent/revoke-agent-wallet';
 import type { revokeAllAgentWallets } from '../rest/agent/revoke-all-agent-wallets';
 import type { setAgentIpWhitelistEnabled } from '../rest/agent/set-agent-ip-whitelist-enabled';
-import type { getFeeLevels } from '../rest/markets/get-fee-levels';
 import type { getLoanPool } from '../rest/markets/get-loan-pool';
-import type { getMarkPriceCandleData } from '../rest/markets/get-mark-price-candle-data';
-import type { batchOrders } from '../rest/orders/batch-order';
 import type { cancelStopOrder } from '../rest/orders/cancel-stop-order';
-import type { createStopOrder } from '../rest/orders/create-stop-order';
-import type { getOrderHistoryById } from '../rest/orders/get-order-history-by-id';
-import type { getOpenTwapOrder } from '../rest/orders/twap/get-open-twap-order';
-import type { getTwapOrderHistory } from '../rest/orders/twap/get-twap-order-history';
-import type { getTwapOrderHistoryById } from '../rest/orders/twap/get-twap-order-history-by-id';
 import type { createPositionTpsl } from '../rest/positions/create-position-tpsl';
 import type { getBridgeInfo } from '../rest/spot/get-bridge-info';
 import type { getBridgeParams } from '../rest/spot/get-bridge-params';
@@ -102,15 +96,133 @@ export type RevokeApiKeyParams = Args<typeof revokeApiConfigKey>;
 export type WithdrawSpotParams = Args<typeof withdrawSpotAsset>;
 // lending
 export type ToggleAutoLendingParams = Args<typeof toggleAutoLending>;
-// account (ex-portfolio)
-export type UpdateSettingsParams = Args<typeof updateSpotSettings>;
+// account (ex-portfolio) — vocabulaire commun (`name` au lieu de `symbol`)
+/** Entrée `updateSettings` — réglages spot d'une paire (vocabulaire commun). */
+export interface UpdateSettingsParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Exclure cette paire de la marge unifiée. */
+  unifiedMarginExcluded: boolean;
+}
 // subAccounts (`CreateSubAccountParams` partagé inter-SDK)
 export type CreateSubAccountParams = Args<typeof createSubaccount>;
-// orders (`PlaceBatchParams` partagé HL/Aster)
-export type PlaceStopParams = Args<typeof createStopOrder>;
-export type CancelStopParams = Args<typeof cancelStopOrder>;
-export type PlaceTpslParams = Args<typeof createPositionTpsl>;
-export type PlaceBatchParams = Args<typeof batchOrders>;
+// orders (`PlaceBatchParams` partagé HL/Aster ; entrées en **vocabulaire commun**)
+
+/** Config d'un trigger (stop / TP / SL) en vocabulaire commun (prix = chaînes décimales). */
+export interface TriggerConfig {
+  /** Prix de déclenchement (chaîne décimale). */
+  stopPrice: string;
+  /** Prix limite ; absent ⇒ ordre marché au déclenchement. */
+  limitPrice?: string;
+  /** Client order id. */
+  clientId?: string;
+  /** Référence du prix de déclenchement (mark/last/mid). */
+  triggerPriceType?: TriggerPriceType;
+}
+
+/** Entrée `placeStop` — stop d'ouverture/fermeture, vocabulaire commun (`name`/`side`). */
+export interface PlaceStopParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Sens. */
+  side: Side;
+  /** Reduce-only. */
+  reduceOnly: boolean;
+  /** Prix de déclenchement (chaîne décimale). */
+  stopPrice: string;
+  /** Prix limite ; absent ⇒ stop **marché**. */
+  limitPrice?: string;
+  /** Quantité (chaîne décimale) ; absente ⇒ taille de la position. */
+  size?: string;
+  /** Client order id. */
+  clientId?: string;
+  /** Référence du prix de déclenchement. */
+  triggerPriceType?: TriggerPriceType;
+  /** Code builder (fee-sharing) éventuel. */
+  builderCode?: string;
+}
+
+/** Entrée `cancelStop` — référence d'un stop par `id` (ou `clientId`), vocabulaire commun. */
+export interface CancelStopParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** ID d'ordre exchange (l'un de `id`/`clientId` requis). */
+  id?: string;
+  /** Client order id. */
+  clientId?: string;
+}
+
+/** Entrée `placeTpsl` — TP/SL de **position**, vocabulaire commun (`name`/`side`). */
+export interface PlaceTpslParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Sens de la position visée. */
+  side: Side;
+  /** Take-profit (déclenchement + limite éventuelle). */
+  takeProfit?: TriggerConfig;
+  /** Stop-loss (déclenchement + limite éventuelle). */
+  stopLoss?: TriggerConfig;
+}
+
+/**
+ * Entrée `placeBatch` — lot d'**actions** Pacifica (créations/annulations/édition/TP-SL mêlées).
+ * Le lot natif est hétérogène (cf. {@link gaps}) : on garde la forme `BatchAction[]` documentée,
+ * la **sortie** est normalisée en `Order[]` (un par leg créateur).
+ */
+export type PlaceBatchParams = BatchAction[];
+
+/** Entrée `getById` — référence d'un ordre par `id`. */
+export interface OrderByIdParams {
+  /** ID d'ordre exchange. */
+  id: string;
+}
+
+/** Entrée `getTwapHistoryById` — référence d'un TWAP par `id`. */
+export interface TwapByIdParams {
+  /** ID du TWAP exchange. */
+  id: string;
+}
+
+/** Entrée `getMarkPriceCandles` — vocabulaire commun (`name`, bornes datetime `YYYY-MM-DD HH:MM:SS`). */
+export interface MarkPriceCandlesParams {
+  /** Paire/symbole (= `Pair.name`). */
+  name: string;
+  /** Intervalle (`1m`, `1h`, `1d`…). */
+  interval: string;
+  /** Début (datetime `YYYY-MM-DD HH:MM:SS` UTC). */
+  startTime?: string;
+  /** Fin (datetime `YYYY-MM-DD HH:MM:SS` UTC). */
+  endTime?: string;
+}
+
+/** Entrée — bornes datetime (`YYYY-MM-DD HH:MM:SS` UTC) + pagination des lectures de compte. */
+export interface AccountHistoryParams {
+  /** Filtre optionnel sur une paire (= `Pair.name`). */
+  name?: string;
+  /** Début (datetime `YYYY-MM-DD HH:MM:SS` UTC). */
+  startTime?: string;
+  /** Fin (datetime `YYYY-MM-DD HH:MM:SS` UTC). */
+  endTime?: string;
+  /** Nombre max d'éléments. */
+  limit?: number;
+  /** Curseur de pagination. */
+  cursor?: string;
+}
+
+/** Plage de temps d'un portefeuille (`getPortfolio`). */
+export type PortfolioRange = '1d' | '7d' | '14d' | '30d' | 'all';
+
+/** Entrée `getPortfolio` — plage + bornes datetime optionnelles (`user` injecté par le scope). */
+export interface PortfolioParams {
+  /** Plage agrégée. */
+  timeRange: PortfolioRange;
+  /** Début (datetime `YYYY-MM-DD HH:MM:SS` UTC). */
+  startTime?: string;
+  /** Fin (datetime `YYYY-MM-DD HH:MM:SS` UTC). */
+  endTime?: string;
+  /** Nombre max de points. */
+  limit?: number;
+}
 
 /** Temps réel **natif** : flux compte bruts non couverts par `ws()` + trading via WebSocket. */
 export interface INativeRealtime {
@@ -197,15 +309,24 @@ export interface ILending {
 
 /**
  * Lectures **et** réglages de compte étendus (ex-`portfolio`), portés par `native.account()`.
+ * L'adresse du compte (`user`) est **injectée par le scope** (signer) — aucune entrée `account`.
+ * Entrées : vocabulaire commun (`name`, bornes datetime `YYYY-MM-DD HH:MM:SS`). Sorties typées :
+ * `getTradeHistory` réutilise le commun `UserTrade` ; les autres ont des interfaces dédiées nommées.
  * Lectures get-préfixées ; `updateSettings` nu.
  */
 export interface INativeAccount {
-  getPortfolio(params: Args<typeof getPortfolio>): ReturnType<typeof getPortfolio>;
-  getSettings(params: Args<typeof getAccountSettings>): ReturnType<typeof getAccountSettings>;
+  /** Courbe de portefeuille (équity/PnL agrégés) → `PortfolioPoint[]`. */
+  getPortfolio(params: PortfolioParams): Promise<PortfolioPoint[]>;
+  /** Réglages de compte (marge/spot par paire) → `AccountSettings`. */
+  getSettings(): Promise<AccountSettings>;
+  /** Met à jour les réglages spot d'une paire (vocab commun). */
   updateSettings(params: UpdateSettingsParams): ReturnType<typeof updateSpotSettings>;
-  getBalanceHistory(params: Args<typeof getBalanceHistory>): ReturnType<typeof getBalanceHistory>;
-  getTradeHistory(params: Args<typeof getTradeHistory>): ReturnType<typeof getTradeHistory>;
-  getFunding(params: Args<typeof getAccountFunding>): ReturnType<typeof getAccountFunding>;
+  /** Historique de solde (events) → `BalanceHistoryEntry[]`. */
+  getBalanceHistory(params?: AccountHistoryParams): Promise<BalanceHistoryEntry[]>;
+  /** Historique d'exécutions du compte → `UserTrade[]` (type **commun**). */
+  getTradeHistory(params?: AccountHistoryParams): Promise<UserTrade[]>;
+  /** Paiements de funding du compte → `AccountFundingEntry[]` (≠ taux public `getFundingHistory`). */
+  getFunding(params?: AccountHistoryParams): Promise<AccountFundingEntry[]>;
 }
 
 /**
@@ -222,20 +343,26 @@ export interface ISubAccountsAdmin {
  * TP/SL de position, batch, lecture par id, TWAP). Hors contrat portable.
  */
 export interface INativePerp {
-  // ── lectures marché supplémentaires (publiques) ──
-  getFeeLevels(): ReturnType<typeof getFeeLevels>;
-  getMarkPriceCandles(
-    params: Args<typeof getMarkPriceCandleData>,
-  ): ReturnType<typeof getMarkPriceCandleData>;
-  // ── ordres avancés (signés) ──
-  placeBatch(actions: PlaceBatchParams): ReturnType<typeof batchOrders>;
-  placeStop(params: PlaceStopParams): ReturnType<typeof createStopOrder>;
+  // ── lectures marché supplémentaires (publiques ; I/O normalisés) ──
+  /** Barème de frais par niveau → `FeeLevel[]` (interface dédiée, pas d'équivalent commun). */
+  getFeeLevels(): Promise<FeeLevel[]>;
+  /** Bougies de **mark price** (fenêtre datetime `YYYY-MM-DD HH:MM:SS`) → `Candle[]` (type commun). */
+  getMarkPriceCandles(params: MarkPriceCandlesParams): Promise<Candle[]>;
+  // ── ordres avancés (signés ; entrées vocab commun, sorties types communs) ──
+  /** Lot d'actions (hétérogène) → `Order[]` (un par leg créateur). */
+  placeBatch(actions: PlaceBatchParams): Promise<Order[]>;
+  /** Stop d'ouverture/fermeture → `Order` (type commun). */
+  placeStop(params: PlaceStopParams): Promise<Order>;
+  /** Annule un stop par `id`/`clientId`. */
   cancelStop(params: CancelStopParams): ReturnType<typeof cancelStopOrder>;
+  /** Pose un TP/SL de **position**. */
   placeTpsl(params: PlaceTpslParams): ReturnType<typeof createPositionTpsl>;
-  getById(params: Args<typeof getOrderHistoryById>): ReturnType<typeof getOrderHistoryById>;
-  getTwaps(params: Args<typeof getOpenTwapOrder>): ReturnType<typeof getOpenTwapOrder>;
-  getTwapHistory(params: Args<typeof getTwapOrderHistory>): ReturnType<typeof getTwapOrderHistory>;
-  getTwapHistoryById(
-    params: Args<typeof getTwapOrderHistoryById>,
-  ): ReturnType<typeof getTwapOrderHistoryById>;
+  /** État courant d'un ordre par `id` → `Order` (type commun). */
+  getById(params: OrderByIdParams): Promise<Order>;
+  /** TWAP **ouverts** du compte → `Twap[]` (interface dédiée, noms communs). */
+  getTwaps(): Promise<Twap[]>;
+  /** Historique des TWAP du compte → `Twap[]`. */
+  getTwapHistory(params?: AccountHistoryParams): Promise<Twap[]>;
+  /** Historique d'un TWAP par `id` → `Twap[]`. */
+  getTwapHistoryById(params: TwapByIdParams): Promise<Twap[]>;
 }

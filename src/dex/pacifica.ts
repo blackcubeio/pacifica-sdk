@@ -1,4 +1,15 @@
 import { type InitOptions, type PacificaClient, init } from '../common/config';
+import {
+  type AccountFundingEntry,
+  type AccountSettings,
+  type BalanceHistoryEntry,
+  type CandleInterval,
+  type FeeLevel,
+  OrderSide,
+  type PortfolioPoint,
+  type PortfolioTimeRange,
+  type StopConfig,
+} from '../common/native';
 import type {
   Balance,
   Candle,
@@ -16,6 +27,13 @@ import type {
 } from '../common/types';
 import { dateToMs, keyTypeOf, signEd25519, solanaAddress } from '../common/utils';
 import type { StreamHandler } from '../common/ws';
+import {
+  OrderHistoryByIdConverter,
+  batchResultToOrders,
+  stopOrderToCommon,
+} from '../converters/native-order';
+import type { Twap } from '../converters/twap';
+import { UserTradeConverter } from '../converters/user-trade';
 import { addIsolatedMargin } from '../rest/account/add-isolated-margin';
 // ── Fonctions surplus Pacifica (exposées via interfaces complémentaires) ──
 import { createApiConfigKey } from '../rest/account/create-api-config-key';
@@ -126,6 +144,8 @@ import type {
   WithdrawParams,
 } from './contract';
 import type {
+  AccountHistoryParams,
+  CancelStopParams,
   IAgents,
   IApiKeys,
   ILending,
@@ -135,6 +155,15 @@ import type {
   ISubAccountsAdmin,
   IVaults,
   IWallet,
+  MarkPriceCandlesParams,
+  OrderByIdParams,
+  PlaceBatchParams,
+  PlaceStopParams,
+  PlaceTpslParams,
+  PortfolioParams,
+  TriggerConfig,
+  TwapByIdParams,
+  UpdateSettingsParams,
 } from './native-contract';
 
 /** Options de construction d'un {@link Pacifica}. */
@@ -452,37 +481,125 @@ class PacificaScope {
  * lectures marché supplémentaires (publiques) + ordres avancés (signés). Hors contrat portable.
  */
 class PacificaNativePerp extends PacificaScope implements INativePerp {
-  // ── lectures marché supplémentaires (publiques) ──
-  public getFeeLevels() {
+  /** Adresse du compte (requise par Pacifica pour les lectures par compte). */
+  private user(): string {
+    const signer = this.client.signers[this.signed()];
+    if (signer === undefined) {
+      throw new Error(`Aucun signer enregistré sous "${this.label}".`);
+    }
+    return signer.publicKey;
+  }
+
+  private toTrigger(config: TriggerConfig): StopConfig {
+    return {
+      stopPrice: config.stopPrice,
+      limitPrice: config.limitPrice,
+      clientOrderId: config.clientId,
+      triggerPriceType: config.triggerPriceType,
+    };
+  }
+
+  // ── lectures marché supplémentaires (publiques ; I/O normalisés) ──
+  public getFeeLevels(): Promise<FeeLevel[]> {
     return getFeeLevels(this.client, this.label);
   }
-  public getMarkPriceCandles(params: Parameters<typeof getMarkPriceCandleData>[1]) {
-    return getMarkPriceCandleData(this.client, params, this.label);
+  public getMarkPriceCandles(params: MarkPriceCandlesParams): Promise<Candle[]> {
+    return getMarkPriceCandleData(
+      this.client,
+      {
+        symbol: params.name,
+        interval: params.interval as CandleInterval,
+        startTime: params.startTime === undefined ? 0 : dateToMs(params.startTime),
+        endTime: params.endTime === undefined ? undefined : dateToMs(params.endTime),
+      },
+      this.label,
+    );
   }
-  // ── ordres avancés (signés) ──
-  public placeBatch(actions: Parameters<typeof batchOrders>[1]) {
-    return batchOrders(this.client, actions, this.signed());
+  // ── ordres avancés (signés ; entrées vocab commun, sorties types communs) ──
+  public placeBatch(actions: PlaceBatchParams): Promise<Order[]> {
+    return batchOrders(this.client, actions, this.signed()).then((result) =>
+      batchResultToOrders(actions, result),
+    );
   }
-  public placeStop(params: Parameters<typeof createStopOrder>[1]) {
-    return createStopOrder(this.client, params, this.signed());
+  public placeStop(params: PlaceStopParams): Promise<Order> {
+    const side = params.side === 'buy' ? OrderSide.Bid : OrderSide.Ask;
+    return createStopOrder(
+      this.client,
+      {
+        symbol: params.name,
+        side,
+        reduceOnly: params.reduceOnly,
+        stopOrder: {
+          stopPrice: params.stopPrice,
+          limitPrice: params.limitPrice,
+          clientOrderId: params.clientId,
+          triggerPriceType: params.triggerPriceType,
+          amount: params.size,
+        },
+        builderCode: params.builderCode,
+      },
+      this.signed(),
+    ).then((res) =>
+      stopOrderToCommon({
+        name: params.name,
+        side: params.side,
+        reduceOnly: params.reduceOnly,
+        stopPrice: params.stopPrice,
+        limitPrice: params.limitPrice,
+        size: params.size,
+        clientId: params.clientId,
+        orderId: res.orderId,
+      }),
+    );
   }
-  public cancelStop(params: Parameters<typeof cancelStopOrder>[1]) {
-    return cancelStopOrder(this.client, params, this.signed());
+  public cancelStop(params: CancelStopParams): Promise<void> {
+    return cancelStopOrder(
+      this.client,
+      {
+        symbol: params.name,
+        orderId: params.id === undefined ? undefined : Number(params.id),
+        clientOrderId: params.clientId,
+      },
+      this.signed(),
+    );
   }
-  public placeTpsl(params: Parameters<typeof createPositionTpsl>[1]) {
-    return createPositionTpsl(this.client, params, this.signed());
+  public placeTpsl(params: PlaceTpslParams): Promise<void> {
+    const side = params.side === 'buy' ? OrderSide.Bid : OrderSide.Ask;
+    return createPositionTpsl(
+      this.client,
+      {
+        symbol: params.name,
+        side,
+        takeProfit: params.takeProfit === undefined ? undefined : this.toTrigger(params.takeProfit),
+        stopLoss: params.stopLoss === undefined ? undefined : this.toTrigger(params.stopLoss),
+      },
+      this.signed(),
+    );
   }
-  public getById(params: Parameters<typeof getOrderHistoryById>[1]) {
-    return getOrderHistoryById(this.client, params, this.label);
+  public getById(params: OrderByIdParams): Promise<Order> {
+    const converter = new OrderHistoryByIdConverter();
+    return getOrderHistoryById(this.client, { orderId: Number(params.id) }, this.label).then(
+      (entries) => {
+        const latest = entries[entries.length - 1];
+        if (latest === undefined) {
+          throw new Error(`getById (Pacifica) : ordre ${params.id} introuvable.`);
+        }
+        return converter.toCommon(latest);
+      },
+    );
   }
-  public getTwaps(params: Parameters<typeof getOpenTwapOrder>[1]) {
-    return getOpenTwapOrder(this.client, params, this.label);
+  public getTwaps(): Promise<Twap[]> {
+    return getOpenTwapOrder(this.client, { account: this.user() }, this.label);
   }
-  public getTwapHistory(params: Parameters<typeof getTwapOrderHistory>[1]) {
-    return getTwapOrderHistory(this.client, params, this.label);
+  public getTwapHistory(params?: AccountHistoryParams): Promise<Twap[]> {
+    return getTwapOrderHistory(
+      this.client,
+      { account: this.user(), limit: params?.limit, cursor: params?.cursor },
+      this.label,
+    ).then((page) => page.items);
   }
-  public getTwapHistoryById(params: Parameters<typeof getTwapOrderHistoryById>[1]) {
-    return getTwapOrderHistoryById(this.client, params, this.label);
+  public getTwapHistoryById(params: TwapByIdParams): Promise<Twap[]> {
+    return getTwapOrderHistoryById(this.client, { orderId: Number(params.id) }, this.label);
   }
 }
 
@@ -613,23 +730,84 @@ class PacificaLending extends PacificaScope implements ILending {
 
 /** Scope **account** (ex-portfolio : réglages + historiques de compte) — {@link INativeAccount}. */
 class PacificaAccountExtra extends PacificaScope implements INativeAccount {
-  public getPortfolio(params: Parameters<typeof getPortfolio>[1]) {
-    return getPortfolio(this.client, params, this.label);
+  /** Adresse du compte (injectée dans les lectures — aucune entrée `account`). */
+  private user(): string {
+    const signer = this.client.signers[this.signed()];
+    if (signer === undefined) {
+      throw new Error(`Aucun signer enregistré sous "${this.label}".`);
+    }
+    return signer.publicKey;
   }
-  public getSettings(params: Parameters<typeof getAccountSettings>[1]) {
-    return getAccountSettings(this.client, params, this.label);
+
+  public getPortfolio(params: PortfolioParams): Promise<PortfolioPoint[]> {
+    return getPortfolio(
+      this.client,
+      {
+        account: this.user(),
+        timeRange: params.timeRange as PortfolioTimeRange,
+        startTime: params.startTime === undefined ? undefined : dateToMs(params.startTime),
+        endTime: params.endTime === undefined ? undefined : dateToMs(params.endTime),
+        limit: params.limit,
+      },
+      this.label,
+    );
   }
-  public updateSettings(params: Parameters<typeof updateSpotSettings>[1]) {
-    return updateSpotSettings(this.client, params, this.signed());
+  public getSettings(): Promise<AccountSettings> {
+    return getAccountSettings(this.client, { account: this.user() }, this.label);
   }
-  public getBalanceHistory(params: Parameters<typeof getBalanceHistory>[1]) {
-    return getBalanceHistory(this.client, params, this.label);
+  public updateSettings(params: UpdateSettingsParams): Promise<void> {
+    return updateSpotSettings(
+      this.client,
+      { symbol: params.name, unifiedMarginExcluded: params.unifiedMarginExcluded },
+      this.signed(),
+    );
   }
-  public getTradeHistory(params: Parameters<typeof getTradeHistory>[1]) {
-    return getTradeHistory(this.client, params, this.label);
+  public getBalanceHistory(params?: AccountHistoryParams): Promise<BalanceHistoryEntry[]> {
+    return getBalanceHistory(
+      this.client,
+      { account: this.user(), limit: params?.limit, cursor: params?.cursor },
+      this.label,
+    ).then((page) => page.items);
   }
-  public getFunding(params: Parameters<typeof getAccountFunding>[1]) {
-    return getAccountFunding(this.client, params, this.label);
+  public getTradeHistory(params?: AccountHistoryParams): Promise<UserTrade[]> {
+    const converter = new UserTradeConverter();
+    return getTradeHistory(
+      this.client,
+      {
+        account: this.user(),
+        symbol: params?.name,
+        startTime: params?.startTime === undefined ? undefined : dateToMs(params.startTime),
+        endTime: params?.endTime === undefined ? undefined : dateToMs(params.endTime),
+        limit: params?.limit,
+        cursor: params?.cursor,
+      },
+      this.label,
+    ).then((page) =>
+      page.items.map((entry) =>
+        converter.toCommon({
+          history_id: entry.historyId,
+          order_id: entry.orderId,
+          client_order_id: entry.clientOrderId,
+          symbol: entry.symbol,
+          amount: entry.amount,
+          price: entry.price,
+          entry_price: entry.entryPrice,
+          fee: entry.fee,
+          pnl: entry.pnl,
+          event_type: entry.eventType,
+          side: entry.side,
+          cause: entry.cause,
+          created_at: entry.createdAt,
+        }),
+      ),
+    );
+  }
+  public getFunding(params?: AccountHistoryParams): Promise<AccountFundingEntry[]> {
+    return getAccountFunding(
+      this.client,
+      { account: this.user(), limit: params?.limit, cursor: params?.cursor },
+      this.label,
+    ).then((page) => page.items);
   }
 }
 
