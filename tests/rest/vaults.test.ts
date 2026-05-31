@@ -43,7 +43,9 @@ describe('vaults + positions tpsl (testnet, réel)', () => {
     NETWORK_TIMEOUT,
   );
 
-  it(
+  // CRÉATION de vault (= ressource testnet) → exécuté MANUELLEMENT par Philippe uniquement, jamais
+  // en régression auto (politique : pas de création de vault/sous-compte/clé dans les tests).
+  it.skip(
     'creates a vault, deposits, then runs manager ops',
     () => {
       return createVault(

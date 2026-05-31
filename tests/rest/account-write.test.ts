@@ -50,7 +50,9 @@ describe('account write read-back (testnet, do → état visible → undo)', () 
     NETWORK_TIMEOUT,
   );
 
-  it(
+  // CRÉATION de clé API (= ressource) → exécuté MANUELLEMENT par Philippe uniquement, jamais en
+  // régression auto (politique : pas de création de clé/sous-compte/vault dans les tests).
+  it.skip(
     'API config key appears after create and disappears after revoke',
     () => {
       return createApiConfigKey(client, account).then((created) => {

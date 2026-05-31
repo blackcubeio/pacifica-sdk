@@ -19,7 +19,9 @@ function vaultBalance(lake: string): () => Promise<number | null> {
     });
 }
 
-describe('vault lifecycle (testnet, réel)', () => {
+// CRÉATION de vault (= ressource testnet) → exécuté MANUELLEMENT par Philippe uniquement, jamais en
+// régression auto (politique : pas de création de vault/sous-compte/clé dans les tests).
+describe.skip('vault lifecycle (testnet, réel)', () => {
   beforeAll(() => {
     client = init({
       signers: { [account]: { secretKey, publicKey: account, network: 'testnet' } },

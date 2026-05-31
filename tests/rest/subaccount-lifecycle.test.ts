@@ -22,7 +22,9 @@ const NETWORK_TIMEOUT = 50_000;
 const mainSigner: Signer = { secretKey: mainSecretKey, publicKey: mainAccount, network: 'testnet' };
 const subSigner: Signer = { secretKey: subSecretKey, publicKey: subAccount, network: 'testnet' };
 
-describe('subaccount lifecycle (testnet, réel)', () => {
+// CRÉATION de sous-compte (= ressource testnet) → exécuté MANUELLEMENT par Philippe uniquement,
+// jamais en régression auto (politique : pas de création de sous-compte/vault/clé dans les tests).
+describe.skip('subaccount lifecycle (testnet, réel)', () => {
   beforeAll(() => {
     client = init({ signers: { [mainAccount]: mainSigner, [subAccount]: subSigner } });
   });
