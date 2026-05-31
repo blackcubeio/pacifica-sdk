@@ -1,8 +1,10 @@
-// ── Interfaces COMPLÉMENTAIRES Pacifica (hors contrat commun aux 3 DEX) ────────────
+// ── Interfaces COMPLÉMENTAIRES Pacifica (hors contrat commun aux DEX) ────────────
 // Pacifica expose beaucoup plus que le tronc commun. Ces interfaces décrivent ces capacités
-// **spécifiques** ; les scopes correspondants (`dex.vaults()`, `dex.agent()`, `dex.apiKeys()`,
-// `dex.spot()`, `dex.lending()`, `dex.portfolio()`, `dex.subaccounts()`, `dex.advancedOrders()`)
-// les implémentent. Les types d'I/O sont dérivés des fonctions REST (zéro divergence).
+// **spécifiques**, accessibles via le namespace uniforme `dex.native.<capacité>(label?)`
+// (convention partagée par les 4 SDK) : `native.vaults()`, `native.agents()`, `native.apiKeys()`,
+// `native.spot()`, `native.lending()`, `native.portfolio()`, `native.subAccounts()`,
+// `native.advancedOrders()`. Noms d'interfaces (`IVaults`, `IAgents`…) **identiques** aux autres
+// SDK ; seuls les types de params diffèrent. Les types d'I/O sont dérivés des fonctions REST.
 
 import type { createApiConfigKey } from '../rest/account/create-api-config-key';
 import type { createSubaccount } from '../rest/account/create-subaccount';
@@ -63,7 +65,7 @@ import type { vaultWithdraw } from '../rest/vaults/vault-withdraw';
 type Args<F extends (...a: never[]) => unknown> = Parameters<F>[1];
 
 /** Gestion des **vaults** (Lake). */
-export interface IPacificaVaults {
+export interface IVaults {
   getVaults(): ReturnType<typeof getVaults>;
   createVault(params: Args<typeof createVault>): ReturnType<typeof createVault>;
   vaultDeposit(params: Args<typeof vaultDeposit>): ReturnType<typeof vaultDeposit>;
@@ -83,37 +85,31 @@ export interface IPacificaVaults {
   claimReferralCode(params: Args<typeof claimReferralCode>): ReturnType<typeof claimReferralCode>;
 }
 
-/** Agent wallets et IP whitelist. */
-export interface IPacificaAgent {
-  bindAgentWallet(params: Args<typeof bindAgentWallet>): ReturnType<typeof bindAgentWallet>;
-  listAgentWallets(): ReturnType<typeof listAgentWallets>;
-  revokeAgentWallet(params: Args<typeof revokeAgentWallet>): ReturnType<typeof revokeAgentWallet>;
-  revokeAllAgentWallets(): ReturnType<typeof revokeAllAgentWallets>;
-  addAgentWhitelistedIp(
-    params: Args<typeof addAgentWhitelistedIp>,
-  ): ReturnType<typeof addAgentWhitelistedIp>;
-  removeAgentWhitelistedIp(
+/** Agent wallets et IP whitelist. Verbes alignés sur les autres SDK (`list`/`approve`/`revoke`). */
+export interface IAgents {
+  approve(params: Args<typeof bindAgentWallet>): ReturnType<typeof bindAgentWallet>;
+  list(): ReturnType<typeof listAgentWallets>;
+  revoke(params: Args<typeof revokeAgentWallet>): ReturnType<typeof revokeAgentWallet>;
+  revokeAll(): ReturnType<typeof revokeAllAgentWallets>;
+  addIp(params: Args<typeof addAgentWhitelistedIp>): ReturnType<typeof addAgentWhitelistedIp>;
+  removeIp(
     params: Args<typeof removeAgentWhitelistedIp>,
   ): ReturnType<typeof removeAgentWhitelistedIp>;
-  listAgentIpWhitelist(
-    params: Args<typeof listAgentIpWhitelist>,
-  ): ReturnType<typeof listAgentIpWhitelist>;
-  setAgentIpWhitelistEnabled(
+  listIps(params: Args<typeof listAgentIpWhitelist>): ReturnType<typeof listAgentIpWhitelist>;
+  setIpEnabled(
     params: Args<typeof setAgentIpWhitelistEnabled>,
   ): ReturnType<typeof setAgentIpWhitelistEnabled>;
 }
 
-/** Clés de configuration API (rate-limit). */
-export interface IPacificaApiKeys {
-  createApiConfigKey(): ReturnType<typeof createApiConfigKey>;
-  listApiConfigKeys(): ReturnType<typeof listApiConfigKeys>;
-  revokeApiConfigKey(
-    params: Args<typeof revokeApiConfigKey>,
-  ): ReturnType<typeof revokeApiConfigKey>;
+/** Clés de configuration API (rate-limit). Verbes alignés (`create`/`list`/`revoke`). */
+export interface IApiKeys {
+  create(): ReturnType<typeof createApiConfigKey>;
+  list(): ReturnType<typeof listApiConfigKeys>;
+  revoke(params: Args<typeof revokeApiConfigKey>): ReturnType<typeof revokeApiConfigKey>;
 }
 
 /** Actifs spot, bridge, retraits/transferts spot, historiques spot. */
-export interface IPacificaSpot {
+export interface ISpot {
   getSpotAssets(query?: Args<typeof getSpotAssets>): ReturnType<typeof getSpotAssets>;
   getBridgeInfo(): ReturnType<typeof getBridgeInfo>;
   getBridgeParams(params: Args<typeof getBridgeParams>): ReturnType<typeof getBridgeParams>;
@@ -136,14 +132,14 @@ export interface IPacificaSpot {
 }
 
 /** Prêt / auto-lending (Lake collatéral). */
-export interface IPacificaLending {
+export interface ILending {
   toggleAutoLending(params: Args<typeof toggleAutoLending>): ReturnType<typeof toggleAutoLending>;
   getAccountLoan(params: Args<typeof getAccountLoan>): ReturnType<typeof getAccountLoan>;
   getLoanPool(): ReturnType<typeof getLoanPool>;
 }
 
 /** Portefeuille, réglages, historiques de compte. */
-export interface IPacificaPortfolio {
+export interface IPortfolio {
   getPortfolio(params: Args<typeof getPortfolio>): ReturnType<typeof getPortfolio>;
   getAccountSettings(
     params: Args<typeof getAccountSettings>,
@@ -156,22 +152,21 @@ export interface IPacificaPortfolio {
   getAccountFunding(params: Args<typeof getAccountFunding>): ReturnType<typeof getAccountFunding>;
 }
 
-/** Création / transferts de sous-comptes (la liste est dans `account().getSubAccounts`). */
-export interface IPacificaSubAccounts {
-  createSubaccount(params: Args<typeof createSubaccount>): ReturnType<typeof createSubaccount>;
-  transferSubaccountFund(
-    params: Args<typeof transferSubaccountFund>,
-  ): ReturnType<typeof transferSubaccountFund>;
+/** Création / transferts de sous-comptes (la liste est dans `account().getSubAccounts`).
+ *  Verbes alignés (`create`/`transfer`). */
+export interface ISubAccountsAdmin {
+  create(params: Args<typeof createSubaccount>): ReturnType<typeof createSubaccount>;
+  transfer(params: Args<typeof transferSubaccountFund>): ReturnType<typeof transferSubaccountFund>;
 }
 
 /** Ordres avancés : stop, TP/SL de position, batch, TWAP, et données marché annexes. */
-export interface IPacificaAdvancedOrders {
+export interface IAdvancedOrders {
   createStopOrder(params: Args<typeof createStopOrder>): ReturnType<typeof createStopOrder>;
   cancelStopOrder(params: Args<typeof cancelStopOrder>): ReturnType<typeof cancelStopOrder>;
   createPositionTpsl(
     params: Args<typeof createPositionTpsl>,
   ): ReturnType<typeof createPositionTpsl>;
-  batchOrders(actions: Args<typeof batchOrders>): ReturnType<typeof batchOrders>;
+  placeBatch(actions: Args<typeof batchOrders>): ReturnType<typeof batchOrders>;
   getOrderHistoryById(
     params: Args<typeof getOrderHistoryById>,
   ): ReturnType<typeof getOrderHistoryById>;

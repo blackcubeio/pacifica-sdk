@@ -7,6 +7,8 @@ Tout passe par la classe **`Pacifica`** — voir le [README](../README.md) pour 
 ## Sommaire
 
 - [README](../README.md) — la classe `Pacifica`, les scopes, REST vs WebSocket, exemples.
+- [Surface commune](./common.md) — le **contrat unifié** (identique sur les 4 SDK Blackcube).
+- [Surface native](./native.md) — les capacités **spécifiques à Pacifica** (`dex.native.<cap>()`).
 - [Signing](./signing.md) — Ed25519, signers par label, réseau par signer, agent wallets / API
   keys, types d'opérations.
 - [Deposit](./deposit.md) — dépôt on-chain (instruction Solana / devnet).

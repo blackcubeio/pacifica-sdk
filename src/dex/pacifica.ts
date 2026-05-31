@@ -123,14 +123,14 @@ import type {
   WithdrawInput,
 } from './contract';
 import type {
-  IPacificaAdvancedOrders,
-  IPacificaAgent,
-  IPacificaApiKeys,
-  IPacificaLending,
-  IPacificaPortfolio,
-  IPacificaSpot,
-  IPacificaSubAccounts,
-  IPacificaVaults,
+  IAdvancedOrders,
+  IAgents,
+  IApiKeys,
+  ILending,
+  IPortfolio,
+  ISpot,
+  ISubAccountsAdmin,
+  IVaults,
 } from './pacifica-contract';
 
 /** Options de construction d'un {@link Pacifica}. */
@@ -404,8 +404,8 @@ class PacificaScope {
   }
 }
 
-/** Scope **vaults** (Lake) — interface complémentaire {@link IPacificaVaults}. */
-class PacificaVaults extends PacificaScope implements IPacificaVaults {
+/** Scope **vaults** (Lake) — interface complémentaire {@link IVaults}. */
+class PacificaVaults extends PacificaScope implements IVaults {
   public getVaults() {
     return getVaults(this.client, this.label);
   }
@@ -447,49 +447,49 @@ class PacificaVaults extends PacificaScope implements IPacificaVaults {
   }
 }
 
-/** Scope **agent** — interface complémentaire {@link IPacificaAgent}. */
-class PacificaAgent extends PacificaScope implements IPacificaAgent {
-  public bindAgentWallet(params: Parameters<typeof bindAgentWallet>[1]) {
+/** Scope **agent** — interface complémentaire {@link IAgents}. */
+class PacificaAgent extends PacificaScope implements IAgents {
+  public approve(params: Parameters<typeof bindAgentWallet>[1]) {
     return bindAgentWallet(this.client, params, this.signed());
   }
-  public listAgentWallets() {
+  public list() {
     return listAgentWallets(this.client, this.signed());
   }
-  public revokeAgentWallet(params: Parameters<typeof revokeAgentWallet>[1]) {
+  public revoke(params: Parameters<typeof revokeAgentWallet>[1]) {
     return revokeAgentWallet(this.client, params, this.signed());
   }
-  public revokeAllAgentWallets() {
+  public revokeAll() {
     return revokeAllAgentWallets(this.client, this.signed());
   }
-  public addAgentWhitelistedIp(params: Parameters<typeof addAgentWhitelistedIp>[1]) {
+  public addIp(params: Parameters<typeof addAgentWhitelistedIp>[1]) {
     return addAgentWhitelistedIp(this.client, params, this.signed());
   }
-  public removeAgentWhitelistedIp(params: Parameters<typeof removeAgentWhitelistedIp>[1]) {
+  public removeIp(params: Parameters<typeof removeAgentWhitelistedIp>[1]) {
     return removeAgentWhitelistedIp(this.client, params, this.signed());
   }
-  public listAgentIpWhitelist(params: Parameters<typeof listAgentIpWhitelist>[1]) {
+  public listIps(params: Parameters<typeof listAgentIpWhitelist>[1]) {
     return listAgentIpWhitelist(this.client, params, this.signed());
   }
-  public setAgentIpWhitelistEnabled(params: Parameters<typeof setAgentIpWhitelistEnabled>[1]) {
+  public setIpEnabled(params: Parameters<typeof setAgentIpWhitelistEnabled>[1]) {
     return setAgentIpWhitelistEnabled(this.client, params, this.signed());
   }
 }
 
-/** Scope **apiKeys** (clés de config API) — interface complémentaire {@link IPacificaApiKeys}. */
-class PacificaApiKeys extends PacificaScope implements IPacificaApiKeys {
-  public createApiConfigKey() {
+/** Scope **apiKeys** (clés de config API) — interface complémentaire {@link IApiKeys}. */
+class PacificaApiKeys extends PacificaScope implements IApiKeys {
+  public create() {
     return createApiConfigKey(this.client, this.signed());
   }
-  public listApiConfigKeys() {
+  public list() {
     return listApiConfigKeys(this.client, this.signed());
   }
-  public revokeApiConfigKey(params: Parameters<typeof revokeApiConfigKey>[1]) {
+  public revoke(params: Parameters<typeof revokeApiConfigKey>[1]) {
     return revokeApiConfigKey(this.client, params, this.signed());
   }
 }
 
-/** Scope **spot** (actifs spot, bridge, retraits/transferts) — {@link IPacificaSpot}. */
-class PacificaSpot extends PacificaScope implements IPacificaSpot {
+/** Scope **spot** (actifs spot, bridge, retraits/transferts) — {@link ISpot}. */
+class PacificaSpot extends PacificaScope implements ISpot {
   public getSpotAssets(query?: Parameters<typeof getSpotAssets>[1]) {
     return getSpotAssets(this.client, query ?? {}, this.label);
   }
@@ -519,8 +519,8 @@ class PacificaSpot extends PacificaScope implements IPacificaSpot {
   }
 }
 
-/** Scope **lending** (prêt / auto-lending) — interface complémentaire {@link IPacificaLending}. */
-class PacificaLending extends PacificaScope implements IPacificaLending {
+/** Scope **lending** (prêt / auto-lending) — interface complémentaire {@link ILending}. */
+class PacificaLending extends PacificaScope implements ILending {
   public toggleAutoLending(params: Parameters<typeof toggleAutoLending>[1]) {
     return toggleAutoLending(this.client, params, this.signed());
   }
@@ -532,8 +532,8 @@ class PacificaLending extends PacificaScope implements IPacificaLending {
   }
 }
 
-/** Scope **portfolio** (réglages + historiques de compte) — {@link IPacificaPortfolio}. */
-class PacificaPortfolio extends PacificaScope implements IPacificaPortfolio {
+/** Scope **portfolio** (réglages + historiques de compte) — {@link IPortfolio}. */
+class PacificaPortfolio extends PacificaScope implements IPortfolio {
   public getPortfolio(params: Parameters<typeof getPortfolio>[1]) {
     return getPortfolio(this.client, params, this.label);
   }
@@ -554,18 +554,18 @@ class PacificaPortfolio extends PacificaScope implements IPacificaPortfolio {
   }
 }
 
-/** Scope **subaccounts** (création / transferts) — interface complémentaire {@link IPacificaSubAccounts}. */
-class PacificaSubAccounts extends PacificaScope implements IPacificaSubAccounts {
-  public createSubaccount(params: Parameters<typeof createSubaccount>[1]) {
+/** Scope **subaccounts** (création / transferts) — interface complémentaire {@link ISubAccountsAdmin}. */
+class PacificaSubAccounts extends PacificaScope implements ISubAccountsAdmin {
+  public create(params: Parameters<typeof createSubaccount>[1]) {
     return createSubaccount(this.client, params);
   }
-  public transferSubaccountFund(params: Parameters<typeof transferSubaccountFund>[1]) {
+  public transfer(params: Parameters<typeof transferSubaccountFund>[1]) {
     return transferSubaccountFund(this.client, params, this.signed());
   }
 }
 
-/** Scope **advancedOrders** (stop / TP-SL / batch / TWAP + marché annexe) — {@link IPacificaAdvancedOrders}. */
-class PacificaAdvancedOrders extends PacificaScope implements IPacificaAdvancedOrders {
+/** Scope **advancedOrders** (stop / TP-SL / batch / TWAP + marché annexe) — {@link IAdvancedOrders}. */
+class PacificaAdvancedOrders extends PacificaScope implements IAdvancedOrders {
   public createStopOrder(params: Parameters<typeof createStopOrder>[1]) {
     return createStopOrder(this.client, params, this.signed());
   }
@@ -575,7 +575,7 @@ class PacificaAdvancedOrders extends PacificaScope implements IPacificaAdvancedO
   public createPositionTpsl(params: Parameters<typeof createPositionTpsl>[1]) {
     return createPositionTpsl(this.client, params, this.signed());
   }
-  public batchOrders(actions: Parameters<typeof batchOrders>[1]) {
+  public placeBatch(actions: Parameters<typeof batchOrders>[1]) {
     return batchOrders(this.client, actions, this.signed());
   }
   public getOrderHistoryById(params: Parameters<typeof getOrderHistoryById>[1]) {
@@ -641,46 +641,34 @@ export class Pacifica {
     return new PacificaRealtime(this.unifiedWs(this.resolve(label)), 'perp');
   }
 
-  // ── Scopes spécifiques Pacifica (interfaces complémentaires, hors contrat commun) ──
+  // ── Surplus spécifique Pacifica (namespace `native`, convention partagée par les 4 SDK) ──
 
-  /** Scope **vaults** (Lake). */
-  public vaults(label?: string): PacificaVaults {
-    return new PacificaVaults(this.client, this.resolve(label));
-  }
-
-  /** Scope **agent** (agent wallets, IP whitelist). */
-  public agent(label?: string): PacificaAgent {
-    return new PacificaAgent(this.client, this.resolve(label));
-  }
-
-  /** Scope **apiKeys** (clés de config API). */
-  public apiKeys(label?: string): PacificaApiKeys {
-    return new PacificaApiKeys(this.client, this.resolve(label));
-  }
-
-  /** Scope **spot** (actifs spot, bridge, retraits/transferts spot). */
-  public spot(label?: string): PacificaSpot {
-    return new PacificaSpot(this.client, this.resolve(label));
-  }
-
-  /** Scope **lending** (prêt / auto-lending). */
-  public lending(label?: string): PacificaLending {
-    return new PacificaLending(this.client, this.resolve(label));
-  }
-
-  /** Scope **portfolio** (réglages + historiques de compte). */
-  public portfolio(label?: string): PacificaPortfolio {
-    return new PacificaPortfolio(this.client, this.resolve(label));
-  }
-
-  /** Scope **subaccounts** (création / transferts ; la liste est dans `account()`). */
-  public subaccounts(label?: string): PacificaSubAccounts {
-    return new PacificaSubAccounts(this.client, this.resolve(label));
-  }
-
-  /** Scope **advancedOrders** (stop, TP/SL, batch, TWAP, marché annexe). */
-  public advancedOrders(label?: string): PacificaAdvancedOrders {
-    return new PacificaAdvancedOrders(this.client, this.resolve(label));
+  /**
+   * Capacités **spécifiques à Pacifica**, hors contrat unifié. Accès uniforme à tous les SDK :
+   * `dex.native.<capacité>(label?)`. Noms d'interfaces (`IVaults`, `IAgents`…) et de méthodes
+   * **identiques** entre SDK ; seuls les types de params diffèrent.
+   */
+  public get native() {
+    const c = this.client;
+    const r = (label?: string) => this.resolve(label);
+    return {
+      /** Vaults (Lake) — `IVaults`. */
+      vaults: (label?: string) => new PacificaVaults(c, r(label)),
+      /** Agent wallets + IP whitelist — `IAgents`. */
+      agents: (label?: string) => new PacificaAgent(c, r(label)),
+      /** Clés de config API — `IApiKeys`. */
+      apiKeys: (label?: string) => new PacificaApiKeys(c, r(label)),
+      /** Actifs spot, bridge, retraits/transferts spot — `ISpot`. */
+      spot: (label?: string) => new PacificaSpot(c, r(label)),
+      /** Prêt / auto-lending (Lake) — `ILending`. */
+      lending: (label?: string) => new PacificaLending(c, r(label)),
+      /** Portefeuille, réglages, historiques de compte — `IPortfolio`. */
+      portfolio: (label?: string) => new PacificaPortfolio(c, r(label)),
+      /** Création / transferts de sous-comptes — `ISubAccountsAdmin`. */
+      subAccounts: (label?: string) => new PacificaSubAccounts(c, r(label)),
+      /** Ordres avancés (stop, TP/SL, batch, TWAP, marché annexe) — `IAdvancedOrders`. */
+      advancedOrders: (label?: string) => new PacificaAdvancedOrders(c, r(label)),
+    };
   }
 
   /** Un client WS unifié par label (réutilisé pour partager le ref-counting du socket). */
