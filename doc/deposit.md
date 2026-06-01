@@ -1,55 +1,68 @@
-# Deposit (on-chain)
+# Dépôt (on-chain)
 
-Collateral deposit is **not an API route** — it's a **Solana transaction** straight to the
-Pacifica program (what the UI / the Python SDK do). Uses the modern `@solana/kit` +
-`@solana-program/token` (not the legacy `@solana/web3.js`).
+Le dépôt de collatéral n'est **pas une route API** : c'est une **transaction Solana** envoyée
+directement au programme Pacifica (ce que font l'UI et le SDK Python). Il s'appuie sur le moderne
+`@solana/kit` + `@solana-program/token` (pas le legacy `@solana/web3.js`).
 
-Authority: ◎ **Solana wallet** — signed by the depositing account's on-chain Solana keypair,
-resolved from the **mandatory** signer `label`. This is a Solana signature, never a Pacifica API key.
+Autorité : ◎ **wallet Solana** — signé par la keypair Solana on-chain du compte déposant, résolue
+depuis le `label` du signer (**obligatoire**). C'est une signature Solana, jamais une clé API Pacifica.
 
-## Function
+## Fonction
+
+`deposit` est la **seule fonction libre** hors de la classe `Pacifica` (une TX on-chain n'a pas sa
+place dans la façade REST/WS). Elle prend le **client en premier argument** : l'appelant le construit
+avec `init` (le même que la façade utilise en interne), puis le label désigne le signer.
 
 ```ts
-deposit(params: DepositParams, label: string): Promise<string>   // transaction signature
+deposit(client: PacificaClient, params: DepositParams, label: string): Promise<string> // signature de TX
 ```
 
 ```ts
 interface DepositParams {
-  amount: number;               // e.g. 10 = 10 USDC/USDP
-  rpcUrl?: string;              // default: mainnet-beta
-  rpcSubscriptionsUrl?: string; // default: derived from rpcUrl (https→wss)
+  amount: number;               // ex. 10 = 10 USDC/USDP
+  rpcUrl?: string;              // défaut : mainnet-beta
+  rpcSubscriptionsUrl?: string; // défaut : dérivé de rpcUrl (https→wss)
   programId?: string;
   centralState?: string;
   collateralMint?: string;
-  decimals?: number;            // default: 6
+  decimals?: number;            // défaut : 6
 }
 ```
 
-`buildDepositData(amount, decimals)` is exported to inspect/test the encoding without sending.
+`buildDepositData(amount, decimals)` est exporté pour inspecter/tester l'encodage sans rien envoyer.
 
-## Instruction layout
+## Disposition de l'instruction
 
-- Anchor discriminator `sha256("global:deposit")[:8]` (= `f223c68952e1f2b6`) + amount as `u64` LE (`amount × 10^decimals`).
-- **Vault is derived**: ATA of `centralState` for the mint (no vault address to provide).
-- 10 accounts: depositor (signer), depositor ATA, central_state, vault, token program, ATA program, mint, system program, event_authority (PDA `["__event_authority"]`), program.
-- Sent via `sendAndConfirmTransactionFactory` from `@solana/kit`.
+- Discriminant Anchor `sha256("global:deposit")[:8]` (= `f223c68952e1f2b6`) + montant en `u64` LE (`amount × 10^decimals`).
+- **Le vault est dérivé** : ATA de `centralState` pour le mint (aucune adresse de vault à fournir).
+- 10 comptes : depositor (signer), ATA du depositor, central_state, vault, token program, ATA program, mint, system program, event_authority (PDA `["__event_authority"]`), program.
+- Envoyé via `sendAndConfirmTransactionFactory` de `@solana/kit`.
 
-## ⚠️ The program differs per environment
+## ⚠️ Le programme diffère selon l'environnement
 
-| | Program | central_state | mint |
+| | Programme | central_state | mint |
 |---|---|---|---|
-| **mainnet** (defaults) | `PCFA5iYg…` | `9Gdmhq…` | USDC `EPjFW…` |
+| **mainnet** (défauts) | `PCFA5iYg…` | `9Gdmhq…` | USDC `EPjFW…` |
 | **testnet / devnet** | `peRPsYCcB1J9…` | `2zPRq…` | USDP `USDPqRbL…` |
 
-Exported devnet constants: `DEVNET_RPC_URL`, `DEVNET_DEPOSIT_PROGRAM_ID`,
+Constantes devnet exportées : `DEVNET_RPC_URL`, `DEVNET_DEPOSIT_PROGRAM_ID`,
 `DEVNET_CENTRAL_STATE`, `DEVNET_COLLATERAL_MINT`.
 
 ```ts
 import {
-  deposit, DEVNET_RPC_URL, DEVNET_DEPOSIT_PROGRAM_ID, DEVNET_CENTRAL_STATE, DEVNET_COLLATERAL_MINT,
+  init, deposit,
+  DEVNET_RPC_URL, DEVNET_DEPOSIT_PROGRAM_ID, DEVNET_CENTRAL_STATE, DEVNET_COLLATERAL_MINT,
 } from '@blackcube/pacifica-sdk';
 
-deposit(
+// Le client porte le registre des signers (clé Solana base58 par label).
+const client = init({
+  signers: {
+    deskA: { secretKey: SOLANA_PRIVATE_KEY, publicKey: SOLANA_ADDRESS, network: 'testnet' },
+  },
+});
+
+await deposit(
+  client,
   {
     amount: 10,
     rpcUrl: DEVNET_RPC_URL,
@@ -57,10 +70,10 @@ deposit(
     centralState: DEVNET_CENTRAL_STATE,
     collateralMint: DEVNET_COLLATERAL_MINT,
   },
-  { secretKey: SOLANA_PRIVATE_KEY },
+  'deskA', // le label résout la keypair Solana qui signe et paie la TX
 );
 ```
 
-> Verified **end-to-end on devnet**: after the deposit, the Pacifica account balance
-> (`getAccountInfo`) actually increases by the deposited amount. ⚠️ Using the mainnet program
-> (`PCFA…`) on devnet produces a transaction that *confirms* but does **not credit** the account.
+> Vérifié **de bout en bout sur devnet** : après le dépôt, le solde du compte Pacifica
+> (`getAccountInfo`) augmente bien du montant déposé. ⚠️ Utiliser le programme mainnet
+> (`PCFA…`) sur devnet produit une transaction qui *confirme* mais ne **crédite pas** le compte.

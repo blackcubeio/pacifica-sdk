@@ -1,40 +1,40 @@
-# Signing
+# Signatures
 
-Ed25519 request signing, the `Signer` object, operation types, hardware wallet, agent wallets
-and API config keys.
+Signature Ed25519 des requêtes, l'objet `Signer`, les types d'opérations, le hardware wallet,
+les agent wallets et les clés de config API.
 
-## Authority — who can sign what
+## Autorité — qui peut signer quoi
 
-Each function's required credential is annotated on its page with one of:
+Le credential requis de chaque fonction est annoté sur sa page avec l'un des marqueurs suivants :
 
-| Mark | Meaning |
+| Marqueur | Sens |
 |---|---|
-| 🔓 **Public** | No signer — public read (any account address as a query param). |
-| 🔑 **Account key or API key** | The account's own key **or** a bound API key for that account (registry signer). Trading, account writes, withdraw, vaults, positions… |
-| 👤 **Account key only** | The account's **own** key; an **API key is rejected** (`"Verification failed"`). Agent-key & API-key management. |
-| ✍️ **Dual** | Two keys: the main account **and** the new sub account (subaccount creation). |
-| ◎ **Solana wallet** | The account's on-chain Solana keypair (deposit) — never an API key. |
+| 🔓 **Public** | Aucun signer — lecture publique (n'importe quelle adresse de compte en paramètre de requête). |
+| 🔑 **Clé de compte ou clé API** | La clé propre du compte **ou** une clé API liée à ce compte (signer du registre). Trading, écritures de compte, retrait, vaults, positions… |
+| 👤 **Clé de compte uniquement** | La clé **propre** du compte ; une **clé API est refusée** (`"Verification failed"`). Gestion des agent keys et des clés API. |
+| ✍️ **Double** | Deux clés : le compte principal **et** le nouveau sous-compte (création de sous-compte). |
+| ◎ **Wallet Solana** | La keypair Solana on-chain du compte (dépôt) — jamais une clé API. |
 
-**API keys are per account (incl. per subaccount)** — a key only works for the account it is
-bound to ; passe un signer par label au constructeur `new Pacifica({ signers }, …)`. Verified on
-testnet: an API key can trade / change leverage / withdraw for its account, but **cannot**
-bind/revoke agent keys (those need the account's own key).
+**Les clés API sont par compte (y compris par sous-compte)** — une clé ne fonctionne que pour le
+compte auquel elle est liée ; passe un signer par label au constructeur `new Pacifica({ signers }, …)`.
+Vérifié sur testnet : une clé API peut trader / changer le levier / retirer pour son compte, mais
+**ne peut pas** lier/révoquer des agent keys (cela requiert la clé propre du compte).
 
 > La classe `Pacifica` signe pour toi : tu ne manipules jamais les primitives ci-dessous. Les
-> fonctions de gestion (agents/API keys/vaults) sont exposées via les scopes natifs
+> fonctions de gestion (agents/clés API/vaults) sont exposées via les scopes natifs
 > `dex.native.agents()` / `dex.native.apiKeys()` / `dex.native.vaults()`.
 
-## Mechanism
+## Mécanisme
 
-1. header `{ timestamp(ms), expiryWindow(default 30000), type }`
+1. en-tête `{ timestamp(ms), expiryWindow(défaut 30000), type }`
 2. `{ ...header, data: payload }`
-3. recursive key sort (`sortJsonKeys`)
-4. compact `JSON.stringify` (no spaces)
-5. Ed25519 signature (`@noble/curves`) → base58
-6. REST request = `{ account, signature, timestamp, expiry_window, ...payload }`
-7. WS message = `{ id, params: { "<operation_type>": request } }`
+3. tri récursif des clés (`sortJsonKeys`)
+4. `JSON.stringify` compact (sans espaces)
+5. signature Ed25519 (`@noble/curves`) → base58
+6. requête REST = `{ account, signature, timestamp, expiry_window, ...payload }`
+7. message WS = `{ id, params: { "<operation_type>": request } }`
 
-## Signers, labels & networks
+## Signers, labels et réseaux
 
 Tu passes les signers au **constructeur** `new Pacifica(signers, { default })` — un par **label**.
 Chaque signer est autonome et **porte son propre réseau** : c'est ce qui permet à mainnet et
@@ -42,10 +42,10 @@ testnet de coexister dans le même process (plus de singleton global).
 
 ```ts
 interface Signer {
-  secretKey: string;               // base58 private key used to sign
-  publicKey: string;               // the account address (the signed `account`, used for reads)
-  network: 'mainnet' | 'testnet';  // the network this signer acts on
-  agentWallet?: string;            // agent key pubkey when signing via an agent wallet
+  secretKey: string;               // clé privée base58 utilisée pour signer
+  publicKey: string;               // l'adresse du compte (le champ signé `account`, lu pour les reads)
+  network: 'mainnet' | 'testnet';  // le réseau sur lequel ce signer agit
+  agentWallet?: string;            // pubkey de l'agent key si la signature passe par un agent wallet
 }
 
 const dex = new Pacifica(
@@ -57,73 +57,80 @@ const dex = new Pacifica(
 );
 
 await dex.perp('tester').place(params);  // le label choisit le compte ET le réseau
-await dex.perp().getCandles(query);            // lecture publique, signer par défaut
+await dex.perp().getCandles(query);      // lecture publique, signer par défaut
 ```
 
 Règles lecture / écriture, internes à la façade :
 
 - **Écritures** (`placeOrder`, `withdraw`, `updateLeverage`…) — un signer (label, ou défaut) est
   **obligatoire** ; le champ signé `account` = `publicKey` du signer, et le réseau route la requête.
-- **Lectures** (marché, `getCandles`, subscriptions…) — pas de signer requis ; sans label →
+- **Lectures** (marché, `getCandles`, abonnements…) — pas de signer requis ; sans label →
   **mainnet**, un label → le réseau de ce signer.
 
 ## Primitives internes (`common/utils`)
 
-| Function | Purpose |
-|---|---|
-| `sortJsonKeys(value)` | recursive key sort (arrays preserved) |
-| `prepareMessage(header, payload)` | sorted/compact wire message to sign |
-| `signMessage(header, payload, secretKey)` | `{ message, signature }` (base58 signature) |
-| `signWithHardwareWallet(header, payload, hardwareWalletPath)` | `{ message, signature: { type:'hardware', value } }` |
-| `secretKeyFromBase58(secretKey)` / `publicKeyFromBase58(secretKey)` | key helpers |
+Ces primitives sont **internes** : elles ne sont pas exportées par le paquet. La façade les utilise
+pour toi. Elles ne sont listées ici que pour documenter le mécanisme de signature.
 
-`signature` is polymorphic: `string` (software) | `{ type: 'hardware', value }` (Ledger).
+| Fonction | Rôle |
+|---|---|
+| `sortJsonKeys(value)` | tri récursif des clés (tableaux préservés) |
+| `prepareMessage(header, payload)` | message filaire trié/compact à signer |
+| `signMessage(header, payload, secretKey)` | `{ message, signature }` (signature base58) |
+| `signWithHardwareWallet(header, payload, hardwareWalletPath)` | `{ message, signature: { type:'hardware', value } }` |
+| `secretKeyFromBase58(secretKey)` / `publicKeyFromBase58(secretKey)` | helpers de clés |
+
+`signature` est polymorphe : `string` (logiciel) | `{ type: 'hardware', value }` (Ledger).
 
 ### Hardware wallet (Ledger)
 
-`signWithHardwareWallet` calls the `solana sign-offchain-message` CLI (**Node-only**, subprocess);
-requires the `solana` CLI installed + a connected Ledger.
+`signWithHardwareWallet` appelle la CLI `solana sign-offchain-message` (**Node uniquement**,
+sous-processus) ; requiert la CLI `solana` installée + un Ledger connecté.
 
-## Operation types
+## Types d'opérations
 
-`OperationType` (enum) covers every signing type: `create_order`, `create_market_order`,
-`edit_order`, `cancel_order`, `cancel_all_orders`, `create_stop_order`, `cancel_stop_order`,
-`set_position_tpsl`, `update_leverage`, `update_margin_mode`, `add_isolated_margin`,
-`set_auto_lend_disabled`, `update_account_spot_settings`, `withdraw`, `withdraw_spot_asset`,
-`subaccount_initiate`/`subaccount_confirm`, `list_subaccounts`, `transfer_funds`,
-`subaccount_spot_transfer`, `*_lake` (vaults), agent (`bind_agent_wallet`, `list_agent_wallets`,
-`revoke_agent_wallet`, `revoke_all_agent_wallets`, `list_agent_ip_whitelist`,
-`add_agent_whitelisted_ip`, `remove_agent_whitelisted_ip`, `set_agent_ip_whitelist_enabled`),
-API keys (`create_api_key`, `revoke_api_key`, `list_api_keys`).
+`OperationType` (enum **interne**) couvre chaque type de signature : `create_order`,
+`create_market_order`, `edit_order`, `cancel_order`, `cancel_all_orders`, `create_stop_order`,
+`cancel_stop_order`, `set_position_tpsl`, `update_leverage`, `update_margin_mode`,
+`add_isolated_margin`, `set_auto_lend_disabled`, `update_account_spot_settings`, `withdraw`,
+`withdraw_spot_asset`, `subaccount_initiate`/`subaccount_confirm`, `list_subaccounts`,
+`transfer_funds`, `subaccount_spot_transfer`, `*_lake` (vaults), agent (`bind_agent_wallet`,
+`list_agent_wallets`, `revoke_agent_wallet`, `revoke_all_agent_wallets`,
+`list_agent_ip_whitelist`, `add_agent_whitelisted_ip`, `remove_agent_whitelisted_ip`,
+`set_agent_ip_whitelist_enabled`), clés API (`create_api_key`, `revoke_api_key`, `list_api_keys`).
 
-## Agent wallets / API keys
+## Agent wallets / clés API
 
-API agent keys let a program trade **on behalf of an account** without its main key (`account` =
-the account, signature with the agent key, `agent_wallet` field). They are **per account** —
-each account (including each subaccount) holds its own API key (max 20 per account, self-custody),
-and a key only works for the account it is bound to.
+Les agent keys API laissent un programme trader **pour le compte d'un account** sans sa clé
+principale (`account` = le compte, signature avec l'agent key, champ `agent_wallet`). Elles sont
+**par compte** — chaque compte (y compris chaque sous-compte) détient sa propre clé API (max 20
+par compte, self-custody), et une clé ne fonctionne que pour le compte auquel elle est liée.
 
-Authority: 👤 **Account key only** — every management function below must be signed with the
-account's **own** key. An API key signing these is rejected (verified on testnet: `bindAgentWallet`
-via an API key → `400 "Verification failed"`). An agent cannot create or revoke agents.
+Autorité : 👤 **Clé de compte uniquement** — chaque fonction de gestion ci-dessous doit être signée
+avec la clé **propre** du compte. Une clé API qui les signe est refusée (vérifié sur testnet :
+`bindAgentWallet` via une clé API → `400 "Verification failed"`). Un agent ne peut ni créer ni
+révoquer d'agents.
 
-| Function | type | Endpoint | Returns |
+> Ces fonctions sont exposées via le scope natif `dex.native.agents()` (la façade signe et route
+> pour toi). Le tableau ci-dessous décrit le mapping endpoint / type d'opération.
+
+| Méthode (scope `native.agents()`) | type | Endpoint | Retour |
 |---|---|---|---|
-| `bindAgentWallet({ agentWallet }, label)` | `bind_agent_wallet` | `POST /agent/bind` | `void` |
-| `listAgentWallets(label)` | `list_agent_wallets` | `POST /agent/list` | `string[]` |
-| `revokeAgentWallet({ agentWallet }, label)` | `revoke_agent_wallet` | `POST /agent/revoke` | `void` |
-| `revokeAllAgentWallets(label)` | `revoke_all_agent_wallets` | `POST /agent/revoke_all` | `void` |
-| `listAgentIpWhitelist({ agentWallet }, label)` | `list_agent_ip_whitelist` | `POST /agent/ip_whitelist/list` | `JsonValue` |
-| `addAgentWhitelistedIp({ agentWallet, ipAddress }, label)` | `add_agent_whitelisted_ip` | `POST /agent/ip_whitelist/add` | `void` |
-| `removeAgentWhitelistedIp({ agentWallet, ipAddress }, label)` | `remove_agent_whitelisted_ip` | `POST /agent/ip_whitelist/remove` | `void` |
-| `setAgentIpWhitelistEnabled({ agentWallet, enabled }, label)` | `set_agent_ip_whitelist_enabled` | `POST /agent/ip_whitelist/toggle` | `void` |
+| `approve({ agentWallet })` | `bind_agent_wallet` | `POST /agent/bind` | `void` |
+| `getAgents()` | `list_agent_wallets` | `POST /agent/list` | `string[]` |
+| `revoke({ agentWallet })` | `revoke_agent_wallet` | `POST /agent/revoke` | `void` |
+| `revokeAll()` | `revoke_all_agent_wallets` | `POST /agent/revoke_all` | `void` |
+| `getIpWhitelist({ agentWallet })` | `list_agent_ip_whitelist` | `POST /agent/ip_whitelist/list` | `JsonValue` |
+| `addIp({ agentWallet, ipAddress })` | `add_agent_whitelisted_ip` | `POST /agent/ip_whitelist/add` | `void` |
+| `removeIp({ agentWallet, ipAddress })` | `remove_agent_whitelisted_ip` | `POST /agent/ip_whitelist/remove` | `void` |
+| `setIpEnabled({ agentWallet, enabled })` | `set_agent_ip_whitelist_enabled` | `POST /agent/ip_whitelist/toggle` | `void` |
 
-### Using an API key per subaccount
+### Utiliser une clé API par sous-compte
 
-1. **Bind** the key to its account, signed by the account owner:
-   `bindAgentWallet({ agentWallet: API_PUBKEY }, 'owner')` (owner signer registered under `owner`).
-2. **Register** the key as a labelled signer and trade with it — one label per subaccount. Set
-   `publicKey` to the subaccount address and `secretKey` to its API key:
+1. **Lier** la clé à son compte, signé par le propriétaire :
+   `dex.native.agents('owner').approve({ agentWallet: API_PUBKEY })` (signer `owner` enregistré).
+2. **Enregistrer** la clé comme signer labellisé et trader avec — un label par sous-compte. Mets
+   `publicKey` = adresse du sous-compte et `secretKey` = sa clé API :
 
 ```ts
 const dex = new Pacifica({
@@ -133,19 +140,19 @@ const dex = new Pacifica({
 await dex.perp('sub01').place(params);   // signé par la clé API de SUB01, crédité à SUB01
 ```
 
-`listAgentIpWhitelist` sends `api_agent_key` (not `agent_wallet`) in the payload.
+`getIpWhitelist` envoie `api_agent_key` (pas `agent_wallet`) dans le payload.
 
-## API config keys (rate-limit)
+## Clés de config API (rate-limit)
 
-Authority: 👤 **Account key only** — same management class as agent keys; sign with the account's
-own key (an API key cannot manage API keys).
+Autorité : 👤 **Clé de compte uniquement** — même classe de gestion que les agent keys ; signe
+avec la clé propre du compte (une clé API ne peut pas gérer les clés API).
 
-| Function | type | Endpoint | Returns |
+| Méthode (scope `native.apiKeys()`) | type | Endpoint | Retour |
 |---|---|---|---|
-| `createApiConfigKey(label)` | `create_api_key` | `POST /account/api_keys/create` | `{ apiKey }` |
-| `revokeApiConfigKey({ apiKey }, label)` | `revoke_api_key` | `POST /account/api_keys/revoke` | `void` |
-| `listApiConfigKeys(label)` | `list_api_keys` | `POST /account/api_keys` | `JsonValue` |
+| `create()` | `create_api_key` | `POST /account/api_keys/create` | `{ apiKey }` |
+| `revoke({ apiKey })` | `revoke_api_key` | `POST /account/api_keys/revoke` | `void` |
+| `getApiKeys()` | `list_api_keys` | `POST /account/api_keys` | `JsonValue` |
 
-> `listAgentWallets` returns `string[]` (agent wallet addresses, observed on testnet).
-> `listAgentIpWhitelist` and `listApiConfigKeys` responses are undocumented → typed as
-> `JsonValue` (no invented fields).
+> `getAgents` renvoie `string[]` (adresses des agent wallets, observé sur testnet).
+> Les réponses de `getIpWhitelist` et `getApiKeys` ne sont pas documentées → typées en
+> `JsonValue` (aucun champ inventé).

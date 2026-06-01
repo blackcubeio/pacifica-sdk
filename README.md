@@ -20,9 +20,11 @@ gère la connexion, la signature (Ed25519 / Solana), le réseau (mainnet/testnet
 conversion vers les types unifiés Blackcube.
 
 > **Seule exception : `deposit()`.** Le dépôt est une **transaction Solana on-chain** (pas une route
-> API Pacifica) : il est exposé en **fonction libre** `deposit(params, label)` (`rest/deposit.ts`),
-> hors de la classe `Pacifica`. C'est volontaire — une TX on-chain n'a pas sa place dans la façade
-> REST/WS. Tout le reste passe bien par la classe. Détails : [`doc/deposit.md`](doc/deposit.md).
+> API Pacifica) : il est exposé en **fonction libre** `deposit(client, params, label)`
+> (`rest/deposit.ts`), hors de la classe `Pacifica`. L'appelant construit le `client` avec `init`
+> (le même constructeur que la façade utilise en interne) ; le `label` y résout la keypair Solana
+> qui signe. C'est volontaire — une TX on-chain n'a pas sa place dans la façade REST/WS. Tout le
+> reste passe bien par la classe. Détails : [`doc/deposit.md`](doc/deposit.md).
 
 ```ts
 import { Pacifica } from '@blackcube/pacifica-sdk';

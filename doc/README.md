@@ -2,7 +2,8 @@
 
 SDK TypeScript pour l'exchange [Pacifica](https://pacifica.fi) (DEX perpetuals sur Solana).
 Tout passe par la classe **`Pacifica`** — voir le [README](../README.md) pour la surface complète
-(scopes `perp`/`account`/`system`/`helpers`/`ws` + `vaults`/`agent`, REST vs WebSocket, exemples).
+(scopes `perp`/`account`/`transfers`/`helpers`/`ws` + namespace `native`, REST vs WebSocket,
+exemples). Pacifica n'a **pas** de scope `system()`.
 
 ## Sommaire
 
@@ -15,8 +16,8 @@ Tout passe par la classe **`Pacifica`** — voir le [README](../README.md) pour 
 
 ## Rappel : REST vs WebSocket
 
-- **REST** (`perp()`, `account()`, `system()`) — **requête → réponse** : tu `await`, tu reçois
-  une valeur.
+- **REST** (`perp()`, `account()`, `transfers()` + scopes `native`) — **requête → réponse** : tu
+  `await`, tu reçois une valeur.
 - **WebSocket** (`ws()`) — **abonnement → flux** : un handler rappelé à chaque mise à jour,
   jusqu'au désabonnement. Socket ouvert au 1er `subscribe`, fermé au dernier `unsubscribe`.
 
