@@ -49,17 +49,22 @@ export class UserTradeConverter {
   }
 
   toNative(trade: UserTrade): UserTradeNative {
+    // `client_order_id`, `entry_price`, `event_type`, `side`, `cause` conservés dans `xtras` ;
+    // ré-étalés ici (cast simple sur le résidu, pas de double `as unknown`).
     return {
+      ...(trade.xtras as Omit<
+        UserTradeNative,
+        'history_id' | 'order_id' | 'symbol' | 'amount' | 'price' | 'fee' | 'pnl' | 'created_at'
+      >),
       history_id: Number(trade.id),
       order_id: Number(trade.orderId),
       symbol: trade.name,
       amount: trade.size,
       price: trade.price,
       fee: trade.fee,
-      pnl: trade.pnl as string,
+      pnl: trade.pnl ?? '0',
       created_at: trade.time,
-      ...trade.xtras,
-    } as unknown as UserTradeNative;
+    };
   }
 }
 

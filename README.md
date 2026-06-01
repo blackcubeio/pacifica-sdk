@@ -19,6 +19,11 @@ Tu n'appelles jamais un endpoint REST ni un client WebSocket directement. Une se
 gère la connexion, la signature (Ed25519 / Solana), le réseau (mainnet/testnet) et la
 conversion vers les types unifiés Blackcube.
 
+> **Seule exception : `deposit()`.** Le dépôt est une **transaction Solana on-chain** (pas une route
+> API Pacifica) : il est exposé en **fonction libre** `deposit(params, label)` (`rest/deposit.ts`),
+> hors de la classe `Pacifica`. C'est volontaire — une TX on-chain n'a pas sa place dans la façade
+> REST/WS. Tout le reste passe bien par la classe. Détails : [`doc/deposit.md`](doc/deposit.md).
+
 ```ts
 import { Pacifica } from '@blackcube/pacifica-sdk';
 
@@ -28,7 +33,7 @@ const dex = new Pacifica(
 );
 
 // REST : requête → réponse
-const candles = await dex.perp().getCandles({ name: 'BTC', interval: '1m', startTime: Date.now() - 3.6e6 });
+const candles = await dex.perp().getCandles({ name: 'BTC', interval: '1m', startTime: '2026-06-01 00:00:00' });
 const order = await dex.perp().place({
   name: 'BTC', side: 'buy', type: 'limit', size: '0.001', price: '20000',
 });

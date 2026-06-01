@@ -1,5 +1,14 @@
 import type { PacificaClient, WebSocketFactory, WebSocketLike } from '../common/config';
-import { WS_HEARTBEAT_INTERVAL } from '../common/constants';
+import {
+  ACTION_TIMEOUT_MS,
+  IDLE_TIMEOUT_MS,
+  RECONNECT_BASE_MS,
+  RECONNECT_CAP_MS,
+  RECONNECT_FACTOR,
+  RECONNECT_JITTER,
+  RECONNECT_STABLE_MS,
+  WS_HEARTBEAT_INTERVAL,
+} from '../common/constants';
 import type {
   BatchAction,
   CancelAllOrdersRef,
@@ -21,10 +30,13 @@ import {
   buildMarketOrderPayload,
 } from '../rest/orders/payloads';
 import { buildSignedRequest, resolveSigner } from '../rest/signing';
+import { SubscriptionBatcher } from './subscription-batcher';
 
+/** Action signée en vol (attente d'ack par `id`) ; `timer` arme le timeout individuel. */
 interface PendingAction {
   resolve: (value: JsonValue) => void;
   reject: (reason: unknown) => void;
+  timer: ReturnType<typeof setTimeout>;
 }
 
 export class WsClient {
@@ -39,11 +51,16 @@ export class WsClient {
   private readonly label: string | undefined;
   private socket: WebSocketLike | null = null;
   private heartbeatTimer: ReturnType<typeof setInterval> | null = null;
+  private idleTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private stableTimer: ReturnType<typeof setTimeout> | null = null;
+  private reconnectAttempts = 0;
   private readonly pending = new Map<string, PendingAction>();
   private readonly handlers = new Map<string, Set<StreamHandler>>();
   private readonly activeSubscriptions = new Map<string, JsonObject>();
+  private readonly batcher: SubscriptionBatcher;
   private shouldReconnect = false;
-  /** Messages émis avant l'ouverture du socket, rejoués à `onopen` (connexion paresseuse). */
+  /** Actions signées émises avant l'ouverture du socket, rejouées à `onopen` (connexion paresseuse). */
   private pendingSends: string[] = [];
   private open = false;
 
@@ -52,6 +69,11 @@ export class WsClient {
     this.url = options.url ?? client.wsUrls[resolveReadNetwork(client, options.label)];
     this.createSocket = options.webSocket ?? client.webSocket;
     this.label = options.label;
+    this.batcher = new SubscriptionBatcher(
+      (frame) => this.rawSend(frame),
+      (names) => ({ method: 'subscribe', params: JSON.parse(names[0] ?? '{}') as JsonObject }),
+      (names) => ({ method: 'unsubscribe', params: JSON.parse(names[0] ?? '{}') as JsonObject }),
+    );
   }
 
   public connect(): Promise<void> {
@@ -65,7 +87,15 @@ export class WsClient {
           socket.send(payload);
         }
         this.pendingSends = [];
+        this.batcher.setOpen(true);
         this.startHeartbeat();
+        this.bumpIdle();
+        // Reset du compteur de backoff après une connexion stable (pas dès `onopen` :
+        // une socket qui claque aussitôt ne doit pas reboucler à 500 ms sans grimper).
+        this.stableTimer = setTimeout(() => {
+          this.reconnectAttempts = 0;
+          this.stableTimer = null;
+        }, RECONNECT_STABLE_MS);
         resolve();
       };
       socket.onmessage = (event) => this.handleMessage(event.data);
@@ -73,6 +103,7 @@ export class WsClient {
         if (this.onError !== null) {
           this.onError(error);
         }
+        this.rejectAllPending('WebSocket fermé : requête en vol annulée');
         reject(error);
       };
       socket.onclose = () => this.handleClose();
@@ -84,6 +115,15 @@ export class WsClient {
     this.open = false;
     this.pendingSends = [];
     this.stopHeartbeat();
+    this.stopIdleTimer();
+    this.clearStableTimer();
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
+    this.batcher.reset();
+    this.batcher.setOpen(false);
+    this.rejectAllPending('WebSocket fermé : requête en vol annulée');
     if (this.socket !== null) {
       this.socket.close();
       this.socket = null;
@@ -92,18 +132,22 @@ export class WsClient {
 
   public subscribe(params: JsonObject): void {
     this.activeSubscriptions.set(JSON.stringify(params), params);
-    this.send({ method: 'subscribe', params });
+    this.batcher.subscribe(JSON.stringify(params));
   }
 
   public unsubscribe(params: JsonObject): void {
     this.activeSubscriptions.delete(JSON.stringify(params));
-    this.send({ method: 'unsubscribe', params });
+    this.batcher.unsubscribe(JSON.stringify(params));
   }
 
   public sendAction<TResult extends JsonValue = JsonValue>(params: JsonObject): Promise<TResult> {
     const id = globalThis.crypto.randomUUID();
     return new Promise<TResult>((resolve, reject) => {
-      this.pending.set(id, { resolve: resolve as (value: JsonValue) => void, reject });
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error('WebSocket : délai dépassé en attente de la réponse'));
+      }, ACTION_TIMEOUT_MS);
+      this.pending.set(id, { resolve: resolve as (value: JsonValue) => void, reject, timer });
       this.send({ id, params });
     });
   }
@@ -278,18 +322,30 @@ export class WsClient {
     };
   }
 
-  private send(payload: JsonObject): void {
-    const serialized = JSON.stringify(payload);
-    // Connexion paresseuse : tant que le socket n'est pas ouvert, on met en file (rejoué à onopen).
+  /** Émet une frame d'abonnement déjà sérialisée (chemin du batcher) ; file si socket fermée. */
+  private rawSend(frame: string): void {
     if (this.socket === null || this.open === false) {
-      this.pendingSends.push(serialized);
+      this.pendingSends.push(frame);
       return;
     }
-    this.socket.send(serialized);
+    this.socket.send(frame);
+  }
+
+  private send(payload: JsonObject): void {
+    this.rawSend(JSON.stringify(payload));
   }
 
   private handleMessage(raw: unknown): void {
-    const message = JSON.parse(String(raw)) as JsonValue;
+    this.bumpIdle();
+    let message: JsonValue;
+    try {
+      message = JSON.parse(String(raw)) as JsonValue;
+    } catch {
+      if (this.onError !== null) {
+        this.onError(new Error('WebSocket : message JSON illisible ignoré'));
+      }
+      return;
+    }
     if (this.onMessage !== null) {
       this.onMessage(message);
     }
@@ -301,6 +357,7 @@ export class WsClient {
       const pendingAction = this.pending.get(id);
       if (pendingAction !== undefined) {
         this.pending.delete(id);
+        clearTimeout(pendingAction.timer);
         pendingAction.resolve(message);
         return;
       }
@@ -320,32 +377,90 @@ export class WsClient {
     }
   }
 
+  /** Détection d'inactivité : aucun message depuis `IDLE_TIMEOUT_MS` → socket morte → reconnect. */
+  private bumpIdle(): void {
+    this.stopIdleTimer();
+    this.idleTimer = setTimeout(() => this.forceReconnect(), IDLE_TIMEOUT_MS);
+  }
+
+  private stopIdleTimer(): void {
+    if (this.idleTimer !== null) {
+      clearTimeout(this.idleTimer);
+      this.idleTimer = null;
+    }
+  }
+
+  private clearStableTimer(): void {
+    if (this.stableTimer !== null) {
+      clearTimeout(this.stableTimer);
+      this.stableTimer = null;
+    }
+  }
+
+  /** Ferme la socket courante → `handleClose` → `scheduleReconnect`. */
+  private forceReconnect(): void {
+    if (this.socket !== null) {
+      this.socket.close();
+    }
+  }
+
+  /** Rejette toute action signée en vol (jamais laissée pending) avec une erreur claire. */
+  private rejectAllPending(reason: string): void {
+    const error = new Error(reason);
+    for (const pendingAction of this.pending.values()) {
+      clearTimeout(pendingAction.timer);
+      pendingAction.reject(error);
+    }
+    this.pending.clear();
+  }
+
   private handleClose(): void {
     this.stopHeartbeat();
+    this.stopIdleTimer();
+    this.clearStableTimer();
+    this.batcher.reset();
+    this.batcher.setOpen(false);
+    this.rejectAllPending('WebSocket fermé : requête en vol annulée');
     this.socket = null;
     this.open = false;
     if (this.onClose !== null) {
       this.onClose();
     }
     if (this.shouldReconnect === true) {
-      this.reconnect();
+      this.scheduleReconnect();
     }
   }
 
-  private reconnect(): void {
-    this.connect()
-      .then(() => {
-        for (const params of this.activeSubscriptions.values()) {
-          this.send({ method: 'subscribe', params });
-        }
-        if (this.onReconnect !== null) {
-          this.onReconnect();
-        }
-      })
-      .catch((error: unknown) => {
-        if (this.onError !== null) {
-          this.onError(error);
-        }
-      });
+  /** Backoff exponentiel + jitter + cap ; ré-arme tant que `shouldReconnect` (jamais d'abandon). */
+  private scheduleReconnect(): void {
+    if (this.shouldReconnect === false) {
+      return;
+    }
+    const capped = Math.min(
+      RECONNECT_BASE_MS * RECONNECT_FACTOR ** this.reconnectAttempts,
+      RECONNECT_CAP_MS,
+    );
+    const jitter = capped * RECONNECT_JITTER * (2 * Math.random() - 1);
+    const delay = Math.max(0, Math.round(capped + jitter));
+    this.reconnectAttempts += 1;
+    this.reconnectTimer = setTimeout(() => {
+      this.reconnectTimer = null;
+      this.connect()
+        .then(() => this.afterReconnect())
+        .catch((error: unknown) => {
+          if (this.onError !== null) {
+            this.onError(error);
+          }
+          this.scheduleReconnect();
+        });
+    }, delay);
+  }
+
+  /** Rejoue tous les abonnements vivants (via le batcher) puis notifie `onReconnect`. */
+  private afterReconnect(): void {
+    this.batcher.resubscribe(this.activeSubscriptions.keys());
+    if (this.onReconnect !== null) {
+      this.onReconnect();
+    }
   }
 }

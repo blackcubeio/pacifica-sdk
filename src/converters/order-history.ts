@@ -81,16 +81,28 @@ export class OrderHistoryConverter {
   }
 
   toNative(order: Order): OrderHistoryNative {
+    // Champs hors cœur (side, average_filled_price, order_status, order_type, stop_price,
+    // stop_parent_order_id, reason, updated_at) conservés dans `xtras` ; ré-étalés (cast sur résidu).
     return {
+      ...(order.xtras as Omit<
+        OrderHistoryNative,
+        | 'order_id'
+        | 'client_order_id'
+        | 'symbol'
+        | 'initial_price'
+        | 'amount'
+        | 'filled_amount'
+        | 'reduce_only'
+        | 'created_at'
+      >),
       order_id: Number(order.id),
       client_order_id: order.clientId,
       symbol: order.name,
-      initial_price: order.price as string,
+      initial_price: order.price ?? '0',
       amount: order.size,
       filled_amount: order.filled,
-      reduce_only: order.reduceOnly as boolean,
+      reduce_only: order.reduceOnly ?? false,
       created_at: order.time,
-      ...order.xtras,
-    } as unknown as OrderHistoryNative;
+    };
   }
 }

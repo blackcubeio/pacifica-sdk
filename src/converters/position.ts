@@ -38,14 +38,19 @@ export class PositionConverter {
   }
 
   toNative(position: Position): PositionNative {
+    // `side`, `funding`, `isolated`, `created_at`, `updated_at` sont conservés dans `xtras` par
+    // `toCommon` ; on les ré-étale ici (cast simple sur le résidu, pas de double `as unknown`).
     return {
+      ...(position.xtras as Omit<
+        PositionNative,
+        'symbol' | 'amount' | 'entry_price' | 'margin' | 'liquidation_price'
+      >),
       symbol: position.name,
       amount: position.size,
-      entry_price: position.entryPrice as string,
-      margin: position.margin as string,
+      entry_price: position.entryPrice ?? '0',
+      margin: position.margin ?? '0',
       liquidation_price: position.liquidationPrice,
-      ...position.xtras,
-    } as unknown as PositionNative;
+    };
   }
 }
 

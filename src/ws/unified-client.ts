@@ -32,6 +32,17 @@ import { UserTradeWsConverter, type UserTradeWsNative } from '../converters/user
 import { WsClient } from './client';
 
 /**
+ * Frontière de parsing WS : le `StreamHandler` natif délivre un `JsonValue` (JSON déjà parsé, shape
+ * non connue du compilateur). On l'interprète comme le type natif attendu du flux. **Seul** double
+ * cast strictement nécessaire du module (les converters `toNative` REST ont été resserrés) : un
+ * changement de shape backend serait attrapé par le converter `toCommon` (champs absents → `xtras`),
+ * pas ici. Centralisé pour ne pas disséminer le `as unknown as` sur chaque souscription.
+ */
+function fromWire<T>(raw: JsonValue): T {
+  return raw as unknown as T;
+}
+
+/**
  * Client WebSocket **unifié Blackcube** (interne ; exposé via `Pacifica.ws()`). Chaque méthode
  * `subscribeX` délivre au handler le **type unifié déjà converti** (`Candle`, `OrderBook`…).
  * Wrappe le {@link WsClient} natif Pacifica (un seul socket : public + user-data).
@@ -95,7 +106,7 @@ export class UnifiedWsClient {
       ws.subscribeCandle(
         { symbol: params.name, interval: params.interval as CandleInterval },
         (raw) => {
-          handler(converter.toCommon(raw as unknown as CandleNative));
+          handler(converter.toCommon(fromWire<CandleNative>(raw)));
         },
       ),
     );
@@ -106,7 +117,7 @@ export class UnifiedWsClient {
     const converter = new TradeWsConverter();
     return this.subscribe((ws) =>
       ws.subscribeTrades({ symbol: params.name }, (raw) => {
-        for (const native of raw as unknown as TradeWsNative[]) {
+        for (const native of fromWire<TradeWsNative[]>(raw)) {
           handler(converter.toCommon(native));
         }
       }),
@@ -121,7 +132,7 @@ export class UnifiedWsClient {
     const converter = new BboWsConverter(params.kind ?? 'perp');
     return this.subscribe((ws) =>
       ws.subscribeBbo({ symbol: params.name }, (raw) => {
-        handler(converter.toCommon(raw as unknown as BboWsNative));
+        handler(converter.toCommon(fromWire<BboWsNative>(raw)));
       }),
     );
   }
@@ -137,7 +148,7 @@ export class UnifiedWsClient {
     const converter = new OrderBookWsConverter(params.kind ?? 'perp');
     return this.subscribe((ws) =>
       ws.subscribeOrderbook({ symbol: params.name, aggLevel: params.aggLevel ?? 1 }, (raw) => {
-        handler(converter.toCommon(raw as unknown as OrderBookWsNative));
+        handler(converter.toCommon(fromWire<OrderBookWsNative>(raw)));
       }),
     );
   }
@@ -147,7 +158,7 @@ export class UnifiedWsClient {
     const converter = new PriceConverter();
     return this.subscribe((ws) =>
       ws.subscribePrices((raw) => {
-        handler((raw as unknown as PriceNative[]).map((entry) => converter.toCommon(entry)));
+        handler(fromWire<PriceNative[]>(raw).map((entry) => converter.toCommon(entry)));
       }),
     );
   }
@@ -160,7 +171,7 @@ export class UnifiedWsClient {
     const converter = new OrderWsConverter();
     return this.subscribe((ws) =>
       ws.subscribeAccountOrderUpdates((raw) => {
-        for (const native of raw as unknown as OrderUpdateWsNative[]) {
+        for (const native of fromWire<OrderUpdateWsNative[]>(raw)) {
           handler(converter.toCommon(native));
         }
       }, params.user),
@@ -175,7 +186,7 @@ export class UnifiedWsClient {
     const converter = new UserTradeWsConverter();
     return this.subscribe((ws) =>
       ws.subscribeAccountTrades((raw) => {
-        for (const native of raw as unknown as UserTradeWsNative[]) {
+        for (const native of fromWire<UserTradeWsNative[]>(raw)) {
           handler(converter.toCommon(native));
         }
       }, params.user),
@@ -190,7 +201,7 @@ export class UnifiedWsClient {
     const converter = new PositionWsConverter();
     return this.subscribe((ws) =>
       ws.subscribeAccountPositions((raw) => {
-        for (const native of raw as unknown as PositionWsNative[]) {
+        for (const native of fromWire<PositionWsNative[]>(raw)) {
           handler(converter.toCommon(native));
         }
       }, params.user),

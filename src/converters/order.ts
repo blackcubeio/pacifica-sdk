@@ -67,17 +67,29 @@ export class OrderConverter {
   }
 
   toNative(order: Order): OrderNative {
+    // `side`, `order_type`, `cancelled_amount`, `stop_price`, `stop_parent_order_id`, `updated_at`
+    // sont conservés dans `xtras` par `toCommon` ; on les ré-étale (cast simple sur le résidu).
     return {
+      ...(order.xtras as Omit<
+        OrderNative,
+        | 'order_id'
+        | 'client_order_id'
+        | 'symbol'
+        | 'price'
+        | 'initial_amount'
+        | 'filled_amount'
+        | 'reduce_only'
+        | 'created_at'
+      >),
       order_id: Number(order.id),
       client_order_id: order.clientId,
       symbol: order.name,
-      price: order.price as string,
+      price: order.price ?? '0',
       initial_amount: order.size,
       filled_amount: order.filled,
-      reduce_only: order.reduceOnly as boolean,
+      reduce_only: order.reduceOnly ?? false,
       created_at: order.time,
-      ...order.xtras,
-    } as unknown as OrderNative;
+    };
   }
 }
 

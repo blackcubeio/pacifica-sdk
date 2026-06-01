@@ -282,9 +282,9 @@ class PacificaMarket
 
   // ── ITrading ──
   public place(input: PlaceOrderParams): Promise<Order> {
-    if (input.type !== 'limit' && input.type !== 'market') {
-      throw new Error(`place (Pacifica) : type "${input.type}" non supporté (limit/market).`);
-    }
+    // `type` est narrowé à `'limit' | 'market'` au niveau du **type** (cf. contract.ts) : aucune
+    // route invalide ne compile → pas de throw « non supporté ». `slippagePercent` est forwardé sur
+    // le chemin market (sans lui, l'ordre marché était plafonné à 1 % par défaut — argent réel).
     return placeOrder(
       this.client,
       {
@@ -296,6 +296,7 @@ class PacificaMarket
         tif: input.tif,
         reduceOnly: input.reduceOnly,
         clientId: input.clientId,
+        slippagePercent: input.slippagePercent,
       },
       this.signed(),
     );

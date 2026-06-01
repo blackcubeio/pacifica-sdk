@@ -33,12 +33,16 @@ export class PairConverter {
   }
 
   toNative(pair: Pair): Market {
+    // `tickSize`/`stepSize`/`maxLeverage` peuvent être absents du cœur (`undefined`) ; on retombe
+    // alors sur la valeur conservée dans `xtras`. Cast simple sur le résidu (pas de double `as unknown`).
+    const rest = pair.xtras as Omit<Market, 'symbol' | 'tickSize' | 'lotSize' | 'maxLeverage'> &
+      Partial<Pick<Market, 'tickSize' | 'lotSize' | 'maxLeverage'>>;
     return {
+      ...rest,
       symbol: pair.name,
-      tickSize: pair.tickSize,
-      lotSize: pair.stepSize,
-      maxLeverage: pair.maxLeverage,
-      ...pair.xtras,
-    } as unknown as Market;
+      tickSize: pair.tickSize ?? rest.tickSize ?? '0',
+      lotSize: pair.stepSize ?? rest.lotSize ?? '0',
+      maxLeverage: pair.maxLeverage ?? rest.maxLeverage ?? 0,
+    };
   }
 }

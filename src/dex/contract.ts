@@ -50,16 +50,27 @@ export interface SymbolParams {
   name: string;
 }
 
+/**
+ * Paramètres de placement — **deux divergences assumées pour Pacifica** (ségrégation au niveau du
+ * **type**, pas de throw runtime) :
+ * 1. `type` est narrowé à `'limit' | 'market'` : Pacifica n'a pas de stop/TP sur le `place()` commun
+ *    (ils vivent sur `dex.native.perp().placeStop/placeTpsl`). Déclarer les autres types et les
+ *    rejeter par `throw` violerait la règle no-throw → on ne les déclare pas.
+ * 2. `slippagePercent` (optionnel, **ordres `market` Pacifica** ; défaut `1` %) : champ additif propre
+ *    à Pacifica, ignoré des autres SDK. Sans lui, tout ordre marché était silencieusement plafonné à
+ *    1 % de slippage (argent réel).
+ */
 export interface PlaceOrderParams {
   name: string;
   side: 'buy' | 'sell';
-  type: 'limit' | 'market' | 'stop' | 'stopMarket' | 'takeProfit' | 'takeProfitMarket';
+  type: 'limit' | 'market';
   size: string;
   price?: string;
-  triggerPrice?: string;
   tif?: 'gtc' | 'ioc' | 'fok' | 'alo';
   reduceOnly?: boolean;
   clientId?: string;
+  /** Slippage max en % (ordres `market` Pacifica) ; défaut `1`. Divergence Pacifica assumée. */
+  slippagePercent?: string;
 }
 export interface CancelOrderParams {
   name: string;
@@ -109,6 +120,7 @@ export interface IMarketData {
 
 /** Métadonnées de marché du produit (infos d'échange, symboles…). */
 export interface IMarketMeta {
+  /** Passe-plat **brut volontaire** : pas de forme commune cross-DEX (chaque venue a son schéma). */
   getExchangeInfo(): Promise<unknown>;
 }
 
@@ -117,7 +129,14 @@ export interface IPublicTrades {
   getTrades(query: TradesParams): Promise<Trade[]>;
 }
 
-/** Placement/annulation/édition d'ordres + levier (les 3 DEX). */
+/**
+ * Placement/annulation/édition d'ordres + levier (les 3 DEX).
+ *
+ * **Asymétrie `place` / `edit` (Pacifica)** : `place` ne `throw` jamais « non supporté » — la
+ * ségrégation est au niveau du **type** (`PlaceOrderParams.type` narrowé `limit|market`). `edit`, lui,
+ * peut lever une **erreur de validation d'input** (`price` requis), ce qui est légitime (champ requis
+ * absent ≠ capacité absente) : Pacifica exige un `price` pour rééditer un ordre.
+ */
 export interface ITrading {
   place(input: PlaceOrderParams): Promise<Order>;
   cancel(input: CancelOrderParams): Promise<void>;
@@ -148,6 +167,7 @@ export interface IProductAccount {
   getPositions(query?: SymbolParams): Promise<Position[]>;
   getOpens(query?: SymbolParams): Promise<Order[]>;
   getUserTrades(query?: SymbolParams): Promise<UserTrade[]>;
+  /** Passe-plat **brut volontaire** : pas de forme commune cross-DEX (schéma compte propre à la venue). */
   getAccountInfo(): Promise<unknown>;
 }
 
@@ -161,6 +181,11 @@ export interface IOrderHistory {
 /** Compte transverse (sans notion de produit) : soldes + retrait (les 3 DEX). */
 export interface IAccount {
   getBalances(): Promise<Balance[]>;
+  /**
+   * Retrait de fonds. Sortie `unknown` **brute volontaire** : pas de résultat commun cross-DEX (Pacifica
+   * ne renvoie rien — `void` —, d'autres venues renvoient un ack/hash de TX). L'implémentation Pacifica
+   * resserre à `Promise<void>`, assignable à ce contrat partagé.
+   */
   withdraw(input: WithdrawParams): Promise<unknown>;
 }
 
