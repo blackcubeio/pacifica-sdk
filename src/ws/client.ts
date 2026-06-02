@@ -32,6 +32,9 @@ import {
 import { buildSignedRequest, resolveSigner } from '../rest/signing';
 import { SubscriptionBatcher } from './subscription-batcher';
 
+/** `WebSocket.OPEN` (readyState) — la frame n'est émise que dans cet état. */
+const OPEN = 1;
+
 /** Action signée en vol (attente d'ack par `id`) ; `timer` arme le timeout individuel. */
 interface PendingAction {
   resolve: (value: JsonValue) => void;
@@ -322,9 +325,16 @@ export class WsClient {
     };
   }
 
-  /** Émet une frame d'abonnement déjà sérialisée (chemin du batcher) ; file si socket fermée. */
+  /**
+   * Émet une frame d'abonnement déjà sérialisée (chemin du batcher) ; file si la socket n'est pas réellement
+   * **OPEN**. Le seul `this.open` ne suffit pas : il peut être en avance sur l'état réel (reconnexion →
+   * `this.socket` réassigné à une socket CONNECTING avant `onopen`, ou frame différée par le throttle du
+   * batcher arrivant pendant un close concurrent). `send()` lèverait alors « Sent before connected » — throw
+   * non rattrapé qui crashe le process. On vérifie donc `readyState === OPEN` ; les frames filées repartent au
+   * prochain `onopen` (abonnements vivants rejoués via `afterReconnect`/`resubscribe`).
+   */
   private rawSend(frame: string): void {
-    if (this.socket === null || this.open === false) {
+    if (this.open === false || this.socket === null || this.socket.readyState !== OPEN) {
       this.pendingSends.push(frame);
       return;
     }
