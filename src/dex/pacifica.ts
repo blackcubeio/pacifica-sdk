@@ -136,7 +136,6 @@ import type {
   IProductAccount,
   IPublicTrades,
   IRealtime,
-  IRealtimeAllCandles,
   IRealtimePositions,
   ISubAccounts,
   ITrading,
@@ -408,7 +407,7 @@ class PacificaHelpers implements KeyHelper, SolanaHelper {
  * Scope **temps réel** lié à un `label`. Pacifica a un flux de positions dédié → implémente
  * `IRealtimePositions`. Les flux user-data résolvent le compte depuis le signer.
  */
-class PacificaRealtime implements IRealtime, IRealtimePositions, IRealtimeAllCandles {
+class PacificaRealtime implements IRealtime, IRealtimePositions {
   constructor(
     private readonly ws: UnifiedWsClient,
     private readonly kind: MarketKind,
