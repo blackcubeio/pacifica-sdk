@@ -1,6 +1,6 @@
 {
   "name": "@blackcube/pacifica-sdk",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "TypeScript SDK for the Pacifica exchange (perpetuals DEX on Solana): REST, WebSocket, Ed25519 signing and on-chain deposits",
   "license": "BSD-3-Clause",
   "author": "Blackcube (https://blackcube.io)",
