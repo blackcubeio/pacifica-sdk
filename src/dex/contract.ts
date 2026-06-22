@@ -63,9 +63,11 @@ export interface SymbolParams {
 export interface PlaceOrderParams {
   name: string;
   side: 'buy' | 'sell';
-  type: 'limit' | 'market';
+  type: 'limit' | 'market' | 'stop' | 'stopMarket' | 'takeProfit' | 'takeProfitMarket';
   size: string;
   price?: string;
+  /** Prix de déclenchement (stop/take-profit) ; route vers le stop natif Pacifica (`createStopOrder`). */
+  triggerPrice?: string;
   tif?: 'gtc' | 'ioc' | 'fok' | 'alo';
   reduceOnly?: boolean;
   clientId?: string;
