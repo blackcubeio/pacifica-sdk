@@ -282,9 +282,42 @@ class PacificaMarket
 
   // ── ITrading ──
   public place(input: PlaceOrderParams): Promise<Order> {
-    // `type` est narrowé à `'limit' | 'market'` au niveau du **type** (cf. contract.ts) : aucune
-    // route invalide ne compile → pas de throw « non supporté ». `slippagePercent` est forwardé sur
-    // le chemin market (sans lui, l'ordre marché était plafonné à 1 % par défaut — argent réel).
+    // Ordre déclenché (stop/take-profit) : même surface commune que les autres SDK. On route vers le stop
+    // natif Pacifica (`placeStop` → createStopOrder) ; `price` = prix limite au déclenchement (absent ⇒ stop
+    // marché). C6 : la mécanique reste cachée dans la méthode, pas de throw.
+    if (input.triggerPrice !== undefined) {
+      const triggerPrice = input.triggerPrice;
+      const reduceOnly = input.reduceOnly ?? false;
+      const side = input.side === 'buy' ? OrderSide.Bid : OrderSide.Ask;
+      return createStopOrder(
+        this.client,
+        {
+          symbol: input.name,
+          side,
+          reduceOnly,
+          stopOrder: {
+            stopPrice: triggerPrice,
+            limitPrice: input.price,
+            clientOrderId: input.clientId,
+            amount: input.size,
+          },
+        },
+        this.signed(),
+      ).then((res) =>
+        stopOrderToCommon({
+          name: input.name,
+          side: input.side,
+          reduceOnly,
+          stopPrice: triggerPrice,
+          limitPrice: input.price,
+          size: input.size,
+          clientId: input.clientId,
+          orderId: res.orderId,
+        }),
+      );
+    }
+    // `type` régulier (`limit`/`market`) : `slippagePercent` est forwardé sur le chemin market (sans lui,
+    // l'ordre marché était plafonné à 1 % par défaut — argent réel).
     return placeOrder(
       this.client,
       {

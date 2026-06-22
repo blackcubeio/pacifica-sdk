@@ -610,7 +610,13 @@ export interface GetUserTradesParams {
 
 // ── depuis rest/place-order.ts ──
 /** Type d'ordre unifié supporté par Pacifica (`placeOrder`). */
-export type PlaceOrderType = 'limit' | 'market';
+export type PlaceOrderType =
+  | 'limit'
+  | 'market'
+  | 'stop'
+  | 'stopMarket'
+  | 'takeProfit'
+  | 'takeProfitMarket';
 
 /** Time-in-force unifié. */
 export type PlaceOrderTif = 'gtc' | 'ioc' | 'fok' | 'alo';
@@ -629,6 +635,8 @@ export interface PlaceOrderParams {
   size: string;
   /** Prix limite (requis pour `limit`). */
   price?: string;
+  /** Prix de déclenchement (stop/take-profit). Présent ⇒ ordre déclenché (route vers le stop natif). */
+  triggerPrice?: string;
   /** Time-in-force (limit). */
   tif?: PlaceOrderTif;
   /** Reduce-only. */
