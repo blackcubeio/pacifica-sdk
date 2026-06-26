@@ -146,6 +146,7 @@ import type {
   KeyHelper,
   LeverageParams,
   MarginModeParams,
+  MoveStopParams,
   OrderBookParams,
   PlaceOrderParams,
   SolanaHelper,
@@ -384,6 +385,27 @@ class PacificaMarket
   // Annule toute la protection de la paire (stops reduce-only) avant de la re-poser.
   public cancelProtection(input: { name: string }): Promise<void> {
     return this.cancelAll({ name: input.name }).then(() => undefined);
+  }
+  // Déplace le SL en posant le NOUVEAU stop avant d'annuler l'ANCIEN — jamais sans SL (Pacifica n'a pas
+  // d'édition en place des stops). `side` = sens de la position → SL au sens OPPOSÉ. L'annulation passe par
+  // l'endpoint stop dédié (`cancelStopOrder`), pas `cancel()` (qui ne vise que les ordres réguliers).
+  public moveStop(input: MoveStopParams): Promise<{ name: string; id: string }> {
+    const exit: 'buy' | 'sell' = input.side === 'buy' ? 'sell' : 'buy';
+    return this.place({
+      name: input.name,
+      side: exit,
+      type: 'stopMarket',
+      triggerPrice: input.triggerPrice,
+      price: input.price,
+      size: input.size,
+      reduceOnly: true,
+    }).then((order) =>
+      cancelStopOrder(
+        this.client,
+        { symbol: input.name, orderId: Number(input.stopId) },
+        this.signed(),
+      ).then(() => ({ name: input.name, id: order.id })),
+    );
   }
   public edit(input: EditOrderParams): Promise<{ name: string; id: string }> {
     if (input.price === undefined) {
