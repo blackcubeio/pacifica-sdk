@@ -15,7 +15,7 @@ function decimalsFromStep(step: string): number {
  */
 export class PairConverter {
   toCommon(market: Market): Pair {
-    const { symbol: name, tickSize, lotSize, maxLeverage, ...rest } = market;
+    const { symbol: name, tickSize, lotSize, maxLeverage, minOrderSize, ...rest } = market;
     const pair: Pair = {
       name,
       base: name,
@@ -25,6 +25,8 @@ export class PairConverter {
       maxLeverage,
       tickSize,
       stepSize: lotSize,
+      // `min_order_size` Pacifica = « Minimum order size (denominated in USD) » (doc) → notionnel min unifié.
+      minNotional: minOrderSize,
     };
     if (Object.keys(rest).length > 0) {
       pair.xtras = rest as Record<string, unknown>;
@@ -35,14 +37,18 @@ export class PairConverter {
   toNative(pair: Pair): Market {
     // `tickSize`/`stepSize`/`maxLeverage` peuvent être absents du cœur (`undefined`) ; on retombe
     // alors sur la valeur conservée dans `xtras`. Cast simple sur le résidu (pas de double `as unknown`).
-    const rest = pair.xtras as Omit<Market, 'symbol' | 'tickSize' | 'lotSize' | 'maxLeverage'> &
-      Partial<Pick<Market, 'tickSize' | 'lotSize' | 'maxLeverage'>>;
+    const rest = pair.xtras as Omit<
+      Market,
+      'symbol' | 'tickSize' | 'lotSize' | 'maxLeverage' | 'minOrderSize'
+    > &
+      Partial<Pick<Market, 'tickSize' | 'lotSize' | 'maxLeverage' | 'minOrderSize'>>;
     return {
       ...rest,
       symbol: pair.name,
       tickSize: pair.tickSize ?? rest.tickSize ?? '0',
       lotSize: pair.stepSize ?? rest.lotSize ?? '0',
       maxLeverage: pair.maxLeverage ?? rest.maxLeverage ?? 0,
+      minOrderSize: pair.minNotional ?? rest.minOrderSize ?? '0',
     };
   }
 }
