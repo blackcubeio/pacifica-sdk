@@ -21,7 +21,7 @@ const MARKET: Market = {
 describe('PairConverter Pacifica — bijectivité', () => {
   const conv = new PairConverter();
 
-  it('toCommon extrait le cœur, le reste va dans xtras', () => {
+  it('toCommon extrait le cœur (min_order_size → minNotional), le reste va dans xtras', () => {
     expect(conv.toCommon(MARKET)).toEqual({
       name: 'BTC',
       base: 'BTC',
@@ -31,11 +31,11 @@ describe('PairConverter Pacifica — bijectivité', () => {
       maxLeverage: 50,
       tickSize: '0.1',
       stepSize: '0.001',
+      minNotional: '0.001',
       xtras: {
         minTick: '0.1',
         maxTick: '1000',
         isolatedOnly: false,
-        minOrderSize: '0.001',
         maxOrderSize: '100',
         fundingRate: '0.0001',
         nextFundingRate: '0.0001',
