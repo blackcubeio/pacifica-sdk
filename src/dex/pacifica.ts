@@ -26,8 +26,10 @@ import type {
   Order,
   OrderBook,
   Pair,
+  PlaceProtectionParams,
   Position,
   Price,
+  ProtectionTp,
   Side,
   Signer,
   SubAccount,
@@ -144,6 +146,7 @@ import type {
   KeyHelper,
   LeverageParams,
   MarginModeParams,
+  MoveStopParams,
   OrderBookParams,
   PlaceOrderParams,
   SolanaHelper,
@@ -343,6 +346,66 @@ class PacificaMarket
   }
   public cancelAll(input: CancelAllParams): Promise<{ cancelled: number | null }> {
     return cancelAllOrders(this.client, { name: input.name }, this.signed());
+  }
+  // Protection d'une position : SL plein + N TPs partiels, tous reduce-only, via N `createStopOrder`
+  // (Pacifica : un trigger = un stop ; SL ou TP selon le prix). `side` = sens de la POSITION → ordres
+  // au sens OPPOSÉ. `price` (= limitPrice de l'ordre déclenché) fourni par l'appelant, sinon stop marché.
+  public placeProtection(input: PlaceProtectionParams): Promise<Order[]> {
+    const exitSide = input.side === 'buy' ? OrderSide.Ask : OrderSide.Bid;
+    const exitCommon: 'buy' | 'sell' = input.side === 'buy' ? 'sell' : 'buy';
+    const legs: ProtectionTp[] = [
+      { triggerPrice: input.sl.triggerPrice, size: input.sl.size, price: input.sl.price },
+      ...input.tps,
+    ];
+    return Promise.all(
+      legs.map((leg) =>
+        createStopOrder(
+          this.client,
+          {
+            symbol: input.name,
+            side: exitSide,
+            reduceOnly: true,
+            stopOrder: { stopPrice: leg.triggerPrice, limitPrice: leg.price, amount: leg.size },
+          },
+          this.signed(),
+        ).then((res) =>
+          stopOrderToCommon({
+            name: input.name,
+            side: exitCommon,
+            reduceOnly: true,
+            stopPrice: leg.triggerPrice,
+            limitPrice: leg.price,
+            size: leg.size,
+            orderId: res.orderId,
+          }),
+        ),
+      ),
+    );
+  }
+  // Annule toute la protection de la paire (stops reduce-only) avant de la re-poser.
+  public cancelProtection(input: { name: string }): Promise<void> {
+    return this.cancelAll({ name: input.name }).then(() => undefined);
+  }
+  // Déplace le SL en posant le NOUVEAU stop avant d'annuler l'ANCIEN — jamais sans SL (Pacifica n'a pas
+  // d'édition en place des stops). `side` = sens de la position → SL au sens OPPOSÉ. L'annulation passe par
+  // l'endpoint stop dédié (`cancelStopOrder`), pas `cancel()` (qui ne vise que les ordres réguliers).
+  public moveStop(input: MoveStopParams): Promise<{ name: string; id: string }> {
+    const exit: 'buy' | 'sell' = input.side === 'buy' ? 'sell' : 'buy';
+    return this.place({
+      name: input.name,
+      side: exit,
+      type: 'stopMarket',
+      triggerPrice: input.triggerPrice,
+      price: input.price,
+      size: input.size,
+      reduceOnly: true,
+    }).then((order) =>
+      cancelStopOrder(
+        this.client,
+        { symbol: input.name, orderId: Number(input.stopId) },
+        this.signed(),
+      ).then(() => ({ name: input.name, id: order.id })),
+    );
   }
   public edit(input: EditOrderParams): Promise<{ name: string; id: string }> {
     if (input.price === undefined) {

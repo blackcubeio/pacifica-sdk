@@ -139,10 +139,57 @@ export interface IPublicTrades {
  * peut lever une **erreur de validation d'input** (`price` requis), ce qui est légitime (champ requis
  * absent ≠ capacité absente) : Pacifica exige un `price` pour rééditer un ordre.
  */
+export interface ProtectionTp {
+  triggerPrice: string;
+  size: string;
+  price?: string;
+}
+
+/**
+ * Entrée `placeProtection` : SL plein + N TPs partiels (reduce-only) sur une position EXISTANTE.
+ * `side` = sens de la POSITION ; les ordres sont posés au sens OPPOSÉ. Tailles + `price` (borne)
+ * fournis par l'appelant — pas de recalcul interne (anti-résidu).
+ */
+export interface PlaceProtectionParams {
+  name: string;
+  side: 'buy' | 'sell';
+  sl: { triggerPrice: string; size: string; price?: string };
+  tps: ProtectionTp[];
+  clientId?: string;
+}
+
+/**
+ * Entrée `moveStop` : DÉPLACE le SL d'une position (trailing / breakeven) SANS jamais la laisser nue.
+ * `side` = sens de la POSITION ; le SL est posé au sens OPPOSÉ. `stopId` = oid du SL courant à remplacer.
+ * Tailles + `price` (borne) fournis par l'appelant. Mécanisme natif par DEX (cf. `moveStop`).
+ */
+export interface MoveStopParams {
+  name: string;
+  side: 'buy' | 'sell';
+  stopId: string;
+  triggerPrice: string;
+  size: string;
+  price?: string;
+}
+
 export interface ITrading {
   place(input: PlaceOrderParams): Promise<Order>;
   cancel(input: CancelOrderParams): Promise<void>;
   cancelAll(input: CancelAllParams): Promise<{ cancelled: number | null }>;
+  /**
+   * Pose SL + N TPs (reduce-only) sur une position EXISTANTE, en un lot. Mécanisme natif par DEX
+   * (Pacifica : N `createStopOrder` reduce-only ; HL : `grouping:positionTpsl` ; Aster : batch de conditionnels).
+   */
+  placeProtection(input: PlaceProtectionParams): Promise<Order[]>;
+  /** Annule la protection (SL/TPs reduce-only) de la paire — à appeler avant de la re-poser. */
+  cancelProtection(input: { name: string }): Promise<void>;
+  /**
+   * Déplace le SL d'une position (trailing/breakeven) en garantissant qu'elle n'est JAMAIS nue.
+   * Mécanisme natif par DEX (HL : `modify` atomique en place ; Aster/Pacifica : pose le nouveau SL
+   * PUIS annule l'ancien — 2 SL reduce-only transitoires, jamais d'instant sans SL). Renvoie l'identité
+   * du SL résultant (`{ name, id }`) ; l'état complet se relit via `getOpens`.
+   */
+  moveStop(input: MoveStopParams): Promise<{ name: string; id: string }>;
   edit(input: EditOrderParams): Promise<{ name: string; id: string }>;
   updateLeverage(input: LeverageParams): Promise<unknown>;
 }
