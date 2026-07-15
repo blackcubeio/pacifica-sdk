@@ -382,6 +382,37 @@ class PacificaMarket
       ),
     );
   }
+  // Ouvre une position AVEC sa protection en un geste ATOMIQUE : TP/SL EMBARQUÉS dans l'ordre Create
+  // (position-tpsl Pacifica — nés au fill, morts avec la position). Un seul TP embarquable : défense franche
+  // au-delà (jamais un embarqué partiel silencieux — cas fluxeret [0,0,100]). L'entrée porte son sens propre.
+  public createEntryWithProtection(
+    entry: PlaceOrderParams,
+    protection: PlaceProtectionParams,
+  ): Promise<Order[]> {
+    if (protection.tps.length > 1) {
+      throw new Error('Pacifica : un seul TP embarquable (position-tpsl) — N TPs non supportés.');
+    }
+    const side = entry.side === 'buy' ? OrderSide.Bid : OrderSide.Ask;
+    const tp = protection.tps[0];
+    const actions: PlaceBatchParams = [
+      {
+        type: BatchActionType.Create,
+        params: {
+          symbol: entry.name,
+          price: entry.price ?? '',
+          amount: entry.size,
+          side,
+          tif: entry.tif === undefined ? undefined : WS_TIF[entry.tif],
+          clientOrderId: entry.clientId,
+          takeProfit: tp === undefined ? undefined : { stopPrice: tp.triggerPrice },
+          stopLoss: { stopPrice: protection.sl.triggerPrice },
+        },
+      },
+    ];
+    return batchOrders(this.client, actions, this.signed()).then((result) =>
+      batchResultToOrders(actions, result),
+    );
+  }
   // Annule toute la protection de la paire (stops reduce-only) avant de la re-poser.
   public cancelProtection(input: { name: string }): Promise<void> {
     return this.cancelAll({ name: input.name }).then(() => undefined);
