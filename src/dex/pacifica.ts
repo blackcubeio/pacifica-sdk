@@ -265,8 +265,45 @@ class PacificaMarket
   }
 
   // ── IProductAccount ──
-  public getPositions(query?: SymbolParams): Promise<Position[]> {
-    return getPositions(this.client, { user: this.user(), name: query?.name }, this.label);
+  public async getPositions(query?: SymbolParams): Promise<Position[]> {
+    const positions = await getPositions(
+      this.client,
+      { user: this.user(), name: query?.name },
+      this.label,
+    );
+    return this.withLatentPnl(positions);
+  }
+
+  // Pacifica n'expose NI mark NI uPnl par position (`GET /positions` = entry/margin/funding — cf. doc). Le contrat
+  // de façade veut des `Position` complètes (comme HL). On dérive donc `markPrice` + `unrealizedPnl` du mark PUBLIC
+  // (`getPrices`) : uPnl = |size| × (mark − entry) × (long ? +1 : −1) — PnL de PRIX latent, funding exclu (iso HL).
+  // Mark introuvable/plate → on laisse `null` (l'appelant garde sa dernière valeur connue, jamais un 0 déguisé).
+  private async withLatentPnl(positions: Position[]): Promise<Position[]> {
+    if (positions.length === 0) {
+      return positions;
+    }
+    const prices = await getPrices(this.client, this.label);
+    const markByName = new Map(
+      prices.map((price) => [price.name, Number(price.mark ?? price.oracle)]),
+    );
+    return positions.map((position) => {
+      const mark = markByName.get(position.name);
+      const entry = Number(position.entryPrice);
+      const size = Number(position.size);
+      if (
+        position.side === null ||
+        mark === undefined ||
+        Number.isFinite(mark) === false ||
+        mark <= 0 ||
+        Number.isFinite(entry) === false ||
+        Number.isFinite(size) === false
+      ) {
+        return position;
+      }
+      const sign = position.side === 'long' ? 1 : -1;
+      const unrealizedPnl = (mark - entry) * size * sign;
+      return { ...position, markPrice: String(mark), unrealizedPnl: String(unrealizedPnl) };
+    });
   }
   public getOpens(query?: SymbolParams): Promise<Order[]> {
     return getOpenOrders(this.client, { user: this.user(), name: query?.name }, this.label);
