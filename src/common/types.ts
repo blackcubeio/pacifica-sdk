@@ -352,6 +352,20 @@ export interface Balance {
 }
 
 /**
+ * Point d'une **courbe d'équité** mark-to-market (cœur commun cross-DEX). Base d'une courbe
+ * d'évolution réelle du compte SANS recalcul — la valeur est celle que le dex publie (latent inclus).
+ */
+export interface EquityPoint {
+  /** Horodatage du point (ms epoch). */
+  time: number;
+  /** Valeur de compte mark-to-market à cet instant. */
+  equity: number;
+}
+
+/** Plage d'une courbe d'équité (`getEquityHistory`) — mappée sur la fenêtre native de chaque DEX. */
+export type EquityRange = 'day' | 'week' | 'month' | 'all';
+
+/**
  * Sous-compte au **format unifié Blackcube** (cœur identique entre SDK).
  * Seule l'`address` est commune aux exchanges ; tout le reste (solde, fee tier,
  * nom, date de création, balances…) est propre à chaque exchange → `xtras`.

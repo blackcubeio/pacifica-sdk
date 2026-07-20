@@ -20,6 +20,8 @@ import { TimeInForce } from '../common/types';
 import type {
   Balance,
   Candle,
+  EquityPoint,
+  EquityRange,
   FundingRate,
   JsonValue,
   MarketKind,
@@ -548,6 +550,18 @@ class PacificaAccount implements IAccount, ISubAccounts {
   }
   public withdraw(input: WithdrawParams): Promise<unknown> {
     return withdraw(this.client, { amount: input.amount }, this.signed());
+  }
+
+  // Courbe d'équité mark-to-market normalisée (cœur commun) : réutilise le `portfolio` natif, en
+  // mappant la plage commune sur celle de Pacifica (`month` → `30d`, `all` → `all`) et en réduisant
+  // chaque point à {time, equity}. Le détail (pnl) reste via `native.account().getPortfolio()`.
+  public getEquityHistory(range: EquityRange = 'month'): Promise<EquityPoint[]> {
+    const timeRange = (
+      range === 'all' ? 'all' : range === 'day' ? '1d' : range === 'week' ? '7d' : '30d'
+    ) as PortfolioTimeRange;
+    return getPortfolio(this.client, { account: this.user(), timeRange }, this.label).then(
+      (points) => points.map((p) => ({ time: p.timestamp, equity: Number(p.accountEquity) })),
+    );
   }
 }
 

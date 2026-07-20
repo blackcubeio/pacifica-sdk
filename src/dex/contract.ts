@@ -1,6 +1,8 @@
 import type {
   Balance,
   Candle,
+  EquityPoint,
+  EquityRange,
   FundingRate,
   Order,
   OrderBook,
@@ -240,6 +242,12 @@ export interface IOrderHistory {
 /** Compte transverse (sans notion de produit) : soldes + retrait (les 3 DEX). */
 export interface IAccount {
   getBalances(): Promise<Balance[]>;
+  /**
+   * Courbe d'**équité** mark-to-market du compte (série `{time, equity}` normalisée cross-DEX).
+   * `range` mappé sur la fenêtre native du DEX (défaut `month` ≈ 30 j). Base d'une courbe d'évolution
+   * réelle SANS recalcul (« tout est sur le dex ») — le riche `getPortfolio` reste dans `native`.
+   */
+  getEquityHistory(range?: EquityRange): Promise<EquityPoint[]>;
   /**
    * Retrait de fonds. Sortie `unknown` **brute volontaire** : pas de résultat commun cross-DEX (Pacifica
    * ne renvoie rien — `void` —, d'autres venues renvoient un ack/hash de TX). L'implémentation Pacifica
